@@ -1,0 +1,208 @@
+import index.css
+
+.container {
+    min-height: 100vh;
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 30px;
+
+    background: #f7f9fc;
+}
+
+.card {
+    width: 100%;
+    max-width: 600px;
+
+    background: #ffffff;
+
+    padding: 50px 40px;
+
+    border-radius: 20px;
+
+    text-align: center;
+
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+
+    border: 1px solid #eeeeee;
+}
+
+/* ==========================================
+   ÍCONE
+========================================== */
+
+.icone {
+    width: 80px;
+    height: 80px;
+
+    margin: 0 auto 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #fff1f1;
+
+    color: #e53935;
+
+    font-size: 35px;
+}
+
+/* ==========================================
+   CÓDIGO
+========================================== */
+
+.codigo {
+    display: block;
+
+    font-size: clamp(48px, 18vw, 80px);
+    font-weight: 800;
+
+    line-height: 1;
+
+    color: var(--cor-texto);
+
+    margin-bottom: 15px;
+}
+
+/* ==========================================
+   TÍTULO
+========================================== */
+
+.card h1 {
+    margin: 0 0 15px;
+
+    font-size: clamp(20px, 6vw, 28px);
+
+    font-weight: 700;
+
+    color: #222222;
+}
+
+/* ==========================================
+   DESCRIÇÃO
+========================================== */
+
+.card p {
+    max-width: 450px;
+
+    margin: 0 auto;
+
+    font-size: 16px;
+
+    line-height: 1.6;
+
+    color: #666666;
+}
+
+/* ==========================================
+   BOTÕES
+========================================== */
+
+.botoes {
+    display: flex;
+    flex-wrap: wrap;
+
+    justify-content: center;
+
+    gap: 15px;
+
+    margin-top: 30px;
+}
+
+.botoes button,
+.botoes a {
+    height: 48px;
+
+    padding: 0 22px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+
+    text-decoration: none;
+}
+
+/* ==========================================
+   BOTÃO VOLTAR
+========================================== */
+
+.voltar {
+    border: 1px solid #dddddd;
+
+    background: #ffffff;
+
+    color: #444444;
+}
+
+.voltar:hover {
+    background: #f2f2f2;
+}
+
+/* ==========================================
+   BOTÃO INÍCIO
+========================================== */
+
+.inicio {
+    border: none;
+
+    background: var(--cor-texto);
+
+    color: #ffffff;
+}
+
+.inicio:hover {
+    background: var(--cor-confirmar);
+}
+
+/* ==========================================
+   RESPONSIVIDADE
+========================================== */
+
+@media (max-width: 600px) {
+
+    .container {
+        padding: 20px;
+    }
+
+    .card {
+        padding: 40px 25px;
+    }
+
+    .codigo {
+        font-size: 65px;
+    }
+
+    .card h1 {
+        font-size: 23px;
+    }
+
+    .card p {
+        font-size: 15px;
+    }
+
+    .botoes {
+        flex-direction: column;
+    }
+
+    .botoes button,
+    .botoes a {
+        width: 100%;
+    }
+}

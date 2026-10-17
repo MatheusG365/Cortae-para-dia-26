@@ -1,0 +1,194 @@
+.container {
+    width: 100%;
+    min-height: 100vh;
+    background-color: var(--cor-fundo);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ================= MAIN CONTENT ================= */
+.main {
+    max-width: 1100px;
+    width: 100%;
+    margin: 40px auto 60px;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.headerBusca {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    gap: 20px;
+}
+
+.titulo {
+    font-size: clamp(1.4rem, 7vw, 2.2rem);
+    font-weight: 900;
+    color: var(--cor-texto);
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.destaque {
+    color: var(--cor-destaque);
+}
+
+.subtitulo {
+    color: var(--cor-texto-categorizante);
+    font-size: 0.9rem;
+    margin: 6px 0 0 0;
+}
+
+.caixaBusca {
+    display: flex;
+    align-items: center;
+    background-color: var(--cor-card);
+    border-radius: 8px;
+    padding: 10px 16px;
+    width: 100%;
+    max-width: 320px;
+    gap: 10px;
+}
+
+.iconeBusca {
+    color: var(--cor-texto-categorizante);
+}
+
+.inputBusca {
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    font-size: 0.85rem;
+    color: var(--cor-texto);
+}
+
+.inputBusca::placeholder {
+    color: var(--cor-texto-categorizante);
+}
+
+/* ================= GRID DE CARDS ================= */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.card {
+    height: 320px;
+    border-radius: 20px;
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    background-color: rgba(0, 0, 0, 0.4);
+    background-blend-mode: darken;
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.cardOverlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+            to top,
+            rgba(0, 0, 0, 0.9) 0%,
+            rgba(0, 0, 0, 0.4) 50%,
+            rgba(0, 0, 0, 0.1) 100%
+    );
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-sizing: border-box;
+}
+
+.badgeDias {
+    align-self: flex-end;
+    background-color: rgba(255, 156, 8, 0.25);
+    color: var(--cor-destaque);
+    border: 1px solid var(--cor-destaque);
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 6px;
+    backdrop-filter: blur(4px);
+}
+
+.cardConteudo {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.cardNome {
+    color: var(--cor-destaque);
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0 0 6px 0;
+}
+
+.infoLinha {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--cor-texto-2);
+    font-size: 0.82rem;
+}
+
+.infoIcone {
+    color: var(--cor-destaque);
+    flex-shrink: 0;
+}
+
+.btnAgendar {
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px;
+    background-color: var(--cor-botao-2);
+    color: var(--cor-texto);
+    border: none;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.btnAgendar:hover {
+    background-color: var(--cor-destaque);
+    color: var(--cor-texto-2);
+    transform: translateY(-2px);
+}
+
+.btnAgendar:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+}
+
+/* ================= RESPONSIVIDADE ================= */
+@media (max-width: 850px) {
+    .headerBusca {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .caixaBusca {
+        max-width: 100%;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .card {
+        height: 280px;
+    }
+}

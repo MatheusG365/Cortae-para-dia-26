@@ -1,0 +1,324 @@
+[
+  {
+    "id_corte": 38,
+    "nome": "Degradê Baixo (Low Fade)",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2020/04/Low-Fade.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/types-of-fade-haircuts/",
+    "referencia": "Low Fade"
+  },
+  {
+    "id_corte": 39,
+    "nome": "Degradê Alto (High Fade)",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2020/04/High-Fade.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/types-of-fade-haircuts/",
+    "referencia": "High Fade"
+  },
+  {
+    "id_corte": 40,
+    "nome": "Degradê Médio (Mid Fade)",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2020/04/Medium-Fade.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/types-of-fade-haircuts/",
+    "referencia": "Medium Fade"
+  },
+  {
+    "id_corte": 41,
+    "nome": "Militar (Buzz Cut)",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Military-Buzz-Cut.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Military Buzz Cut"
+  },
+  {
+    "id_corte": 42,
+    "nome": "Topete Alto (Hi-Top Fade)",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2022/12/Classic-High-Top-Fade.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/high-top-fade-haircut/",
+    "referencia": "Classic High Top Fade"
+  },
+  {
+    "id_corte": 43,
+    "nome": "Moicano (Mohawk)",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Mohawk-Fade.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Mohawk Fade"
+  },
+  {
+    "id_corte": 44,
+    "nome": "Plano (Flattop)",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2022/12/Low-Flat-Top-with-Skin-Fade.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/high-top-fade-haircut/",
+    "referencia": "Low Flat Top with Skin Fade"
+  },
+  {
+    "id_corte": 45,
+    "nome": "César",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2023/03/Layered-Caesar-Cut.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/layered-haircuts-for-men/",
+    "referencia": "Layered Caesar Cut"
+  },
+  {
+    "id_corte": 46,
+    "nome": "Black Power (Afro)",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2024/03/Long-Natural-Afro-with-Brooklyn-Fade-and-Line-Up.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/afro-fade-haircut/",
+    "referencia": "Long Natural Afro with Brooklyn Fade and Line Up"
+  },
+  {
+    "id_corte": 47,
+    "nome": "Fauxhawk",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Faux-Hawk-Fade.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Faux Hawk Fade"
+  },
+  {
+    "id_corte": 48,
+    "nome": "Tigela (Bowl Cut)",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2021/08/Classic-Bowl-Cut.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/bowl-cut-hairstyle-men/",
+    "referencia": "Classic Bowl Cut"
+  },
+  {
+    "id_corte": 49,
+    "nome": "Undercut",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Slicked-Back-Undercut.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Slicked Back Undercut"
+  },
+  {
+    "id_corte": 50,
+    "nome": "Pompadour",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Short-Pompadour-Fade.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Short Pompadour Fade"
+  },
+  {
+    "id_corte": 51,
+    "nome": "Quiff",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Short-Quiff-Skin-Fade.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Short Quiff + Skin Fade"
+  },
+  {
+    "id_corte": 52,
+    "nome": "Corte Texturizado",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Short-Textured-Haircut.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Short Textured Haircut"
+  },
+  {
+    "id_corte": 53,
+    "nome": "Corte Repicado",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2023/03/Layered-and-Choppy.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/layered-haircuts-for-men/",
+    "referencia": "Layered and Choppy"
+  },
+  {
+    "id_corte": 54,
+    "nome": "Camadas",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2023/03/Classic-Layered-Flow-Back.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/layered-haircuts-for-men/",
+    "referencia": "Classic Layered Flow Back"
+  },
+  {
+    "id_corte": 55,
+    "nome": "Franja",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Long-Fringe-High-Taper-Fade.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Long Fringe + High Taper Fade"
+  },
+  {
+    "id_corte": 56,
+    "nome": "Liso",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Slicked-Back-Side-Part.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Slicked Back Side Part"
+  },
+  {
+    "id_corte": 57,
+    "nome": "Ondulado",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Long-Wavy-Hairstyle.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Long Wavy Hairstyle"
+  },
+  {
+    "id_corte": 58,
+    "nome": "Cacheado",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/02/Short-Naturally-Curly-Hairstyle.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/best-haircuts-for-men/",
+    "referencia": "Short Naturally Curly Hairstyle"
+  },
+  {
+    "id_corte": 59,
+    "nome": "Barba Cheia",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2016/01/Thick-Beard.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/beard-styles/",
+    "referencia": "Thick Beard"
+  },
+  {
+    "id_corte": 60,
+    "nome": "Barba + Degradê",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2016/01/Mens-Beards-Fade-and-Beard.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/beard-styles/",
+    "referencia": "Men's Beards - Fade and Beard"
+  },
+  {
+    "id_corte": 61,
+    "nome": "Barba Curta",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2019/01/Short-Boxed-Beard.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/beard-styles/",
+    "referencia": "Short Boxed Beard"
+  },
+  {
+    "id_corte": 62,
+    "nome": "Barba Viking",
+    "imagem_url": "https://eo54oy2xq6y.exactdn.com/wp-content/uploads/2026/10/bob-ba-viking-beard-styles-1-after.jpg?strip=all",
+    "fonte_url": "https://bookofbarbering.com/viking-beard-styles/",
+    "referencia": "Man with a combed long brown beard tapered to one point"
+  },
+  {
+    "id_corte": 63,
+    "nome": "Bob Reto",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/short-bob-hairstyles/short-blunt-bob-haircut-dark-brown-chin-length.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Chin-Length Blunt Bob"
+  },
+  {
+    "id_corte": 64,
+    "nome": "Long Bob (Lob)",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/15-most-endearing-short-hairstyles-for-fine-hair/sleek-lob-fine-hair-black-center-part.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Sleek Black Lob"
+  },
+  {
+    "id_corte": 65,
+    "nome": "Pixie",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/15-most-endearing-short-hairstyles-for-fine-hair/micro-pixie-crop-fine-hair-dark-brown.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Micro Pixie Crop"
+  },
+  {
+    "id_corte": 66,
+    "nome": "Curto Feminino",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/30-terrific-simply-cute-haircuts-for-girls-to-put-you-on-center-stage/cute-haircut-girls-textured-pixie-crop-dark.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Textured Pixie Crop"
+  },
+  {
+    "id_corte": 67,
+    "nome": "Camadas nos Ombros",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/30-terrific-simply-cute-haircuts-for-girls-to-put-you-on-center-stage/cute-haircut-girls-layered-collarbone-lob.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Layered Collarbone Lob"
+  },
+  {
+    "id_corte": 68,
+    "nome": "Ondulado Médio",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/20-most-delightful-short-wavy-hairstyles/natural-wavy-lob-hairstyle-brown.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Natural Wavy Lob"
+  },
+  {
+    "id_corte": 69,
+    "nome": "Longo Liso",
+    "imagem_url": "https://therighthairstyles.com/wp-content/uploads/2015/01/3-lovely-dark-brown-straight-haircut.jpg",
+    "fonte_url": "https://therighthairstyles.com/20-best-long-straight-hairstyles-and-haircuts-to-bring-out-your-charm/",
+    "referencia": "Lovely Dark Brown Straight Haircut"
+  },
+  {
+    "id_corte": 70,
+    "nome": "Longo Ondulado",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/30-respectable-yet-modern-hairstyles-for-women-over-50/hairstyle-women-over-50-long-wavy-layers.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Long Wavy Layers"
+  },
+  {
+    "id_corte": 71,
+    "nome": "Longo Cacheado",
+    "imagem_url": "https://therighthairstyles.com/wp-content/uploads/2014/05/1-layers-for-long-curly-hair.jpg",
+    "fonte_url": "https://therighthairstyles.com/long-curly-hairstyles/",
+    "referencia": "Layers for Long Curly Hair"
+  },
+  {
+    "id_corte": 72,
+    "nome": "Chanel",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/short-bob-hairstyles/blunt-bob-haircut-full-fringe-black-hair.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Blunt Bob with a Full Fringe"
+  },
+  {
+    "id_corte": 73,
+    "nome": "Repicado Feminino",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/30-terrific-simply-cute-haircuts-for-girls-to-put-you-on-center-stage/cute-haircut-girls-tousled-layered-lob-brown.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Tousled Layered Lob"
+  },
+  {
+    "id_corte": 74,
+    "nome": "Franja Lateral",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/30-terrific-simply-cute-haircuts-for-girls-to-put-you-on-center-stage/cute-haircut-girls-long-copper-hair-side-fringe.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Long Hair with a Side Fringe"
+  },
+  {
+    "id_corte": 75,
+    "nome": "Blunt Cut",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/30-terrific-simply-cute-haircuts-for-girls-to-put-you-on-center-stage/cute-haircut-girls-sleek-blunt-lob-center-part.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Sleek Blunt Lob"
+  },
+  {
+    "id_corte": 76,
+    "nome": "Shag",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/20-brightest-medium-layered-haircuts-to-light-you-up/medium-layered-haircut-brown-shag-curtain-bangs.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Brown Shag with Curtain Bangs"
+  },
+  {
+    "id_corte": 77,
+    "nome": "Wolf Cut",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/30-terrific-simply-cute-haircuts-for-girls-to-put-you-on-center-stage/cute-haircut-girls-blonde-wolf-cut.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Blonde Wolf Cut"
+  },
+  {
+    "id_corte": 78,
+    "nome": "Butterfly Cut",
+    "imagem_url": "https://therighthairstyles.com/wp-content/uploads/2023/05/9-viral-dark-brunette-butterfly-cut.jpg",
+    "fonte_url": "https://therighthairstyles.com/butterfly-haircut/10/",
+    "referencia": "Viral Dark Brunette Butterfly Cut"
+  },
+  {
+    "id_corte": 79,
+    "nome": "Hime Cut",
+    "imagem_url": "https://therighthairstyles.com/wp-content/uploads/2024/11/1-sleek-hime-cut-hair.jpg",
+    "fonte_url": "https://therighthairstyles.com/hime-cut/",
+    "referencia": "Sleek Hime Cut Hair"
+  },
+  {
+    "id_corte": 80,
+    "nome": "French Bob",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/5-winning-looks-with-bob-haircuts-for-fine-hair/bob-fine-hair-french-micro-bangs.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "French Bob with Micro-Bangs"
+  },
+  {
+    "id_corte": 81,
+    "nome": "A-Line Bob",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/15-most-endearing-short-hairstyles-for-fine-hair/sleek-a-line-bob-fine-hair-dark-brown.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Sleek A-Line Bob"
+  },
+  {
+    "id_corte": 82,
+    "nome": "Inverted Bob",
+    "imagem_url": "https://ai.therighthairstyles.com/assets/previews/short-layered-hairstyles/inverted-bob-haircut-stacked-back.webp",
+    "fonte_url": "https://ai.therighthairstyles.com/",
+    "referencia": "Inverted Bob"
+  },
+  {
+    "id_corte": 84,
+    "nome": "Corte de Barba e cabelo",
+    "imagem_url": "https://www.menshairstylestoday.com/wp-content/uploads/2016/01/Mens-Beards-Fade-and-Beard.jpg",
+    "fonte_url": "https://www.menshairstylestoday.com/beard-styles/",
+    "referencia": "Men's Beards - Fade and Beard"
+  }
+]

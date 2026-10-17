@@ -1,0 +1,353 @@
+.container {
+    width: 100%;
+    min-height: calc(100vh - 160px);
+    display: flex;
+    background-color: var(--cor-fundo-b);
+    box-sizing: border-box;
+}
+
+.areaFormulario {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 50px 40px;
+    background-color: var(--cor-fundo-b);
+    box-sizing: border-box;
+}
+
+.cartaoCadastro {
+    width: 100%;
+    max-width: 480px;
+    background-color: var(--cor-card-3);
+    border-radius: 15px;
+    padding: 30px 38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.titulo {
+    margin: 0 0 28px;
+    color: var(--cor-texto);
+    font-size: 1.7rem;
+    font-weight: 900;
+    font-style: italic;
+    text-align: center;
+}
+
+.formulario {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.grupoEntrada {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+}
+
+.rotulo {
+    color: var(--cor-texto);
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.entrada {
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    border-bottom: 1.5px solid var(--cor-texto-categorizante);
+    background-color: transparent;
+    color: var(--cor-texto);
+    font-size: 1rem;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.entrada:focus {
+    border-bottom-color: var(--cor-confirmar);
+}
+
+.botaoCadastrar {
+    width: 200px;
+    max-width: 100%;
+    margin: 18px auto 0;
+    padding: 10px 12px;
+    background-color: var(--cor-botao-2);
+    color: var(--cor-texto);
+    border: 1px solid var(--cor-texto-categorizante);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.botaoCadastrar:hover {
+    background-color: var(--cor-confirmar);
+    color: var(--cor-texto-2);
+    transform: translateY(-2px);
+}
+
+.areaLogin {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.textoLogin {
+    margin: 0 0 9px;
+    color: var(--cor-texto);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.botaoLogin {
+    width: 200px;
+    max-width: 100%;
+    padding: 10px 12px;
+    background-color: var(--cor-confirmar);
+    color: var(--cor-texto-2);
+    border: none;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.botaoLogin:hover {
+    transform: translateY(-2px);
+}
+
+
+/* =========================
+   IMAGEM
+========================= */
+
+.areaImagem {
+    flex: 0 0 35%;
+    min-height: 100%;
+    position: relative;
+    background-color: #252525;
+    background-image: var(--imagem-site-cadastro, none);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.sobreposicaoImagem {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+            to right,
+            rgba(0, 0, 0, 0.35),
+            rgba(0, 0, 0, 0)
+    );
+    pointer-events: none;
+}
+
+
+/* =========================
+   TELAS GRANDES
+========================= */
+
+@media (max-width: 1100px) {
+
+    .areaFormulario {
+        padding: 40px 30px;
+    }
+
+    .cartaoCadastro {
+        max-width: 450px;
+        padding: 30px;
+    }
+
+    .areaImagem {
+        flex: 0 0 32%;
+        background-position: center;
+    }
+}
+
+
+/* =========================
+   TABLETS
+========================= */
+
+@media (max-width: 850px) {
+
+    .container {
+        min-height: calc(100vh - 160px);
+    }
+
+    .areaImagem {
+        display: none;
+    }
+
+    .areaFormulario {
+        width: 100%;
+        flex: none;
+        padding: 40px 25px;
+    }
+
+    .cartaoCadastro {
+        max-width: 500px;
+        padding: 35px;
+    }
+
+    .titulo {
+        font-size: 1.6rem;
+    }
+
+    .entrada {
+        font-size: 1rem;
+    }
+}
+
+
+/* =========================
+   CELULARES
+========================= */
+
+@media (max-width: 600px) {
+
+    .container {
+        min-height: calc(100vh - 120px);
+    }
+
+    .areaFormulario {
+        padding: 25px 15px;
+        align-items: flex-start;
+    }
+
+    .cartaoCadastro {
+        width: 100%;
+        max-width: none;
+        padding: 28px 22px;
+        border-radius: 12px;
+    }
+
+    .titulo {
+        width: 100%;
+        margin-bottom: 24px;
+        font-size: 1.45rem;
+    }
+
+    .grupoEntrada {
+        margin-bottom: 16px;
+    }
+
+    .rotulo {
+        font-size: 0.8rem;
+    }
+
+    .entrada {
+        padding: 9px 0;
+        font-size: 0.95rem;
+    }
+
+    .botaoCadastrar,
+    .botaoLogin {
+        width: 100%;
+        max-width: 280px;
+    }
+
+    .areaLogin {
+        margin-top: 18px;
+    }
+
+    .textoLogin {
+        font-size: 0.8rem;
+    }
+}
+
+
+/* =========================
+   CELULARES PEQUENOS
+========================= */
+
+@media (max-width: 400px) {
+
+    .container {
+        min-height: calc(100vh - 100px);
+    }
+
+    .areaFormulario {
+        padding: 20px 10px;
+    }
+
+    .cartaoCadastro {
+        padding: 24px 18px;
+        border-radius: 10px;
+    }
+
+    .titulo {
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+    }
+
+    .grupoEntrada {
+        margin-bottom: 14px;
+    }
+
+    .rotulo {
+        font-size: 0.78rem;
+    }
+
+    .entrada {
+        font-size: 0.9rem;
+    }
+
+    .botaoCadastrar,
+    .botaoLogin {
+        max-width: none;
+        width: 100%;
+        padding: 11px 10px;
+    }
+
+    .areaLogin {
+        margin-top: 16px;
+    }
+}
+
+
+/* =========================
+   CELULARES MUITO PEQUENOS
+========================= */
+
+@media (max-width: 320px) {
+
+    .areaFormulario {
+        padding: 15px 8px;
+    }
+
+    .cartaoCadastro {
+        padding: 20px 15px;
+    }
+
+    .titulo {
+        font-size: 1.15rem;
+    }
+
+    .grupoEntrada {
+        margin-bottom: 12px;
+    }
+
+    .entrada {
+        padding: 8px 0;
+        font-size: 0.85rem;
+    }
+
+    .botaoCadastrar,
+    .botaoLogin {
+        font-size: 0.8rem;
+    }
+}

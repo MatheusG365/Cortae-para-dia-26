@@ -1,0 +1,453 @@
+.etapa {
+    width: 100%;
+    min-height: 610px;
+    padding: 30px 0 60px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #fff;
+    animation: aparecer 0.5s ease;
+}
+
+.topo {
+    width: min(1100px, calc(100% - 50px));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.botaoVoltar,
+.botaoPular {
+    border: none;
+    background: #000;
+    color: #fff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.botaoVoltar {
+    min-width: 75px;
+    height: 25px;
+    padding: 0 16px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.botaoVoltar svg {
+    display: none;
+}
+
+.botaoPular {
+    background: transparent;
+    color: #000;
+    padding: 7px 12px;
+    font-size: 11px;
+}
+
+.botaoVoltar:hover,
+.botaoPular:hover {
+    transform: translateY(-2px);
+}
+
+.areaPrincipal {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.tituloArea {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.tituloArea h1 {
+    margin: 0;
+    color: #050505;
+    font-size: 29px;
+    line-height: 1.15;
+    font-weight: 900;
+    font-style: italic;
+}
+
+.tituloArea p {
+    display: block;
+    margin: 10px 0 0;
+    color: #555;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.inputArquivo {
+    display: none;
+}
+
+.origensFoto {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: 0 0 14px;
+    max-width: 100%;
+}
+
+.origensFoto button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 13px;
+    border: 1px solid #bbb;
+    border-radius: 20px;
+    background: #fff;
+    color: #222;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.origensFoto .origemAtiva {
+    border-color: #000;
+    background: #000;
+    color: #fff;
+}
+
+.areaUpload {
+    width: min(480px, 100%);
+    max-width: 100%;
+    height: 120px;
+    border: 2px dashed #777;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+    background: #fff;
+    transition: all 0.3s ease;
+}
+
+.areaUpload:hover {
+    border-color: #000;
+    background: #fafafa;
+    transform: translateY(-2px);
+}
+
+.areaUpload.arrastando {
+    border-color: #000;
+    background: #f1f1f1;
+    transform: scale(1.02);
+}
+
+.areaUpload.comImagem {
+    height: 300px;
+    border-style: solid;
+}
+
+.iconeUpload {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.iconeUpload svg {
+    width: 32px;
+    height: 32px;
+    stroke-width: 1.8;
+}
+
+.areaUpload strong {
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.areaUpload span {
+    margin-top: 5px;
+    font-size: 10px;
+    color: #555;
+}
+
+.preview {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.overlayImagem {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #fff;
+    background: rgba(0, 0, 0, 0);
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.preview:hover .overlayImagem {
+    background: rgba(0, 0, 0, 0.55);
+    opacity: 1;
+}
+
+.overlayImagem svg {
+    width: 30px;
+    height: 30px;
+}
+
+.overlayImagem span {
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dicas {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 18px;
+    margin-top: 15px;
+    max-width: 100%;
+}
+
+.dica {
+    width: 125px;
+    max-width: 100%;
+    flex: 1 1 88px;
+    min-width: 0;
+    height: 75px;
+    border: 1px solid #aaa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    transition: all 0.25s ease;
+}
+
+.dica:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.iconeDica {
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.iconeDica svg {
+    width: 25px;
+    height: 25px;
+    stroke-width: 1.8;
+}
+
+.dica strong {
+    font-size: 10px;
+    font-weight: 800;
+}
+
+.botaoAnalise,
+.botaoPrincipal {
+    margin-top: 25px;
+    border: none;
+    background: #000;
+    color: #fff;
+    padding: 12px 25px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.botaoAnalise:hover:not(:disabled),
+.botaoPrincipal:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+}
+
+.botaoAnalise:disabled,
+.botaoPrincipal:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.botaoAnalise:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+}
+
+.botaoAnalise:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+@keyframes aparecer {
+    from {
+        opacity: 0;
+        transform: translateX(25px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@media (max-width: 700px) {
+    .etapa {
+        min-height: 580px;
+        padding: 20px 0 50px;
+    }
+
+    .topo {
+        width: calc(100% - 30px);
+    }
+
+    .tituloArea {
+        margin-bottom: 18px;
+        padding: 0 15px;
+    }
+
+    .tituloArea h1 {
+        font-size: 24px;
+    }
+
+    .tituloArea p {
+        font-size: 11px;
+    }
+
+    .areaUpload {
+        width: calc(100% - 40px);
+        max-width: 480px;
+        height: 120px;
+    }
+
+    .areaUpload.comImagem {
+        height: 280px;
+    }
+
+    .areaUpload strong {
+        font-size: 12px;
+        text-align: center;
+        padding: 0 15px;
+    }
+
+    .dicas {
+        width: calc(100% - 30px);
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .dica {
+        width: 110px;
+        height: 70px;
+    }
+
+    .dica strong {
+        font-size: 9px;
+    }
+}
+
+@media (max-width: 480px) {
+    .etapa {
+        padding-top: 15px;
+    }
+
+    .botaoVoltar {
+        min-width: 70px;
+        height: 24px;
+        font-size: 10px;
+    }
+
+    .botaoPular {
+        font-size: 10px;
+    }
+
+    .tituloArea h1 {
+        font-size: 21px;
+    }
+
+    .tituloArea p {
+        font-size: 10px;
+    }
+
+    .areaUpload {
+        width: calc(100% - 30px);
+        height: 115px;
+    }
+
+    .areaUpload.comImagem {
+        height: 250px;
+    }
+
+    .iconeUpload svg {
+        width: 29px;
+        height: 29px;
+    }
+
+    .areaUpload strong {
+        font-size: 10px;
+    }
+
+    .areaUpload span {
+        font-size: 8px;
+    }
+
+    .dicas {
+        gap: 7px;
+    }
+
+    .dica {
+        width: 95px;
+        height: 68px;
+    }
+
+    .iconeDica svg {
+        width: 22px;
+        height: 22px;
+    }
+
+    .dica strong {
+        font-size: 8px;
+    }
+
+    .botaoAnalise {
+        margin-top: 22px;
+        padding: 11px 20px;
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    .tituloArea h1 {
+        font-size: 19px;
+    }
+
+    .dica {
+        width: 88px;
+        height: 64px;
+    }
+
+    .dica strong {
+        font-size: 7px;
+    }
+}
+.avisoObrigatorio{margin:10px 0 0;padding:10px 14px;border-radius:10px;background:#fef3c7;border:1px solid #f59e0b;color:#92400e;font-size:13px;font-weight:700;text-align:center}
+.cameraArea{width:100%;display:flex;flex-direction:column;align-items:center;gap:12px}.videoCamera{width:min(420px,100%);max-height:320px;border-radius:14px;background:#000;object-fit:cover}.botoesCamera{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}.erroCamera{margin:0;color:#b91c1c;background:#fff1f2;border-radius:8px;padding:10px 14px;font-size:13px;font-weight:600;text-align:center}

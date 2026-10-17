@@ -1,0 +1,168 @@
+.pagina {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+}
+
+.conteudo {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.indicadorEtapas {
+    display: none;
+}
+
+.indicadorEtapas span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #d0d0d0;
+    transition: all 0.3s ease;
+}
+
+.indicadorEtapas span.ativa {
+    width: 22px;
+    border-radius: 10px;
+    background-color: #000;
+}
+
+@media (max-width: 700px) {
+    .indicadorEtapas {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        padding: 15px 0 5px;
+    }
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.65);
+    animation: overlayEntrada 0.25s ease;
+}
+
+.modal {
+    width: min(520px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 26px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+    text-align: center;
+    animation: modalEntrada 0.3s ease;
+}
+
+.modal h2 {
+    margin: 0;
+    color: #151515;
+    font-size: 22px;
+}
+
+.modal p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.fotoModal {
+    width: 100%;
+    max-height: 55vh;
+    object-fit: contain;
+    border-radius: 12px;
+    background: #f0f0f0;
+}
+
+.botaoModal {
+    width: 100%;
+    padding: 14px;
+    border: 0;
+    border-radius: 10px;
+    background: #171717;
+    color: #fff;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background 0.25s ease, transform 0.15s ease;
+}
+
+.botaoModal:hover {
+    background: #f28c00;
+}
+
+.botaoModal:active {
+    transform: scale(0.98);
+}
+
+.modalAcoes {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.botaoModalSecundario {
+    flex: 1;
+    padding: 14px;
+    border: 2px solid #171717;
+    border-radius: 10px;
+    background: #fff;
+    color: #171717;
+    font-weight: 800;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.botaoModalSecundario:hover {
+    background: #f5f5f5;
+}
+
+.botaoModalSecundario:active {
+    transform: scale(0.98);
+}
+
+@keyframes overlayEntrada {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes modalEntrada {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@media (max-width: 400px) {
+    .overlay {
+        padding: 12px;
+    }
+
+    .modal {
+        padding: 20px 14px;
+        gap: 12px;
+    }
+
+    .modal h2 {
+        font-size: 19px;
+    }
+
+    .fotoModal {
+        max-height: 50vh;
+    }
+}

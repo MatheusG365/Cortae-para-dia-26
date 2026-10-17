@@ -1,0 +1,40 @@
+.pagina { min-height: calc(100vh - 150px); padding: 48px 20px; background: #f5f5f5; }
+.cartao { width: min(680px, 100%); margin: auto; padding: 34px; border-radius: 18px; background: #fff; box-shadow: 0 12px 35px #00000012; }
+.voltar { display: inline-flex; align-items: center; gap: 6px; border: 0; background: transparent; color: #222; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.eyebrow { margin: 28px 0 8px; color: #d57900; font-size: 11px; font-weight: 900; letter-spacing: .12em; }
+.cartao h1 { margin: 0; color: #151515; font-size: clamp(25px, 5vw, 34px); }
+.subtitulo { margin: 12px 0 28px; color: #666; line-height: 1.55; }
+.lista { display: grid; gap: 10px; }
+.servico { width: 100%; max-width: 100%; padding: 15px; display: flex; flex-wrap: wrap; align-items: center; gap: 13px; border: 2px solid #e4e4e4; border-radius: 10px; background: #fff; color: #222; text-align: left; font: inherit; cursor: pointer; transition: border-color .25s ease, background .25s ease, transform .25s ease, box-shadow .25s ease; }
+.servico:hover, .ativo { border-color: #f28c00; background: #fff8ee; }
+.servico:active { transform: scale(.985); }
+.cartao { animation: cartaoEntrada .45s ease; }
+@keyframes cartaoEntrada { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.servico:hover, .ativo { border-color: #f28c00; background: #fff8ee; }
+.servico svg { color: #f28c00; font-size: 20px; flex-shrink: 0; }.servico span { display: grid; gap: 4px; min-width: 0; flex: 1 1 auto; }.servico small { color: #666; overflow-wrap: anywhere; }.servico b { margin-left: auto; font-size: 20px; }
+.continuar { width: 100%; margin-top: 26px; padding: 14px; border: 0; border-radius: 9px; background: #171717; color: #fff; font-weight: 800; cursor: pointer; }.continuar:disabled { opacity: .4; cursor: not-allowed; }.erro { color: #b42318; font-weight: 600; }
+.verMais { width: 100%; margin-top: 10px; padding: 12px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; transition: all .2s ease; }
+.verMais:hover { background: #fff; border-color: #f28c00; }
+.modalOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.modalServicos { background: #fff; border-radius: 16px; width: 100%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.modalServicosHeader { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; border-bottom: 1px solid #eee; }
+.modalServicosHeader h3 { margin: 0; font-size: 18px; font-weight: 800; }
+.modalServicosHeader button { background: none; border: none; font-size: 28px; cursor: pointer; color: #666; line-height: 1; }
+.modalServicosHeader button:hover { color: #000; }
+.modalServicosLista { overflow-y: auto; padding: 16px 24px; flex: 1; }
+.modalServicoItem { width: 100%; padding: 15px; display: flex; align-items: center; gap: 13px; border: 2px solid #e4e4e4; border-radius: 10px; background: #fff; color: #222; text-align: left; font: inherit; cursor: pointer; margin-bottom: 10px; transition: all .2s ease; }
+.modalServicoItem:hover, .modalServicoItem.ativo { border-color: #f28c00; background: #fff8ee; }
+.modalServicoItem svg { color: #f28c00; font-size: 20px; flex-shrink: 0; }
+.modalServicoItem span { display: grid; gap: 4px; min-width: 0; flex: 1 1 auto; }
+.modalServicoItem small { color: #666; overflow-wrap: anywhere; }
+.modalServicoItem b { margin-left: auto; font-size: 20px; }
+@media (max-width: 550px) {
+    .pagina { padding: 25px 14px; }
+    .cartao { padding: 24px 18px; }
+    .servico, .modalServicoItem { align-items: flex-start; gap: 10px; padding: 13px; }
+    .servico b, .modalServicoItem b { margin-left: 0; }
+    .modalOverlay { align-items: flex-end; padding: 0; }
+    .modalServicos { max-width: none; max-height: 88dvh; border-radius: 16px 16px 0 0; }
+    .modalServicosHeader { padding: 16px; }
+    .modalServicosLista { padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); }
+}

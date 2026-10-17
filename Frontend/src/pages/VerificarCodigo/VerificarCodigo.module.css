@@ -1,0 +1,106 @@
+.container {
+    width: 100%;
+    min-height: calc(100vh - 160px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--cor-fundo-b);
+    padding: 30px 20px;
+    box-sizing: border-box;
+}
+
+.card {
+    width: 100%;
+    max-width: 460px;
+    padding: 40px;
+    box-sizing: border-box;
+    border-radius: 18px;
+    background-color: var(--cor-card-3);
+    text-align: center;
+}
+
+.card h1 {
+    margin: 0 0 18px;
+    color: var(--cor-texto);
+    font-size: 1.5rem;
+    font-weight: 900;
+    font-style: italic;
+}
+
+.card p {
+    color: var(--cor-texto-categorizante);
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.card strong {
+    color: var(--cor-texto);
+}
+
+.card form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+}
+
+.codigo {
+    width: min(230px, 100%);
+    max-width: 100%;
+    height: 48px;
+    box-sizing: border-box;
+    border: 1px solid var(--cor-texto-categorizante);
+    border-radius: 8px;
+    background-color: transparent;
+    color: var(--cor-texto);
+    text-align: center;
+    letter-spacing: 6px;
+    font-size: 1.3rem;
+    outline: none;
+}
+
+.codigo:focus {
+    border-color: var(--cor-destaque);
+}
+
+.card button {
+    width: min(230px, 100%);
+    max-width: 100%;
+    height: 42px;
+    border: none;
+    border-radius: 7px;
+    background-color: var(--cor-botao-2);
+    color: var(--cor-texto);
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.card button:hover {
+    background-color: var(--cor-confirmar);
+    color: var(--cor-texto-2);
+}
+
+.card button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.erro,
+.sucesso {
+    margin-bottom: 18px;
+    font-weight: 700;
+}
+
+.erro {
+    color: var(--cor-destaque);
+}
+
+.sucesso {
+    color: var(--cor-confirmar);
+}
+
+@media (max-width: 520px) {
+    .card {
+        padding: 28px 20px;
+    }
+}

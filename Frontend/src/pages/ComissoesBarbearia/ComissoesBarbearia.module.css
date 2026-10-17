@@ -1,0 +1,19 @@
+.pagina { max-width: 1180px; margin: auto; padding: 40px 24px; min-height: 70vh; }
+.pagina header { border-left: 4px solid var(--cor-destaque); padding-left: 18px; margin-bottom: 24px; }
+.sobre { font-size: 12px; letter-spacing: .1em; font-weight: 800; }
+.pagina h1 { font-size: clamp(26px, 4vw, 38px); margin: 8px 0; }
+.pagina p { font-size: 14px; line-height: 1.7; color: var(--cor-texto-suave); overflow-wrap: anywhere; }
+.filtro { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 28px; }
+.pagina label { display: flex; flex-direction: column; gap: 8px; font-size: 13px; font-weight: 700; min-width: 0; }
+.pagina button { padding: 12px 16px; min-height: var(--altura-controle); background: #171717; color: white; font-size: 13px; font-weight: 800; border-radius: var(--raio-controle); }
+.totais { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
+.totais article { background: var(--cor-card); padding: 22px; border-radius: var(--raio-card); }
+.totais span { font-size: 14px; }.totais strong { display: block; font-size: 26px; margin-top: 12px; overflow-wrap: anywhere; }
+.equipe { display: grid; gap: 18px; }.profissional { border: 1px solid var(--cor-borda); padding: 22px; border-radius: var(--raio-card); min-width: 0; }
+.profissional h2 { font-size: 22px; margin-bottom: 12px; overflow-wrap: anywhere; }.profissional small { font-size: 13px; }
+.pagina .valor { color: var(--cor-texto); }.profissional summary { cursor: pointer; padding: 12px 0; font-size: 14px; font-weight: 700; line-height: 1.5; }
+.detalhes { display: grid; gap: 12px; margin-top: 12px; }.detalhes article { background: var(--cor-card); padding: 16px; border-radius: var(--raio-controle); }.detalhes h3 { font-size: 15px; overflow-wrap: anywhere; }
+.pagina .erro { color: var(--cor-texto-negativo); }
+.aviso { border-left: 4px solid var(--cor-destaque); padding: 12px 18px; background: var(--cor-card); border-radius: var(--raio-controle); }
+@media(max-width: 750px) { .totais { grid-template-columns: 1fr; } }
+@media(max-width: 400px) { .pagina { padding: 28px 14px; }.filtro label, .filtro button { flex: 1 1 100%; }.profissional { padding: 16px; } }

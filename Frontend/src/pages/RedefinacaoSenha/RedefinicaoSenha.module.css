@@ -1,0 +1,521 @@
+.container {
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh - 160px);
+    background-color: var(--cor-fundo-b);
+    display: flex;
+    flex-direction: column;
+}
+
+.botaoVoltar {
+    position: absolute;
+    top: 16px;
+    left: 24px;
+    width: 130px;
+    height: 34px;
+    background-color: var(--cor-botao-2);
+    color: var(--cor-texto);
+    border: none;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.botaoVoltar:hover {
+    background-color: var(--cor-confirmar);
+    color: var(--cor-texto-2);
+    transform: translateY(-1px);
+}
+
+.areaRedefinicao {
+    width: 100%;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+    padding: clamp(60px, 12vh, 120px) 14px 0;
+    margin-bottom: 80px;
+}
+
+.conteudo {
+    width: 100%;
+    max-width: 450px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.titulo {
+    margin: 0 0 55px;
+    color: var(--cor-texto-2);
+    font-size: 1.35rem;
+    font-weight: 800;
+    text-align: center;
+}
+
+.formulario {
+    width: min(240px, 100%);
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.grupoEntrada {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.rotulo {
+    margin-bottom: 6px;
+    color: var(--cor-texto-2);
+    font-size: 0.82rem;
+    font-weight: 500;
+}
+
+.entrada {
+    width: 100%;
+    height: 40px;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    background-color: var(--cor-fundo-b);
+    border: 1px solid var(--cor-texto-categorizante);
+    border-radius: 6px;
+    color: var(--cor-texto-2);
+    font-size: 0.8rem;
+    outline: none;
+    transition: border-color 0.2s ease;
+    margin-bottom: 12px;
+}
+
+.entrada::placeholder {
+    color: var(--cor-texto-categorizante);
+}
+
+.entrada:focus {
+    border-color: var(--cor-destaque);
+}
+
+.botaoEnviar {
+    width: min(240px, 100%);
+    max-width: 100%;
+    height: 40px;
+    margin-top: 10px;
+    background-color: var(--cor-botao-2);
+    color: var(--cor-texto);
+    border: none;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.botaoEnviar:hover {
+    background-color: var(--cor-confirmar);
+    color: var(--cor-texto-2);
+    transform: translateY(-1px);
+}
+
+.etapas {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 40px;
+}
+
+.etapa {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.etapa span {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: var(--cor-card);
+    color: var(--cor-texto-categorizante);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.etapa p {
+    margin: 0;
+    font-size: 12px;
+    color: var(--cor-texto-categorizante);
+}
+
+.etapaAtiva span {
+    background-color: var(--cor-destaque);
+    color: var(--cor-texto-2);
+}
+
+.etapaAtiva p {
+    color: var(--cor-texto-2);
+    font-weight: bold;
+}
+
+.linha {
+    width: 55px;
+    height: 2px;
+    background-color: var(--cor-texto-categorizante);
+    margin: 0 10px;
+    margin-bottom: 20px;
+}
+
+.otpContainer {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 25px 0;
+}
+
+.entradaCodigo {
+    width: 45px;
+    height: 50px;
+    border: 1px solid var(--cor-texto-categorizante);
+    background-color: var(--cor-fundo-b);
+    color: var(--cor-texto-2);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    outline: none;
+}
+
+.entradaCodigo:focus {
+    border: 2px solid var(--cor-destaque);
+}
+
+.subtitulo {
+    text-align: center;
+    color: var(--cor-texto-categorizante);
+    margin-top: -15px;
+    margin-bottom: 30px;
+    line-height: 1.5;
+}
+
+.subtitulo strong {
+    color: var(--cor-texto-2);
+}
+
+.botaoEnviar:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ==================================================
+   OVERLAY
+================================================== */
+
+.overlay {
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    background: rgba(0, 0, 0, 0.55);
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    z-index: 999999;
+
+    padding: 20px;
+
+    box-sizing: border-box;
+}
+
+
+/* ==================================================
+   CARD
+================================================== */
+
+.card {
+
+    position: relative;
+
+    width: 100%;
+
+    max-width: 430px;
+
+    min-height: 260px;
+
+    padding: 35px 30px 30px;
+
+    border-radius: 20px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    box-sizing: border-box;
+
+    z-index: 1000000;
+
+    box-shadow:
+            0 20px 50px rgba(0, 0, 0, 0.25);
+
+    animation: aparecer 0.25s ease-out;
+}
+
+
+/* ==================================================
+   SUCESSO
+================================================== */
+
+.cardSucesso {
+
+    background-color: #DCFCE7;
+
+}
+
+
+/* ==================================================
+   ERRO
+================================================== */
+
+.cardErro {
+
+    background-color: #FEE2E2;
+
+}
+
+
+/* ==================================================
+   ANIMAÇÃO
+================================================== */
+
+@keyframes aparecer {
+
+    from {
+
+        opacity: 0;
+
+        transform: scale(0.9);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform: scale(1);
+
+    }
+
+}
+
+
+/* ==================================================
+   BOTÃO FECHAR
+================================================== */
+
+.fechar {
+
+    position: absolute;
+
+    top: 12px;
+    right: 12px;
+
+    width: 36px;
+    height: 36px;
+
+    border: none;
+
+    background: transparent;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    font-size: 24px;
+
+    color: #000000;
+
+    border-radius: 50%;
+
+    transition: 0.2s;
+
+}
+
+
+.fechar:hover {
+
+    background: rgba(0, 0, 0, 0.08);
+
+}
+
+
+/* ==================================================
+   ÍCONE
+================================================== */
+
+.icone {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    margin-bottom: 15px;
+
+    font-size: 60px;
+
+}
+
+
+.cardSucesso .icone {
+
+    color: #15803D;
+
+}
+
+
+.cardErro .icone {
+
+    color: #B91C1C;
+
+}
+
+
+/* ==================================================
+   TÍTULO
+================================================== */
+
+.card h2 {
+
+    margin: 0 0 12px;
+
+    font-size: 24px;
+
+    font-weight: 700;
+
+    color: #000000;
+
+}
+
+
+/* ==================================================
+   TEXTO
+================================================== */
+
+.card p {
+
+    margin: 0 0 25px;
+
+    max-width: 340px;
+
+    font-size: 16px;
+
+    line-height: 1.5;
+
+    color: #000000;
+
+}
+
+
+/* ==================================================
+   BOTÃO OK
+================================================== */
+
+.botao {
+
+    width: 100%;
+
+    max-width: 250px;
+
+    height: 45px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background-color: #000000;
+
+    color: #FFFFFF;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+
+}
+
+
+.botao:hover {
+
+    opacity: 0.85;
+
+}
+
+
+.botao:active {
+
+    transform: scale(0.98);
+
+}
+@media (max-width: 600px) {
+    .botaoVoltar {
+        left: 16px;
+        width: 115px;
+        height: 32px;
+    }
+
+    .areaRedefinicao {
+        padding-top: 105px;
+    }
+
+    .conteudo {
+        max-width: 350px;
+    }
+
+    .titulo {
+        font-size: 1.15rem;
+        margin-bottom: 45px;
+    }
+
+    .formulario {
+        width: 230px;
+    }
+
+    .botaoEnviar {
+        width: 230px;
+    }
+
+    .entrada {
+        height: 38px;
+    }
+}

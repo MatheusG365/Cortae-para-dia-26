@@ -1,0 +1,28 @@
+.pagina { max-width: 1180px; margin: auto; padding: 40px 24px; min-height: 70vh; }
+.pagina header { border-left: 4px solid var(--cor-destaque); padding-left: 18px; margin-bottom: 24px; }
+.sobre { font-size: 12px; letter-spacing: .1em; font-weight: 800; }
+.pagina h1 { font-size: clamp(26px, 4vw, 38px); margin: 8px 0; }
+.pagina p { font-size: 14px; line-height: 1.7; color: var(--cor-texto-suave); }
+.filtro, .acoes { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.filtro { margin-bottom: 28px; }
+.pagina label { display: flex; flex-direction: column; gap: 8px; font-size: 13px; font-weight: 700; }
+.pagina button { padding: 12px 16px; min-height: var(--altura-controle); background: #171717; color: #fff; font-size: 13px; font-weight: 800; border-radius: var(--raio-controle); }
+.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+.cards article { border: 1px solid var(--cor-borda); border-radius: var(--raio-card); padding: 20px; }
+.cards span { font-size: 14px; color: var(--cor-texto-suave); }
+.cards strong { display: block; font-size: 32px; margin-top: 12px; }
+.financeiro { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 24px 0; }
+.avaliacoes,.avaliacoes *{font-family:'Segoe UI',system-ui,Arial,sans-serif;box-sizing:border-box}.avaliacoes{display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:22px;margin:24px 0;background:#fff8e9;border:1px solid #eed9ae;border-radius:14px}.avaliacoes h2{font-size:18px;font-weight:600;margin:0 0 6px}.avaliacoes p{margin:0}.avaliacoes>div:last-child{display:grid;gap:6px}.avaliacoes strong{font-size:25px;font-weight:600;color:#986000}.avaliacoes span{font-size:13px;color:#676767}
+.financeiro article { background: var(--cor-card); padding: 22px; border-radius: var(--raio-card); }
+.financeiro h2 { font-size: 16px; margin-bottom: 14px; }
+.financeiro strong { font-size: 24px; display: block; margin-bottom: 12px; }
+.secao { margin-top: 32px; }
+.secao h2 { font-size: 22px; margin-bottom: 18px; }
+.agenda { display: grid; gap: 14px; }
+.agenda article { border: 1px solid var(--cor-borda); border-radius: var(--raio-card); padding: 20px; display: flex; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
+.agenda h3 { font-size: 17px; margin-bottom: 8px; }
+.pagina .erro { color: var(--cor-texto-negativo); }
+.overlay { position: fixed; inset: 0; z-index: 1200; background: #0009; display: grid; place-items: center; padding: 20px; }
+.modal { width: min(440px, 100%); padding: 24px; border-radius: var(--raio-card); background: #fff; display: grid; gap: 18px; max-height: 90dvh; overflow: auto; }
+@media(max-width: 800px) { .financeiro { grid-template-columns: 1fr; } .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media(max-width: 400px) { .pagina { padding: 28px 14px; } .filtro label { flex: 1 1 100%; } .filtro button { flex: 1; } .cards { gap: 12px; } .cards article { padding: 16px; } .acoes button { flex: 1 1 auto; } }

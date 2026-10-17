@@ -1,0 +1,9 @@
+export function chaveItem(item) { return item.chave_item || `${item.id_produto}:${item.id_variacao ?? 'base'}`; }
+export function corpoQuantidade(item, quantidade) { return { quantidade, id_variacao: item.id_variacao ?? null }; }
+export function variacaoSelecionada(produto, id) { return (produto?.variacoes || []).find(v => String(v.id_variacao) === String(id) && v.ativo !== false) || null; }
+export function dadosCompra(produto, id) { const v = variacaoSelecionada(produto, id); return { variante: v, preco: v?.preco ?? produto?.preco ?? 0, estoque: v?.estoque ?? (produto?.tem_variacoes ? 0 : produto?.estoque ?? 0), permitido: !produto?.tem_variacoes || !!v }; }
+export function cupomNormalizado(valor) { return String(valor || '').trim().toUpperCase(); }
+export function nomeVariacao(variacao) { return typeof variacao === 'string' ? variacao : variacao?.nome || [variacao?.tamanho,variacao?.cor,variacao?.volume].filter(Boolean).join(' / '); }
+export function margemProduto(preco, custo) { if (custo == null || custo === '' || !Number.isFinite(Number(custo))) return null; const venda = Number(preco); return venda > 0 ? (venda - Number(custo)) / venda * 100 : null; }
+export function formComercial(produto) { return { id_fornecedor: produto?.id_fornecedor ?? '', custo_compra: produto?.custo_compra ?? '', promocao_preco: produto?.promocao_preco ?? '', promocao_inicio: produto?.promocao_inicio?.slice(0, 10) ?? '', promocao_fim: produto?.promocao_fim?.slice(0, 10) ?? '', lancamento_ate: produto?.lancamento_ate?.slice(0, 10) ?? '' }; }
+export function payloadComercial(form) { return { ...form, id_fornecedor: form.id_fornecedor ? Number(form.id_fornecedor) : null, custo_compra: form.custo_compra === '' ? null : Number(form.custo_compra), promocao_preco: form.promocao_preco === '' ? null : Number(form.promocao_preco), promocao_inicio: form.promocao_inicio || null, promocao_fim: form.promocao_fim || null, lancamento_ate: form.lancamento_ate || null }; }

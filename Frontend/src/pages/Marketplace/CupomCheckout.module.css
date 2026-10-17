@@ -1,0 +1,44 @@
+.cupom {
+    margin:24px 0;
+    padding:20px;
+    border:1px solid color-mix(in srgb,var(--loja-texto) 18%,var(--loja-fundo));
+    border-left:4px solid var(--loja-destaque);
+    border-radius:14px;
+    background:var(--loja-fundo);
+    color:var(--loja-texto);
+}
+.cabecalho { display:flex; align-items:center; gap:12px; margin-bottom:17px; }
+.icone { display:grid; place-items:center; flex:0 0 44px; height:44px; border-radius:12px; background:var(--loja-destaque); color:var(--loja-texto-acao,#171717); }
+.cupom .cabecalho h3 { margin:0 0 4px; font-size:17px; letter-spacing:-.2px; }
+.cupom p { margin:0; font-size:12px; line-height:1.5; }
+.controles { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; }
+.cupom .campo { display:flex; flex-direction:column; gap:6px; margin:0; font-size:11px; font-weight:650; }
+.campo input { text-transform:uppercase; letter-spacing:.6px; min-height:44px; }
+.campo input::placeholder { text-transform:none; letter-spacing:0; }
+.controles button { min-height:44px; white-space:nowrap; }
+.estado { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:14px; font-size:12px; }
+.confirmado { display:flex; align-items:center; gap:10px; min-width:0; }
+.confirmado>svg { flex:0 0 20px; }
+.confirmado strong { display:block; font-size:14px; line-height:1.4; }
+.confirmado span { display:block; margin-top:4px; font-size:11px; line-height:1.6; }
+.codigo { display:inline-block; max-width:100%; padding:1px 6px; border:1px dashed currentColor; border-radius:5px; font-size:10px; letter-spacing:.4px; overflow-wrap:anywhere; }
+.cupom .estado button.remover, .cupom .estado button.remover:hover {
+    flex:0 0 auto;
+    padding:2px 0;
+    min-height:32px;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    color:inherit;
+    font-size:11px;
+    font-weight:600;
+    text-decoration:underline;
+    text-underline-offset:3px;
+}
+@media(max-width:480px) {
+    .cupom { padding:16px; }
+    .controles { grid-template-columns:1fr; }
+    .controles button { width:100%; }
+    .estado { align-items:flex-start; flex-direction:column; gap:8px; }
+    .cabecalho { align-items:flex-start; gap:10px; }
+}

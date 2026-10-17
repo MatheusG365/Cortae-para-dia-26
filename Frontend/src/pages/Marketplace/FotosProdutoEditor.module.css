@@ -1,0 +1,14 @@
+.editor { border:1px solid #dddfe4; border-radius:16px; padding:20px; margin:20px 0; display:grid; gap:12px; background:var(--cor-fundo,#fafafa); }
+.cabecalho { display:flex; justify-content:space-between; gap:16px; align-items:center; }
+.cabecalho h3 { margin:0 0 6px; }
+.cabecalho p,.editor small { margin:0; color:#5b616e; font-size:.85rem; }
+.cabecalho span { flex-shrink:0; font-size:.8rem; font-weight:700; }
+.seletor { display:grid; gap:8px; font-weight:700; }
+.seletor input { width:100%; max-width:100%; padding:12px; border:1px dashed #b8bcc6; border-radius:10px; background:#fff; color:#252525; }
+.galeria { display:grid; grid-template-columns:repeat(auto-fill,minmax(115px,1fr)); gap:12px; }
+.galeria figure { margin:0; display:grid; gap:6px; min-width:0; }
+.galeria img,.galeria figure>div { width:100%; height:120px; border-radius:10px; object-fit:cover; background:#eee; }
+.galeria button { padding:7px; font-size:.8rem; }
+.editor summary { cursor:pointer; font-size:.85rem; }
+.editor details label { margin-top:12px; display:grid; gap:8px; }
+@media(max-width:540px) { .editor{padding:14px}.cabecalho{align-items:flex-start}.galeria{grid-template-columns:repeat(2,minmax(0,1fr))} }

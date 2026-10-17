@@ -1,0 +1,9 @@
+.pagina { min-height: 65vh; padding: 44px 20px; display: grid; place-items: center; }
+.card { width: min(480px, 100%); padding: 28px; border: 1px solid var(--cor-borda); border-radius: var(--raio-card); background: #fff; }
+.card h1 { font-size: clamp(23px, 4vw, 30px); margin-bottom: 18px; }
+.card p { font-size: 14px; line-height: 1.8; margin-bottom: 24px; color: var(--cor-texto-suave); }
+.card form, .card label, .grupoEntrada { display: flex; flex-direction: column; gap: 12px; }
+.card form { gap: 20px; }
+.card label { font-size: 13px; font-weight: 700; }
+.card button, .card a { display: inline-flex; justify-content: center; padding: 14px; border-radius: var(--raio-controle); background: #171717; color: #fff; font-weight: 800; font-size: 14px; }
+@media(max-width: 400px) { .pagina { padding: 28px 14px; } .card { padding: 22px 18px; } }

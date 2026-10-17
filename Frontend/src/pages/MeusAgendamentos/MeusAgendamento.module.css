@@ -1,0 +1,1054 @@
+/* =====================================================
+   CONFIGURAÇÕES GERAIS
+===================================================== */
+
+.pagina {
+    min-height: 100vh;
+    width: 100%;
+
+    background: #ffffff;
+    color: #000000;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow-x: hidden;
+}
+
+.conteudo {
+    width: 100%;
+    max-width: 1150px;
+
+    margin: 0 auto;
+
+    padding: 65px 30px 100px;
+
+    box-sizing: border-box;
+
+    flex: 1;
+}
+
+
+/* =====================================================
+   ANIMAÇÕES
+===================================================== */
+
+@keyframes aparecerTitulo {
+
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+@keyframes aparecerAbas {
+
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+@keyframes aparecerCard {
+
+    from {
+        opacity: 0;
+        transform: translateY(35px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+@keyframes aparecerModal {
+
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+
+}
+
+@keyframes pulsar {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.04);
+    }
+
+}
+
+
+/* =====================================================
+   TÍTULO
+===================================================== */
+
+.titulo {
+    text-align: center;
+
+    font-size: clamp(22px, 7vw, 34px);
+    font-weight: 950;
+
+    letter-spacing: -1.2px;
+
+    margin: 0;
+
+    animation: aparecerTitulo 0.7s ease both;
+}
+
+
+/* =====================================================
+   ABAS
+===================================================== */
+
+.abas {
+    width: min(290px, 100%);
+    max-width: 100%;
+    height: 55px;
+
+    margin: 45px auto 42px;
+
+    padding: 5px;
+
+    background: #f1f1f1;
+
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+
+    animation: aparecerAbas 0.7s ease both;
+    animation-delay: 0.15s;
+
+    box-sizing: border-box;
+}
+
+.abas button {
+    flex: 1;
+
+    height: 100%;
+
+    border: none;
+    border-radius: 8px;
+
+    background: transparent;
+
+    font-family: inherit;
+
+    font-size: 15px;
+    font-weight: 750;
+
+    color: #606060;
+
+    cursor: pointer;
+
+    transition:
+            background 0.3s ease,
+            color 0.3s ease,
+            transform 0.25s ease;
+}
+
+.abas button:hover {
+    color: #000000;
+}
+
+.abas button:active {
+    transform: scale(0.96);
+}
+
+.abas .abaAtiva {
+    background: #ffffff;
+
+    color: #000000;
+
+    box-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+
+/* =====================================================
+   LISTA DE AGENDAMENTOS
+===================================================== */
+
+.listaAgendamentos {
+    display: flex;
+    flex-direction: column;
+
+    gap: 20px;
+}
+
+
+/* =====================================================
+   CARD
+===================================================== */
+
+.cardAgendamento {
+    width: 100%;
+
+    padding: 18px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #dedede;
+
+    border-radius: 17px;
+
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr) minmax(300px, 340px);
+    align-items: center;
+
+    gap: 16px;
+
+    background: #ffffff;
+
+    box-shadow:
+            0 5px 12px rgba(0, 0, 0, 0.035);
+
+    animation: aparecerCard 0.7s ease both;
+
+    transition:
+            transform 0.35s ease,
+            box-shadow 0.35s ease,
+            border-color 0.35s ease;
+}
+
+.cardAgendamento:hover {
+    transform: translateY(-5px);
+
+    border-color: #cfcfcf;
+
+    box-shadow:
+            0 14px 30px rgba(0, 0, 0, 0.08);
+}
+
+
+/* =====================================================
+   IMAGEM
+===================================================== */
+
+.imagemContainer {
+    width: 80px;
+    height: 80px;
+
+    flex-shrink: 0;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    background: #eeeeee;
+
+    position: relative;
+}
+
+.imagemContainer img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+
+    opacity: 0;
+
+    transition:
+            opacity 0.5s ease,
+            transform 0.5s ease;
+}
+
+.imagemContainer img.imagemVisivel {
+    opacity: 1;
+}
+
+.cardAgendamento:hover .imagemContainer img {
+    transform: scale(1.07);
+}
+
+.placeholderImagem {
+    position: absolute;
+
+    inset: 0;
+
+    background: linear-gradient(
+            90deg,
+            #eeeeee 25%,
+            #e4e4e4 50%,
+            #eeeeee 75%
+    );
+
+    background-size: 200% 100%;
+
+    animation: carregandoImagem 1.5s infinite;
+}
+
+@keyframes carregandoImagem {
+
+    from {
+        background-position: 200% 0;
+    }
+
+    to {
+        background-position: -200% 0;
+    }
+
+}
+
+
+/* =====================================================
+   INFORMAÇÕES
+===================================================== */
+
+.informacoes {
+    flex: 1;
+
+    min-width: 0;
+}
+
+.informacoes h2 {
+    margin: 0 0 6px;
+
+    font-size: 18px;
+    font-weight: 850;
+
+    letter-spacing: -0.4px;
+    overflow-wrap: anywhere;
+}
+
+.servico {
+    margin: 0 0 7px;
+
+    font-size: 14px;
+
+    color: #666666;
+    overflow-wrap: anywhere;
+}
+
+.detalhesData {
+    display: flex;
+    align-items: center;
+
+    gap: 8px 14px;
+
+    flex-wrap: wrap;
+}
+
+.detalhesData span {
+    display: flex;
+    align-items: center;
+
+    gap: 7px;
+
+    font-size: 13px;
+    font-weight: 750;
+
+    color: #161616;
+}
+
+.detalhesData svg {
+    font-size: 17px;
+}
+
+
+/* =====================================================
+   VALOR E STATUS
+===================================================== */
+
+.acoesAgendamento {
+    display: flex;
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 10px;
+
+    min-width: 0;
+}
+
+.valorStatus {
+    display: flex;
+    flex-wrap: wrap;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 8px 12px;
+}
+
+.valorStatus strong {
+    font-size: 18px;
+    font-weight: 950;
+
+    white-space: nowrap;
+}
+
+.status {
+    padding: 5px 15px;
+
+    border-radius: 20px;
+
+    background: #e8e8e8;
+
+    color: #9ca3af;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.status.concluido {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status.cancelado {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+
+/* =====================================================
+   BOTÕES DO CARD
+===================================================== */
+
+.botoesCard {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    align-items: center;
+
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.botoesCard > button {
+    min-height: 40px;
+    min-width: 0;
+
+    padding: 8px 6px;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+
+    border-radius: 7px;
+
+    font-family: inherit;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+            transform 0.25s ease,
+            background 0.25s ease,
+            box-shadow 0.25s ease;
+}
+
+.botoesCard > button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+            0 5px 12px rgba(0, 0, 0, 0.08);
+}
+
+.botoesCard > button:active {
+    transform: scale(0.95);
+}
+
+.botoesCard > button:focus-visible {
+    outline: 3px solid #f90;
+    outline-offset: 3px;
+}
+
+.pagamentoCard {
+    width: 100%;
+    min-width: 0;
+}
+
+.pagamentoCard > section {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 9px 12px;
+}
+
+.pagamentoCard > section > p {
+    margin: 3px 0;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+.botaoDetalhes {
+    background: #ffffff;
+
+    color: #000000;
+
+    border: 1px solid #000000;
+}
+
+.botaoDetalhes:hover {
+    background: #f5f5f5;
+}
+
+.botaoCancelar {
+    background: #000000;
+
+    color: #ffffff;
+
+    border: 1px solid #000000;
+}
+
+.botaoCancelar:hover {
+    background: #292929;
+}
+
+
+/* =====================================================
+   ESTADO VAZIO
+===================================================== */
+
+.semAgendamentos {
+    min-height: 230px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+
+    color: #777777;
+
+    text-align: center;
+}
+
+.semAgendamentos svg {
+    font-size: 42px;
+
+    color: #aaaaaa;
+
+    animation: pulsar 2s infinite;
+}
+
+.semAgendamentos h2 {
+    margin: 0;
+
+    font-size: 20px;
+
+    color: #222222;
+}
+
+.semAgendamentos p {
+    margin: 0;
+
+    font-size: 14px;
+}
+
+
+/* =====================================================
+   MODAL
+===================================================== */
+
+.overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1000;
+
+    background: rgba(0, 0, 0, 0.45);
+
+    backdrop-filter: blur(5px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    animation: aparecerModal 0.25s ease both;
+}
+
+.modal {
+    width: 100%;
+    max-width: 430px;
+
+    padding: 35px;
+
+    border-radius: 18px;
+
+    background: #ffffff;
+
+    box-shadow:
+            0 20px 60px rgba(0, 0, 0, 0.2);
+
+    position: relative;
+    max-height: 90dvh;
+    overflow-y: auto;
+    box-sizing: border-box;
+
+    animation: aparecerModal 0.35s ease both;
+}
+
+.botaoAvaliar { border:1px solid #e5c27f;background:#fff3d9;color:#815500; }
+.botaoAvaliar:focus-visible { outline:3px solid #f90;outline-offset:3px; }
+
+.fecharModal {
+    position: absolute;
+
+    top: 15px;
+    right: 15px;
+
+    width: 32px;
+    height: 32px;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #f2f2f2;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition:
+            transform 0.25s ease,
+            background 0.25s ease;
+}
+
+.fecharModal:hover {
+    background: #e5e5e5;
+    transform: rotate(90deg);
+}
+
+.iconeModal {
+    display: block;
+
+    margin: 0 auto 15px;
+
+    font-size: 34px;
+}
+
+.modal h2 {
+    text-align: center;
+
+    font-size: 21px;
+
+    margin: 0 0 25px;
+}
+
+.linhaModal {
+    display: flex;
+    justify-content: space-between;
+
+    gap: 15px;
+
+    padding: 13px 0;
+
+    border-bottom: 1px solid #eeeeee;
+
+    font-size: 13px;
+}
+
+.linhaModal span {
+    color: #888888;
+}
+
+.linhaModal strong {
+    text-align: right;
+}
+
+.botaoFechar {
+    width: 100%;
+    height: 43px;
+
+    margin-top: 25px;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #000000;
+    color: #ffffff;
+
+    font-family: inherit;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    cursor: pointer;
+
+    transition:
+            background 0.25s ease,
+            transform 0.25s ease;
+}
+
+.botaoFechar:hover {
+    background: #292929;
+    transform: translateY(-2px);
+}
+
+
+/* =====================================================
+   RESPONSIVIDADE — TABLET
+===================================================== */
+
+@media (max-width: 900px) {
+
+    .conteudo {
+        padding: 50px 25px 80px;
+    }
+
+    .cardAgendamento {
+        grid-template-columns: 72px minmax(0, 1fr) 300px;
+        gap: 14px;
+        padding: 16px;
+    }
+
+    .imagemContainer {
+        width: 72px;
+        height: 72px;
+    }
+
+    .informacoes h2 {
+        font-size: 18px;
+    }
+
+    .servico {
+        font-size: 13px;
+    }
+
+    .valorStatus strong {
+        font-size: 18px;
+    }
+
+}
+
+
+/* =====================================================
+   RESPONSIVIDADE — CELULAR
+===================================================== */
+
+@media (max-width: 650px) {
+
+    .conteudo {
+        padding: 40px 18px 60px;
+    }
+
+    .titulo {
+        font-size: 28px;
+    }
+
+    .abas {
+        width: 270px;
+
+        margin-top: 35px;
+        margin-bottom: 35px;
+    }
+
+    .listaAgendamentos {
+        gap: 16px;
+    }
+
+    .cardAgendamento {
+        grid-template-columns: 64px minmax(0, 1fr);
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .imagemContainer {
+        width: 64px;
+        height: 64px;
+    }
+
+    .informacoes {
+        flex: 1;
+    }
+
+    .informacoes h2 {
+        font-size: 17px;
+    }
+
+    .servico {
+        font-size: 13px;
+        margin-bottom: 6px;
+    }
+
+    .detalhesData {
+        gap: 6px 12px;
+        align-items: flex-start;
+    }
+
+    .detalhesData span {
+        font-size: 12px;
+    }
+
+    .acoesAgendamento {
+        grid-column: 1 / -1;
+        width: 100%;
+        padding-top: 12px;
+
+        border-top: 1px solid #eeeeee;
+    }
+
+    .valorStatus {
+        justify-content: space-between;
+    }
+
+    .valorStatus strong {
+        font-size: 18px;
+    }
+
+    .botoesCard > button {
+        padding: 8px 4px;
+    }
+
+}
+
+
+/* =====================================================
+   RESPONSIVIDADE — CELULAR PEQUENO
+===================================================== */
+
+@media (max-width: 420px) {
+
+    .titulo {
+        font-size: 25px;
+    }
+
+    .abas {
+        width: 100%;
+        max-width: 290px;
+    }
+
+    .cardAgendamento {
+        padding: 14px;
+    }
+
+    .informacoes h2 {
+        font-size: 15px;
+    }
+
+    .servico {
+        font-size: 12px;
+    }
+
+    .modal {
+        padding: 28px 22px;
+    }
+
+}
+
+
+/* =====================================================
+   ACESSIBILIDADE
+===================================================== */
+
+/* Observação: animações ficam ativas em todos os dispositivos.
+   A regra global "@media (prefers-reduced-motion: reduce) { * {
+   animation-duration: 0.01ms !important } }" que existia aqui
+   anulava TODAS as animações e transições (hover, cliques,
+   carregamento) do site inteiro, pois o seletor * é global mesmo
+   dentro de um CSS module. */
+
+
+/* =====================================================
+   MODAL REAGENDAR
+===================================================== */
+
+.modal label {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.modal input {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    font: inherit;
+}
+
+.modal p {
+    margin: 0 0 12px;
+    color: #666;
+    font-size: 13px;
+    text-align: center;
+}
+
+.horariosReagendamento {
+    margin: 4px 0 16px;
+    text-align: left;
+}
+
+.horariosReagendamento > strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 12px;
+}
+
+.horariosReagendamento p {
+    margin: 0;
+    text-align: left;
+}
+
+.horariosReagendamento .erroHorario {
+    color: #b42318;
+}
+
+.gradeHorarios {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    max-height: 176px;
+    overflow-y: auto;
+    padding-right: 2px;
+}
+
+.gradeHorarios button {
+    display: grid;
+    gap: 2px;
+    border: 1px solid #d8d8d8;
+    border-radius: 8px;
+    padding: 8px 5px;
+    background: #fff;
+    color: #111;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.gradeHorarios button:hover,
+.gradeHorarios button.horarioSelecionado {
+    border-color: #000;
+    background: #000;
+    color: #fff;
+}
+
+.gradeHorarios small {
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.modalAcoes {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 6px;
+}
+
+.modalAcoes button {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-weight: 800;
+    cursor: pointer;
+    background: #000;
+    color: #fff;
+}
+
+.modalAcoes button:disabled {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+/* Confirmação de cancelamento de agendamento */
+.resumoCancelamento {
+    display: grid;
+    gap: 4px;
+    margin: 0 0 16px;
+    padding: 12px;
+    background: #f7f7f7;
+    border: 1px solid #eeeeee;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.resumoCancelamento strong {
+    font-size: 14px;
+    color: #111;
+}
+
+.resumoCancelamento span {
+    font-size: 12px;
+    color: #777;
+}
+
+.modalAcoes button.botaoConfirmarCancelamento {
+    background: #d92d20;
+    color: #fff;
+}
+
+.modalAcoes button.botaoConfirmarCancelamento:hover:not(:disabled) {
+    background: #b42318;
+}
+
+.imagensModal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.imagensModal figure {
+    margin: 0;
+    flex: 1 1 140px;
+    max-width: 180px;
+    text-align: center;
+}
+
+.imagensModal img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 10px;
+    background: #f0f0f0;
+}
+
+.imagensModal figcaption {
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #666;
+}
+
+@media (max-width: 400px) {
+    .modal {
+        padding: 24px 16px;
+    }
+}
+
+@media (max-width: 600px) {
+    .overlay { align-items: flex-end; padding: 0; }
+    .modal { max-height: 90dvh; border-radius: 16px 16px 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+    .modalAcoes { flex-direction: column-reverse; }
+    .modalAcoes button { width: 100%; }
+    .imagensModal figure { flex-basis: min(140px, 100%); }
+}

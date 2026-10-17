@@ -1,0 +1,39 @@
+import { dadosCompra } from './comercialState';
+import { useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { FiHeart, FiShoppingCart, FiStar, FiBookmark } from 'react-icons/fi';
+import Select from '../../components/Select/Select';
+import { useAuth } from '../../contexts/useAuth';
+import { mensagemDaApi } from '../../services/api';
+import { marketplace, json } from './marketplaceApi';
+import useMarketplace from './useMarketplace';
+import { Aviso, Carregamento, FotoProduto, LojaLayout, ProdutoCard } from './MarketplaceUI';
+import { moeda, dataHora } from './marketplaceState';
+import styles from './Marketplace.module.css';
+import { caminhoDaLoja } from './lojaState';
+
+function FormularioAvaliacao({ avaliacao, ocupado, salvar }) {
+    const [nota, setNota] = useState(String(avaliacao?.nota || 5));
+    const [comentario, setComentario] = useState(avaliacao?.comentario || '');
+    return <form className={styles.formReview} onSubmit={e => { e.preventDefault(); salvar({ nota: Number(nota), comentario }); }}><h3>{avaliacao ? 'Atualizar sua avaliação' : 'Avaliar produto'}</h3><label>Nota<Select value={nota} onChange={e => setNota(e.target.value)} disabled={ocupado}>{[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} {n === 1 ? 'estrela' : 'estrelas'}</option>)}</Select></label><label>Comentário<textarea value={comentario} onChange={e => setComentario(e.target.value)} maxLength={1000} rows={3} disabled={ocupado} placeholder="Conte como foi sua experiência com o produto." /></label><button className={styles.primario} disabled={ocupado}>Salvar avaliação</button></form>;
+}
+
+export default function MarketplaceProduto() {
+    const { id } = useParams(); const { usuario } = useAuth(); const cliente = Number(usuario?.tipo) === 1;
+    const estado = useMarketplace(`/produtos/${id}`); const [imagem, setImagem] = useState(0); const [quantidade, setQuantidade] = useState(1); const [escolha, setEscolha] = useState({ idProduto: id, idVariacao: '' });
+    const [erro, setErro] = useState(''); const [sucesso, setSucesso] = useState(''); const [ocupado, setOcupado] = useState(false);
+    
+    const p = estado.dados?.produto; const idVariacao = escolha.idProduto === id ? escolha.idVariacao : ''; const compra = dadosCompra(p,idVariacao);
+    async function acao(rota, body, mensagem) { setOcupado(true); setErro(''); setSucesso(''); try { await marketplace(rota, json('PUT', body)); setSucesso(mensagem); estado.recarregar(); } catch (e) { setErro(mensagemDaApi(e)); } finally { setOcupado(false); } }
+    return <LojaLayout idLoja={p?.id_barbearia} titulo={p?.nome || 'Detalhes do produto'} descricao={p?.barbearia}><Link className={styles.voltar} to={p ? caminhoDaLoja(p.id_barbearia) : '/marketplace'}>{p ? `← Voltar à loja de ${p.barbearia}` : '← Voltar para produtos'}</Link><Aviso erro={erro} sucesso={sucesso} /><Carregamento estado={estado}>{p && <>
+        <section className={styles.detalheProduto}><div><FotoProduto key={p.imagens?.[imagem]} className={styles.fotoPrincipal} url={p.imagens?.[imagem]} nome={p.nome} /><div className={styles.miniaturas}>{(p.imagens || []).map((foto, i) => <button key={foto + i} aria-label={`Ver imagem ${i + 1}`} aria-pressed={imagem === i} onClick={() => setImagem(i)}><FotoProduto url={foto} nome={`Imagem ${i + 1} de ${p.nome}`} /></button>)}</div></div><div className={styles.resumoProduto}><span className={styles.eyebrow}>{p.categoria || 'Produto de beleza'}{p.marca ? ` · ${p.marca}` : ''}</span><h2>{p.nome}</h2><p>{p.descricao}</p><p className={styles.avaliacao}><FiStar /> {Number(p.media_avaliacoes || 0).toFixed(1)} · {p.total_avaliacoes || 0} avaliações</p><div className={styles.selosComerciais}>{p.em_promocao && <span>Promoção</span>}{p.lancamento && <span>Lançamento</span>}</div>{p.em_promocao && <del>{moeda(compra.variante?.preco_original ?? p.preco_original)}</del>}<strong className={styles.precoGrande}>{p.tem_variacoes && !compra.variante ? 'A partir de ' : ''}{moeda(compra.preco)}</strong>{p.tem_variacoes && <label>Escolha a variação<Select value={idVariacao} onChange={e => {setEscolha({idProduto:id,idVariacao:e.target.value});setQuantidade(1);}} required disabled={ocupado}><option value="">Selecione tamanho, cor ou volume</option>{(p.variacoes || []).filter(v=>v.ativo !== false).map(v=><option key={v.id_variacao} value={v.id_variacao} disabled={v.estoque <= 0}>{v.nome} · {[v.tamanho,v.cor,v.volume].filter(Boolean).join(' / ')} · {moeda(v.preco)}{v.estoque <= 0 ? ' · Esgotado' : ''}</option>)}</Select></label>}<p className={styles.muted}>{compra.estoque > 0 ? `${compra.estoque} unidade(s) disponível(is)` : p.tem_variacoes && !compra.variante ? 'Selecione uma variação para ver o estoque.' : 'Produto esgotado'}</p>{cliente ? <div className={styles.acoesProduto}><label>Quantidade<input type="number" min="1" max={compra.estoque || 1} value={quantidade} onChange={e => setQuantidade(e.target.value)} /></label><button className={styles.primario} disabled={ocupado || !compra.permitido || compra.estoque <= 0 || !Number.isInteger(Number(quantidade)) || quantidade < 1 || quantidade > compra.estoque} onClick={() => acao(`/carrinho/${id}`, { quantidade: Number(quantidade), adicionar: true, id_variacao: compra.variante?.id_variacao ?? null }, 'Produto adicionado ao seu carrinho.')}><FiShoppingCart />Adicionar ao carrinho</button><button disabled={ocupado} onClick={() => acao(`/favoritos/${id}`, { favorito: !p.favorito }, p.favorito ? 'Removido dos favoritos.' : 'Adicionado aos favoritos.')} aria-pressed={Boolean(p.favorito)}><FiHeart />{p.favorito ? 'Favoritado' : 'Favoritar'}</button><button disabled={ocupado} onClick={() => acao(`/lista-desejos/${id}`, { desejado: !p.desejado },p.desejado ? 'Removido da lista de desejos.' : 'Adicionado à lista de desejos.')} aria-pressed={Boolean(p.desejado)}><FiBookmark />{p.desejado ? 'Na lista de desejos' : 'Quero comprar depois'}</button></div> : <Link className={styles.botaoLink} to="/login">Entre como cliente para comprar</Link>}<p className={styles.nota}>O frete é calculado no carrinho. Também é possível retirar na barbearia.</p></div></section>
+        <section className={styles.painel}><h2>Sobre o produto</h2><p className={styles.textoLivre}>{p.detalhes || p.descricao || 'O estabelecimento ainda não informou detalhes adicionais.'}</p><dl className={styles.infoGrid}><div><dt>Marca</dt><dd>{p.marca || 'Não informada'}</dd></div><div><dt>Categoria</dt><dd>{p.categoria || 'Não informada'}</dd></div><div><dt>Vendido por</dt><dd><Link className={styles.linkDetalhes} to={caminhoDaLoja(p.id_barbearia)}>{p.barbearia}</Link></dd></div></dl></section>
+        <section className={styles.painel}><h2>Avaliações de quem comprou</h2><p className={styles.muted}>Apenas clientes com este produto em um pedido entregue podem avaliar. Uma avaliação por cliente.</p>{(estado.dados?.avaliacoes || []).length ? <div className={styles.lista}>{estado.dados.avaliacoes.map((a, i) => <article key={a.id_avaliacao ?? i} className={styles.avaliacaoCard}><div className={styles.linha}><strong>{a.cliente || a.nome || 'Cliente'}</strong><span>{a.nota}/5 · Compra verificada</span></div><p>{a.comentario || 'Sem comentário.'}</p><small>{dataHora(a.criado_em || a.atualizado_em)}</small></article>)}</div> : <p>Nenhuma avaliação ainda.</p>}{cliente && (p.pode_avaliar || estado.dados?.pode_avaliar) && <FormularioAvaliacao key={JSON.stringify(p.minha_avaliacao || estado.dados?.minha_avaliacao)} avaliacao={p.minha_avaliacao || estado.dados?.minha_avaliacao} ocupado={ocupado} salvar={(dados) => acao(`/produtos/${id}/avaliacao`, dados, 'Sua avaliação foi salva.')} />}</section>
+        {estado.dados?.relacionados?.length > 0 && <section><h2>Você também pode gostar</h2><div className={styles.gradeProdutos}>{estado.dados.relacionados.map(item => <ProdutoCard key={item.id_produto} produto={item} />)}</div></section>}
+    </>}</Carregamento></LojaLayout>;
+}
+
+
+
+
+
