@@ -16,9 +16,9 @@ import sys
 from application import app, conectar_banco
 from database import travar_usuario
 from image_storage import ImageBatch, ImageStorageError, NAME, slot_state
-from image_storage_schema import migrar_imagens
+from migrations.image_storage_schema import migrar_imagens
 from google_drive_storage import GoogleDriveStorage, DriveError
-from schema_utils import objeto_existe, coluna_existe
+from migrations.schema_utils import objeto_existe, coluna_existe
 
 EXTENSIONS = ('.jpeg', '.jpg', '.png', '.webp')
 SALON_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.webp')

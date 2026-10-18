@@ -32,3 +32,15 @@ Não foram alterados pagamentos, integrações, configuração de credenciais, t
 Backups dos fontes, logs, revisão independente, capturas e fingerprints estão em `C:\Users\mathe\Documents\Backups-Cortae\admin-docs-20261013`.
 
 Arquivos principais: `backend-all-firebird-tests.log`, `frontend-tests.log`, `frontend-lint.log`, `frontend-build.log`, `independent-review.json`, `applied-http.json`, `database-preservation.json`, `help-menu-adm-final.png` e `swagger-consulta-200.png`.
+
+
+## Atualização de 18/10/2026 — contrato 2.2.0
+
+- Help atualizado com reserva sem profissional, escolhas de corte, PDF da ficha gerado no navegador, CEP/remetente, endereços salvos com gravação explícita, termos/taxa e tratamento de indisponibilidade do Pix.
+- `api_docs.py` documenta profissional opcional/null, escolha_corte e confirmacao_resumo. Corrigida a descrição antiga que tornava o profissional obrigatório com equipe ativa.
+- `docs_contracts.py` descreve os envelopes de CEP e endereços, parâmetros de CEP, HTTP 201 de cadastro e HTTP 428 de aceite. Cadastro com versão incorreta retorna 428; resumo alterado continua 409.
+- Respostas do OpenAPI agora são copiadas por operação, evitando que uma personalização de schema altere contratos de outras rotas.
+- Mantida a documentação de manutenção manual: API/rotas não criam tabelas; python -m migrations apenas confere, --aplicar exige execução explícita após backup.
+- Nenhuma rota nova, mudança de permissão, aceite real ou chamada a provedor foi feita nesta atualização documental.
+
+Validação: 44 casos executados, 43 aprovados e 1 ignorado pela limitação de links simbólicos no Windows. Cobertura de todos os métodos/caminhos atuais, parâmetros, IDs únicos, sessão ADM, ausência de cache e bloqueio de leitura de configuração preservados. HTTP real: health 200; Help, /docs e /openapi.json anônimos 401 com private, no-store. Logs: C:/Users/mathe/Documents/Backups-Cortae/limpeza-20261018/docs-final.log.

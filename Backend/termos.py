@@ -17,9 +17,12 @@ def documento_termos():
         ('nome', 'TERMOS_RESPONSAVEL_NOME'), ('documento', 'TERMOS_RESPONSAVEL_DOCUMENTO'),
         ('contato', 'TERMOS_RESPONSAVEL_CONTATO'), ('endereco', 'TERMOS_RESPONSAVEL_ENDERECO'))}
     payer = app.config.get('PLATAFORMA_TAXA_PAGADOR')
-    ready = all(responsavel.values()) and payer in ('cliente', 'barbearia')
+    # Publication uses the operator name and support contact. Optional identity
+    # details still belong to the versioned document when supplied later.
+    identificacao_pronta = bool(responsavel['nome'] and responsavel['contato'])
+    ready = identificacao_pronta and payer in ('cliente', 'barbearia')
     return {'versao': VERSAO, 'publicado_em': '2026-10-12', 'titulo': 'Termos de uso do Cortaê',
-        'responsavel': responsavel, 'identificacao_pendente': not all(responsavel.values()),
+        'responsavel': responsavel, 'identificacao_pendente': not identificacao_pronta,
         'estado_publicacao': 'publicado' if ready else 'rascunho', 'aceite_habilitado': ready,
         'taxa': {'percentual': 1.5, 'pagador': payer if payer in ('cliente', 'barbearia') else 'pendente',
                  'base': 'servicos_e_produtos_sem_frete', 'ativa': ready},

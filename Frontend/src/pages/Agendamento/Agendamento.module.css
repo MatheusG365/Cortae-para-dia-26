@@ -720,6 +720,15 @@
     text-align: center;
 }
 
+.profRotulo { display: block; margin: 16px 0 8px; font-size: 14px; font-weight: 700; }
+.profSelect { display: block; width: 100%; min-height: 48px; border: 1px solid #b7b7b7; border-radius: 10px; padding: 10px 12px; background: #fff; color: #171717; font: inherit; }
+.profSelect:focus-visible { outline: 3px solid #2563eb; outline-offset: 3px; }
+.profAviso { margin: 12px 0; font-size: 14px; line-height: 1.6; color: #525252; }
+.profAviso p { margin: 0 0 12px; }
+.encaminhamentoGestao { max-width: 600px; margin: 30px auto; text-align: center; }
+.encaminhamentoGestao h1 { font-size: 24px; }
+.encaminhamentoGestao p { margin: 18px 0; line-height: 1.6; }
+
 .profLista {
     display: flex;
     gap: 12px;

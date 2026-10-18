@@ -43,7 +43,6 @@ Os caminhos completos, métodos efetivamente registrados, campos e restrições 
 ### Verificação da documentação
 
 ```powershell
-$env:STARTUP_MIGRATIONS='false'
 $env:WAITLIST_WORKER='false'
 .\.venv\Scripts\python.exe -m unittest tests.test_api_docs tests.test_admin_help -v
 ```
@@ -105,23 +104,10 @@ real de uma geração paga.
 
 ### Referências externas do catálogo
 
-`catalogo_referencias.json` registra as 46 URLs de imagem e suas páginas de
-origem, associadas ao ID e ao nome existentes no banco. Não inclui arquivos de
-imagem. A administração permite cadastrar ou editar uma referência por URL HTTPS.
-Uma URL externa pode deixar de funcionar; nesse caso, a interface apresenta um
-aviso e a simulação informa quando utilizou apenas nome e descrição.
-
-Para conferir ou aplicar o manifesto ao mesmo catálogo, execute na pasta Backend:
-
-```powershell
-.\.venv\Scripts\python.exe .\atualizar_referencias.py
-.\.venv\Scripts\python.exe .\atualizar_referencias.py --aplicar --backup-dir 'C:\Backups-Cortae'
-```
-
-O script valida ID, nome e atividade, modifica somente referências ausentes,
-preserva referências já existentes e exige um diário com valores anteriores fora
-do projeto antes da atualização. A aplicação não é automática na inicialização.
-Outra base com IDs ou nomes diferentes deve ser configurada pela administração.
+O histórico das referências do catálogo está em `docs/referencias/catalogo_cortes.json`.
+Ele registra as URLs e páginas de origem; não é uma configuração carregada pelo sistema.
+Cadastre ou edite referências pela administração. Fotos enviadas continuam usando o armazenamento configurado.
+Os scripts antigos de preenchimento por manifesto e recuperação de sessões foram retirados após a migração.
 
 `GET /agendamentos/horarios` recebe `id_barbearia`, `ids_servicos` e `data`
 (`AAAA-MM-DD`). Ela usa a duração somada dos serviços, os turnos cadastrados da
@@ -139,3 +125,26 @@ requisições simultâneas.
 pip install -r requirements.txt
 python main.py
 ```
+
+## Banco já preparado
+
+O servidor e as rotas não executam criação de tabelas nem alterações de estrutura.
+`/health` consulta a conexão, os campos obrigatórios e a largura do campo de origem financeira; se faltar estrutura, informa indisponibilidade sem tentar alterá-la.
+
+Na pasta Backend:
+
+```powershell
+# Somente conferência, sem escrita.
+.\.venv\Scripts\python.exe -m migrations
+
+# Operação manual de atualização: faça backup antes.
+.\.venv\Scripts\python.exe -m migrations --aplicar
+```
+
+`migrations/` reúne as atualizações de esquema e seu manifesto de campos obrigatórios.
+Ele é usado em atualizações/restaurações e nos testes isolados; não é importado pelas rotas.
+A ferramenta exige um banco base existente, não cria um arquivo Firebird vazio do zero.
+A variável antiga `STARTUP_MIGRATIONS` foi retirada; ela não reativa alterações automáticas.
+`WAITLIST_WORKER` continua controlando somente a fila de e-mails.
+
+`.venv` contém as dependências do backend, `templates/ativacao.html` é usado nos e-mails, `.env` guarda a configuração privada e os arquivos FDB contêm os dados. Esses itens continuam necessários.

@@ -77,10 +77,16 @@ function EtapaResultado({ imagem, corteSelecionado, cortes = [], observacoes, ca
             </section>}
             {escolhaEspecial && <p className={styles.resumoEscolha} role="status"><FiCheck aria-hidden="true" /> Escolha para o atendimento: <strong>{rotuloEscolhaCorte(escolhaCorte, generosServicos)}</strong></p>}
 
-            <div className={styles.resultado}>
-                {imagem && <figure className={styles.fotoPessoa}>
-                    <ImagemVisagismo url={imagem} descricao="Foto enviada para o visagismo" indisponivel="Foto não disponível" />
-                    <figcaption>Sua foto</figcaption>
+            <div className={`${styles.resultado} ${recomendacao ? styles.comparacao : ''} ${recomendacao && (!imagem || !corteRecomendado) ? styles.comparacaoUnica : ''}`}>
+                {imagem && <figure className={`${styles.cardCorte} ${styles.fotoPessoa}`}>
+                    <div className={styles.imagemCorte}>
+                        <ImagemVisagismo url={imagem} descricao="Foto enviada para o visagismo" indisponivel="Foto não disponível" />
+                    </div>
+                    <figcaption className={styles.infoCorte}>
+                        <span className={styles.rotuloFoto}>Foto enviada</span>
+                        <h2>Sua foto</h2>
+                        <p>Imagem usada para a análise e a simulação.</p>
+                    </figcaption>
                 </figure>}
                 {recomendacao && corteRecomendado && <article className={`${styles.cardCorte} ${styles.recomendacao}`}>
                     <div className={styles.imagemCorte}>
@@ -90,7 +96,9 @@ function EtapaResultado({ imagem, corteSelecionado, cortes = [], observacoes, ca
                         <span className={styles.selecao}><FiCheck aria-hidden="true" /> Corte selecionado</span>
                         <h2>{corteRecomendado.nome}</h2>
                         <p>Referência do catálogo · #{corteRecomendado.id_corte}</p>
-                        {corteRecomendado.descricao && <p>{corteRecomendado.descricao}</p>}
+                        <p className={styles.descricaoResumida}>{corteRecomendado.descricao || 'Veja os detalhes deste corte.'}</p>
+                    </div>
+                    <div className={styles.acoesCard}>
                         <button type="button" className={styles.botaoDetalhes} disabled={carregando} onClick={() => setCorteDetalhes(corteRecomendado)}>Ver mais<span className={styles.somenteLeitor}> sobre {corteRecomendado.nome}</span></button>
                     </div>
                 </article>}

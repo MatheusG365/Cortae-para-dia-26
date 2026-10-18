@@ -13,7 +13,7 @@ Verificação concluída em 10/10/2026.
 
 ## Catálogo e preservação
 
-As 46 referências ativas foram conferidas no navegador e pelo transporte HTTPS usado em produção. O manifesto `Backend/catalogo_referencias.json` contém URL e página de origem; os arquivos de referência não foram adicionados ao projeto.
+As 46 referências ativas foram conferidas no navegador e pelo transporte HTTPS usado em produção. O manifesto `docs/referencias/catalogo_cortes.json` contém URL e página de origem; os arquivos de referência não foram adicionados ao projeto.
 
 Foram revisadas visualmente as associações e ajustadas as referências de Flattop, Afro e French Bob. Cada nova URL coube no campo IMAGEM_ROTA.
 

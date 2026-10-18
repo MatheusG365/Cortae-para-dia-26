@@ -1,5 +1,5 @@
 """Additive commercial marketplace structures. Existing order snapshots stay intact."""
-from schema_utils import criar_tabela, criar_sequence, criar_coluna
+from .schema_utils import criar_tabela, criar_sequence, criar_coluna
 
 TABLES = {
     'MP_FORNECEDOR': '''CREATE TABLE MP_FORNECEDOR (ID_FORNECEDOR INTEGER NOT NULL PRIMARY KEY, ID_BARBEARIA INTEGER NOT NULL REFERENCES USUARIO(ID_USUARIO), NOME VARCHAR(160) NOT NULL, DOCUMENTO VARCHAR(30), EMAIL VARCHAR(200), TELEFONE VARCHAR(30), OBSERVACOES VARCHAR(2000), ATIVO SMALLINT DEFAULT 1 NOT NULL)''',

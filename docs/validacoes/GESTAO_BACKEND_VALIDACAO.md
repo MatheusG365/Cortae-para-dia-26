@@ -1,6 +1,6 @@
 # Gestão local — validação do backend
 
-Implementação: `Backend/gestao_schema.py`, `Backend/gestao.py`; compatibilidade de recebimentos parciais em `Backend/pagamento.py`. Integração e documentação geral coordenadas separadamente.
+Implementação: `Backend/migrations/gestao_schema.py`, `Backend/gestao.py`; compatibilidade de recebimentos parciais em `Backend/pagamento.py`. Integração e documentação geral coordenadas separadamente.
 
 Todas as páginas de gestão exigem proprietário ou administrador, com escopo de salão. Administrador informa `id_barbearia`; proprietário não pode substituir o próprio salão. Logs exigem administrador e usam o banco de auditoria separado. Dados sensíveis históricos são mascarados na leitura, inclusive objetos JSON aninhados.
 

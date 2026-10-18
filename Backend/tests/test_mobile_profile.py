@@ -1,6 +1,5 @@
 """Owner public profile patch contract without production DB writes."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import unittest
 from contextlib import ExitStack

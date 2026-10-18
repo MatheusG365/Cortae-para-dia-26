@@ -4,7 +4,6 @@ RUN_FIREBIRD_SNAPSHOT_TESTS=1 enables real SQL checks against a local Firebird
 server. Provider/auth/audit calls are mocked; no production database is opened.
 """
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import tempfile
 import unittest
@@ -17,6 +16,7 @@ from unittest.mock import MagicMock, patch
 import firebirdsql
 import main
 import arkhe
+from migrations import financeiro_schema as snapshot_schema
 
 
 class SnapshotSchemaBehavior(unittest.TestCase):
@@ -24,9 +24,9 @@ class SnapshotSchemaBehavior(unittest.TestCase):
         cursor = MagicMock()
         schema_cursor = MagicMock()
         schema_cursor.fetchone.side_effect = [(1,), (64,), (1,), (1,)]
-        with patch.object(arkhe, 'Transaction') as transaction, \
-             patch.object(arkhe, 'Cursor', return_value=schema_cursor):
-            arkhe._garantir_snapshot(cursor)
+        with patch.object(snapshot_schema, 'Transaction') as transaction, \
+             patch.object(snapshot_schema, 'Cursor', return_value=schema_cursor):
+            snapshot_schema._garantir_snapshot(cursor)
         transaction.assert_called_once_with(cursor.transaction.connection)
         cursor.transaction.commit.assert_not_called()
         cursor.transaction.rollback.assert_not_called()
@@ -35,11 +35,11 @@ class SnapshotSchemaBehavior(unittest.TestCase):
     def test_non_conflict_schema_failure_is_not_retried_or_hidden(self):
         cursor = MagicMock()
         error = firebirdsql.DatabaseError('Permission denied', {335544352}, -551)
-        with patch.object(arkhe, 'Transaction') as transaction, \
-             patch.object(arkhe, 'Cursor'), \
-             patch.object(arkhe, '_preparar_snapshot_esquema', side_effect=error) as prepare:
+        with patch.object(snapshot_schema, 'Transaction') as transaction, \
+             patch.object(snapshot_schema, 'Cursor'), \
+             patch.object(snapshot_schema, '_preparar_snapshot_esquema', side_effect=error) as prepare:
             with self.assertRaises(firebirdsql.DatabaseError) as raised:
-                arkhe._garantir_snapshot(cursor)
+                snapshot_schema._garantir_snapshot(cursor)
         self.assertIs(raised.exception, error)
         self.assertEqual(prepare.call_count, 1)
         transaction.return_value.rollback.assert_called_once()
@@ -48,12 +48,12 @@ class SnapshotSchemaBehavior(unittest.TestCase):
     def test_conflict_retries_are_bounded(self):
         cursor = MagicMock()
         error = firebirdsql.OperationalError('metadata update conflict', {335544351, 335544336, 335544451}, 0)
-        with patch.object(arkhe, 'Transaction') as transaction, \
-             patch.object(arkhe, 'Cursor'), \
-             patch.object(arkhe, 'time') as clock, \
-             patch.object(arkhe, '_preparar_snapshot_esquema', side_effect=error) as prepare:
+        with patch.object(snapshot_schema, 'Transaction') as transaction, \
+             patch.object(snapshot_schema, 'Cursor'), \
+             patch.object(snapshot_schema, 'time') as clock, \
+             patch.object(snapshot_schema, '_preparar_snapshot_esquema', side_effect=error) as prepare:
             with self.assertRaises(firebirdsql.OperationalError):
-                arkhe._garantir_snapshot(cursor)
+                snapshot_schema._garantir_snapshot(cursor)
         self.assertEqual(prepare.call_count, 3)
         self.assertEqual(transaction.return_value.rollback.call_count, 3)
         self.assertEqual(clock.sleep.call_count, 2)
@@ -127,7 +127,16 @@ class SnapshotFirebird(unittest.TestCase):
               AND TRIM(RF.RDB$FIELD_NAME) = 'FONTE' ''')
         return cursor.fetchone()[0]
 
-    def request_mixed(self, route):
+    def request_mixed(self, route, preparar=True):
+        # Fixture starts with legacy VARCHAR(10). Update explicitly, as an
+        # operator now must do; the HTTP route never changes this structure.
+        if preparar:
+            connection = self.connect()
+            try:
+                snapshot_schema._garantir_snapshot(connection.cursor())
+                connection.commit()
+            finally:
+                connection.close()
         provider_payload = [{'id': 'qa-provider', 'tipo': 'entrada', 'valor': 40.25,
             'data': '2026-10-05', 'origem': 'pix', 'descricao': 'Pagamento fictício'}]
         cash_payload = [{'id_movimentacao': 'qa-cash', 'tipo': 'entrada', 'valor': 59.75,
@@ -157,9 +166,9 @@ class SnapshotFirebird(unittest.TestCase):
         try:
             cursor = connection.cursor()
             self.assertEqual(self.source_length(cursor), 10)
-            arkhe._garantir_snapshot(cursor)
+            snapshot_schema._garantir_snapshot(cursor)
             self.assertEqual(self.source_length(cursor), 32)
-            arkhe._garantir_snapshot(cursor)
+            snapshot_schema._garantir_snapshot(cursor)
             connection.commit()
         finally:
             connection.close()
@@ -171,7 +180,7 @@ class SnapshotFirebird(unittest.TestCase):
             cursor = connection.cursor()
             cursor.execute('DROP TABLE FINANCEIRO_SNAPSHOT')
             connection.commit()
-            arkhe._garantir_snapshot(cursor)
+            snapshot_schema._garantir_snapshot(cursor)
             self.assertEqual(self.source_length(cursor), 32)
         finally:
             connection.close()
@@ -185,7 +194,7 @@ class SnapshotFirebird(unittest.TestCase):
             cursor.execute('INSERT INTO QA_PENDING VALUES(1,10)')
             connection.commit()
             cursor.execute('UPDATE QA_PENDING SET VALOR=99 WHERE ID=1')
-            arkhe._garantir_snapshot(cursor)
+            snapshot_schema._garantir_snapshot(cursor)
             self.assertEqual(self.source_length(cursor), 32)
             connection.rollback()
             cursor.execute('SELECT VALOR FROM QA_PENDING WHERE ID=1')
@@ -198,7 +207,7 @@ class SnapshotFirebird(unittest.TestCase):
         # Synchronize both first ALTERs, guaranteeing they read VARCHAR(10)
         # before either migration commits. Retry uses the real driver/database.
         barrier = Barrier(2)
-        driver_execute = arkhe.Cursor.execute
+        driver_execute = snapshot_schema.Cursor.execute
         alterations = []
         conflicts = []
 
@@ -217,12 +226,12 @@ class SnapshotFirebird(unittest.TestCase):
             connection = self.connect()
             try:
                 cursor = connection.cursor()
-                arkhe._garantir_snapshot(cursor)
+                snapshot_schema._garantir_snapshot(cursor)
                 connection.commit()
             finally:
                 connection.close()
 
-        with patch.object(arkhe.Cursor, 'execute', execute), ThreadPoolExecutor(max_workers=2) as pool:
+        with patch.object(snapshot_schema.Cursor, 'execute', execute), ThreadPoolExecutor(max_workers=2) as pool:
             list(pool.map(prepare, range(2)))
         self.assertGreaterEqual(len(alterations), 2)
         self.assertTrue(any({335544351, 335544451} <= codes for codes in conflicts))
@@ -247,11 +256,21 @@ class SnapshotFirebird(unittest.TestCase):
         self.assertIn(b'<svg', response.data)
         self.assert_preserved_history()
 
+    def test_unprepared_statement_fails_without_altering_schema_or_history(self):
+        response = self.request_mixed('/financeiro/movimentacoes', preparar=False)
+        self.assertEqual(response.status_code, 500)
+        connection = self.connect()
+        try:
+            self.assertEqual(self.source_length(connection.cursor()), 10)
+        finally:
+            connection.close()
+        self.assertEqual(self.rows(), self.original_rows)
+
     def test_failed_replacement_can_never_commit_partial_delete_or_insert(self):
         connection = self.connect()
         try:
             cursor = connection.cursor()
-            arkhe._garantir_snapshot(cursor)
+            snapshot_schema._garantir_snapshot(cursor)
             movements = [{'data_movimentacao': '2026-10-05', 'tipo': 'entrada', 'valor': 12.34},
                          {'data_movimentacao': '2026-10-06', 'tipo': 'invalid-too-long-for-type', 'valor': 9.87}]
             with self.assertRaises(firebirdsql.DatabaseError):

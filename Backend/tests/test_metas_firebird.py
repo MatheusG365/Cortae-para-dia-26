@@ -1,6 +1,5 @@
 """Real CRUD, scopes and historical measurements on disposable Firebird databases only."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import tempfile
 import unittest
@@ -11,9 +10,7 @@ from unittest.mock import patch
 import firebirdsql
 import main
 import agenda_gestao
-import metas_schema
-
-
+from migrations import metas_schema
 @unittest.skipUnless(os.environ.get('RUN_FIREBIRD_METAS_TESTS') == '1', 'isolated Firebird opt-in')
 class MetasFirebird(unittest.TestCase):
     def setUp(self):

@@ -6,7 +6,8 @@ import VariacoesGestao from './VariacoesGestao';
 import VendasMarketplace from './VendasMarketplace';
 import { formComercial, payloadComercial, nomeVariacao } from './comercialState';
 import { barbeariasDaResposta, estadosBrasil } from '../../services/cadastroState';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react';
+import { aplicarResultadoCep, formatarCep, mudarCep, normalizarCep } from '../../services/cepEnderecoState';
 import { Link, useSearchParams } from 'react-router-dom';
 import Select from '../../components/Select/Select';
 import { useAuth } from '../../contexts/useAuth';
@@ -42,10 +43,75 @@ function ProdutosGestao({ requisicao }) {
 }
 
 function EditorRemetente({ dados, requisicao }) {
-    const [form, setForm] = useState({ nome: '', email: '', telefone: '', documento: '', inscricao_estadual: '', cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', ...(dados.remetente || {}) });
-    const [ocupado, setOcupado] = useState(false); const [erro, setErro] = useState(''); const [sucesso, setSucesso] = useState('');
-    async function salvar(e) { e.preventDefault(); setOcupado(true); setErro(''); setSucesso(''); try { await requisicao('/remetente', json('PUT', form)); setSucesso('Dados do remetente salvos.'); } catch (err) { setErro(mensagemDaApi(err)); } finally { setOcupado(false); } }
-    return <section className={styles.painel}><h2>Remetente das entregas</h2><p>Endereço de origem desta barbearia. Estes dados são usados nas cotações e etiquetas.</p><p className={dados.integracao?.configurada ? styles.sucesso : styles.aviso}>{dados.integracao?.configurada ? 'Melhor Envio conectado.' : 'Melhor Envio ainda não configurado. O administrador precisa cadastrar o token no servidor.'}</p><p className={styles.nota}>Limite operacional: {dados.integracao?.limite_etiquetas ?? 3} envios simultâneos. Isso não representa frete gratuito. A compra de etiquetas utiliza saldo da conta.</p><Aviso erro={erro} sucesso={sucesso} /><form onSubmit={salvar}><div className={styles.formGrid}>{[['nome','Nome / razão social'],['email','E-mail'],['telefone','Telefone'],['documento','CPF ou CNPJ'],['inscricao_estadual','Inscrição estadual'],['cep','CEP'],['logradouro','Rua'],['numero','Número'],['complemento','Complemento'],['bairro','Bairro'],['cidade','Cidade']].map(([key, label]) => <label key={key}>{label}<input type={key === 'email' ? 'email' : 'text'} value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} required={key !== 'complemento' && key !== 'inscricao_estadual'} maxLength={160} disabled={ocupado} /></label>)}<label>UF<Select value={form.uf} onChange={e => setForm(f => ({ ...f, uf: e.target.value }))} required disabled={ocupado}><option value="">Selecione</option>{estadosBrasil.map(uf => <option key={uf}>{uf}</option>)}</Select></label></div><button className={styles.primario} disabled={ocupado}>Salvar remetente</button></form></section>;
+    const [form, setForm] = useState(() => ({ nome: '', email: '', telefone: '', documento: '', inscricao_estadual: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', uf: '', ...(dados.remetente || {}), cep: formatarCep(dados.remetente?.cep) }));
+    const [ocupado, setOcupado] = useState(false);
+    const [erro, setErro] = useState('');
+    const [sucesso, setSucesso] = useState('');
+    const [consultaCep, setConsultaCep] = useState({});
+    const camposEditados = useRef(new Set());
+    const controllerCep = useRef(null);
+    const ignorarCep = useRef(normalizarCep(dados.remetente?.cep));
+    const cep = normalizarCep(form.cep);
+    const receberCep = useEffectEvent((resultado, consultado) => {
+        if (!resultado.endereco) throw new Error('Consulta indisponível.');
+        const editados = [...camposEditados.current];
+        setForm(atual => aplicarResultadoCep(atual, resultado.endereco, consultado, editados));
+        setConsultaCep({ cep: consultado, texto: 'CEP encontrado. Confira o endereço e informe número e complemento.' });
+    });
+    useEffect(() => {
+        if (ocupado || cep.length !== 8 || ignorarCep.current === cep) return undefined;
+        const controller = new AbortController();
+        controllerCep.current = controller;
+        const timer = setTimeout(() => {
+            setConsultaCep({ cep, texto: 'Buscando endereço pelo CEP…' });
+            requisicao(`/cep/${cep}`, { signal: controller.signal })
+                .then(resultado => { if (!controller.signal.aborted) receberCep(resultado, cep); })
+                .catch(falha => {
+                    if (!controller.signal.aborted) setConsultaCep({ cep, texto: falha.status === 404 ? 'CEP não encontrado. Confira os dígitos ou preencha o endereço manualmente.' : 'A consulta de CEP está indisponível. Você pode preencher o endereço manualmente.' });
+                });
+        }, 350);
+        return () => { clearTimeout(timer); controller.abort(); };
+    }, [cep, ocupado, requisicao]);
+    function mudar(campo, valor) {
+        setSucesso('');
+        if (campo === 'cep') {
+            if (normalizarCep(valor) !== cep) {
+                controllerCep.current?.abort();
+                ignorarCep.current = '';
+                camposEditados.current.clear();
+                setConsultaCep({});
+            }
+            setForm(atual => mudarCep(atual, valor));
+        } else {
+            camposEditados.current.add(campo);
+            setForm(atual => ({ ...atual, [campo]: valor }));
+        }
+    }
+    async function salvar(evento) {
+        evento.preventDefault();
+        controllerCep.current?.abort();
+        ignorarCep.current = cep;
+        setOcupado(true);
+        setErro('');
+        setSucesso('');
+        try { await requisicao('/remetente', json('PUT', { ...form })); setSucesso('Dados do remetente salvos.'); }
+        catch (falha) { setErro(mensagemDaApi(falha)); }
+        finally { setOcupado(false); }
+    }
+    return <section className={styles.painel}>
+        <h2>Remetente das entregas</h2>
+        <p>Endereço de origem desta barbearia. Estes dados são usados nas cotações e etiquetas.</p>
+        <p className={dados.integracao?.configurada ? styles.sucesso : styles.aviso}>{dados.integracao?.configurada ? 'Melhor Envio conectado.' : 'Melhor Envio ainda não configurado. O administrador precisa cadastrar o token no servidor.'}</p>
+        <p className={styles.nota}>Limite operacional: {dados.integracao?.limite_etiquetas ?? 3} envios simultâneos. Isso não representa frete gratuito. A compra de etiquetas utiliza saldo da conta.</p>
+        <Aviso erro={erro} sucesso={sucesso} />
+        <form onSubmit={salvar}>
+            <div className={styles.formGrid}>
+                {[['nome','Nome / razão social'],['email','E-mail'],['telefone','Telefone'],['documento','CPF ou CNPJ'],['inscricao_estadual','Inscrição estadual'],['cep','CEP'],['logradouro','Rua'],['numero','Número'],['complemento','Complemento'],['bairro','Bairro'],['cidade','Cidade']].map(([campo, label]) => <label key={campo}>{label}<input type={campo === 'email' ? 'email' : 'text'} value={form[campo]} onChange={evento => mudar(campo, evento.target.value)} required={campo !== 'complemento' && campo !== 'inscricao_estadual'} maxLength={campo === 'cep' ? 9 : 160} inputMode={campo === 'cep' ? 'numeric' : undefined} pattern={campo === 'cep' ? '[0-9]{5}-?[0-9]{3}' : undefined} placeholder={campo === 'cep' ? '00000-000' : undefined} aria-describedby={campo === 'cep' ? 'remetente-cep-ajuda' : undefined} disabled={ocupado} />{campo === 'cep' && <small id="remetente-cep-ajuda" className={styles.nota} role="status">{consultaCep.cep === cep ? consultaCep.texto : 'Digite o CEP para preencher rua, bairro, cidade e UF automaticamente.'}</small>}</label>)}
+                <label>UF<Select value={form.uf} onChange={evento => mudar('uf', evento.target.value)} required disabled={ocupado}><option value="">Selecione</option>{estadosBrasil.map(uf => <option key={uf}>{uf}</option>)}</Select></label>
+            </div>
+            <button className={styles.primario} disabled={ocupado}>Salvar remetente</button>
+        </form>
+    </section>;
 }
 function RemetenteGestao({ requisicao }) { const estado = useGestaoLoja(requisicao, '/remetente'); return <Carregamento estado={estado}>{estado.dados && <EditorRemetente dados={estado.dados} requisicao={requisicao} />}</Carregamento>; }
 
@@ -70,12 +136,3 @@ export default function GestaoMarketplace() {
     const mudar = (key, valor) => { const novos = new URLSearchParams(params); novos.set(key, valor); setParams(novos); };
     return <main className={styles.pagina}><header className={styles.cabecalho}><div><span className={styles.eyebrow}>GESTÃO · MARKETPLACE</span><h1>Sua loja, organizada</h1><p>Produtos, reposições de estoque e pedidos da barbearia em um só lugar.</p></div><Link className={styles.botaoLink} to="/marketplace">Ver marketplace</Link></header><Aviso erro={erro} />{admin && <label className={styles.filtroSalao}>Barbearia<Select value={idSalao} onChange={e => mudar('id_barbearia', e.target.value)}><option value="">Selecione a barbearia</option>{saloes.map(s => <option key={s.id} value={s.id}>{s.nome}</option>)}</Select></label>}<nav className={styles.nav} aria-label="Gerenciar marketplace">{[['produtos','Produtos e estoque'],['fornecedores','Fornecedores'],['cupons','Cupons'],['vendas','Painel de vendas'],['pedidos','Pedidos e entregas'],['remetente','Configurar entrega']].map(([key, texto]) => <button key={key} aria-current={aba === key ? 'page' : undefined} onClick={() => mudar('aba', key)}>{texto}</button>)}<Link to="/gestao">Gestão da barbearia</Link></nav>{admin && !idSalao ? <p className={styles.vazio}>Selecione uma barbearia para gerenciar a loja.</p> : <section key={`${idSalao}:${aba}`}>{aba === 'produtos' && <ProdutosGestao requisicao={requisicao} />}{aba === 'pedidos' && <PedidosGestao requisicao={requisicao} />}{['fornecedores','cupons'].includes(aba) && <CadastrosComerciais tipo={aba} requisicao={requisicao} />}{aba === 'vendas' && <VendasMarketplace requisicao={requisicao} idSalao={idSalao} />}{aba === 'remetente' && <RemetenteGestao requisicao={requisicao} />}</section>}</main>;
 }
-
-
-
-
-
-
-
-
-

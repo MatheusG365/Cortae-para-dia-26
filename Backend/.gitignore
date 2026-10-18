@@ -139,17 +139,3 @@ logs/
 
 # OS
 .DS_Store
-
-
-# Project specific
-test_flow.py
-fix_boleto_cartao.py
-fix_boleto_cartao2.py
-fix_cortes.py
-fix_listar_cortes.py
-migrate_genero.py
-migrate_pix.py
-migrate_genero2.py
-fix_listar_cortes.py
-check_cols.py
-migrate_genero.py

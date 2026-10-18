@@ -1,6 +1,6 @@
 import { rotaPagamentoAgendamento } from '../../services/pagamentoState';
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { apiFetch, mensagemDaApi } from '../../services/api';
 import MensagemCard from '../../components/MensagemCard/MensagemCard';
 import styles from './Agendamento.module.css';
@@ -12,7 +12,10 @@ import { dadosEscolhaCorte, rotuloEscolhaCorte } from '../../services/escolhaCor
 import useTermosUso from '../../services/useTermosUso';
 import TermosAceite from '../../components/TermosAceite/TermosAceite';
 import ResumoTaxa from '../../components/ResumoTaxa/ResumoTaxa';
+import Select from '../../components/Select/Select';
 import useResumoOperacao from '../../services/useResumoOperacao';
+import { useAuth } from '../../contexts/useAuth';
+import { contextoProfissionais, profissionaisDaResposta, funcionarioValido, corpoAgendamento, rotaAgendaGestao, idsServicosAgendamento } from '../../services/agendaProfissionaisState';
 
 const nomesSemana = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 const nomesMes = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
@@ -20,9 +23,24 @@ const HORARIOS_POR_PAGINA = 12;
 
 function Agendamento() {
     const [params] = useSearchParams();
+    const { usuario } = useAuth();
+    const tipo = Number(usuario?.tipo);
+    if ([0, 2, 3].includes(tipo)) return <main className={styles.agendamentoPage}>
+        <section className={styles.encaminhamentoGestao}>
+            <h1>{tipo === 3 ? 'Sua agenda profissional' : 'Agendar para um cliente'}</h1>
+            <p>{tipo === 3 ? 'Consulte os atendimentos da sua agenda na área de gestão.' : 'Escolha o cliente na agenda de gestão para registrar o atendimento com os dados corretos.'}</p>
+            <Link className={styles.btnConfirmarModal} to={rotaAgendaGestao(tipo, params.get('barbearia'))}>{tipo === 3 ? 'ABRIR MINHA AGENDA' : 'AGENDAR PARA UM CLIENTE'}</Link>
+        </section>
+    </main>;
+    const chave = JSON.stringify([usuario?.id_usuario ?? usuario?.id, contextoProfissionais(params.get('barbearia'), params.get('servicos')), params.get('funcionario') || params.get('id_funcionario'), params.get('corte'), params.get('visagismo'), params.get('escolha_corte')]);
+    return <AgendamentoCliente key={chave} />;
+}
+
+function AgendamentoCliente() {
+    const [params] = useSearchParams();
     const navigate = useNavigate();
     const idBarbearia = params.get('barbearia');
-    const idsServicos = params.get('servicos') || '';
+    const idsServicos = idsServicosAgendamento(params.get('servicos')).join(',');
     const idCorte = params.get('corte');
     const idVisagismo = params.get('visagismo');
     const escolhaCorte = params.get('escolha_corte') || (idCorte ? 'catalogo' : null);
@@ -32,22 +50,22 @@ function Agendamento() {
         return !Number.isNaN(solicitada.getTime()) && solicitada >= hoje ? solicitada : hoje;
     });
     const [diaSelecionado, setDiaSelecionado] = useState(0);
-    const [horarios, setHorarios] = useState([]);
+    const [consultaHorarios, setConsultaHorarios] = useState(null);
     const [paginaHorarios, setPaginaHorarios] = useState(1);
-    const [horarioSelecionado, setHorarioSelecionado] = useState(null);
+    const [selecaoHorario, setSelecaoHorario] = useState(null);
     const [selecaoEspera, setSelecaoEspera] = useState(null);
     const [entrandoEspera, setEntrandoEspera] = useState(false);
-    const [duracao, setDuracao] = useState(null);
     const [profissionais, setProfissionais] = useState([]);
     const [profissionaisCarregados, setProfissionaisCarregados] = useState(false);
+    const [erroProfissionais, setErroProfissionais] = useState('');
+    const [revisaoProfissionais, setRevisaoProfissionais] = useState(0);
     const [diasAbertos, setDiasAbertos] = useState(null);
     const [idFuncionario, setIdFuncionario] = useState(params.get('funcionario') || params.get('id_funcionario') || '');
-    const [carregando, setCarregando] = useState(false);
+    const [ocupado, setCarregando] = useState(false);
     const [erro, setErro] = useState('');
     const [sucesso, setSucesso] = useState('');
     const [idAgendamento, setIdAgendamento] = useState(null);
     const [valorTotal, setValorTotal] = useState(null);
-    const [orcamento, setOrcamento] = useState(null);
     const [pagamento, setPagamento] = useState(null);
     const [verificando, setVerificando] = useState(false);
     const [copiado, setCopiado] = useState(false);
@@ -55,8 +73,6 @@ function Agendamento() {
     const [modalResumo, setModalResumo] = useState(false); // confirmação do horário
     const [modalPagamento, setModalPagamento] = useState(null); // null | 'metodos' | 'detalhe'
     const [recarregar, setRecarregar] = useState(0); // força recarregar horários (ex.: após cancelar)
-    const previa = useResumoOperacao('/agendamentos/resumo', { id_barbearia: Number(idBarbearia), id_funcionario: idFuncionario ? Number(idFuncionario) : null, ids_servicos: idsServicos.split(',') }, modalResumo && orcamento?.valor_total != null);
-    const termos = useTermosUso({ versaoEsperada: previa.resumo?.termos_versao });
     const [resumoAgendamento, setResumoAgendamento] = useState(null);
     const [modalCancelar, setModalCancelar] = useState(false); // confirmação de cancelamento
 
@@ -78,80 +94,97 @@ function Agendamento() {
     const diaAtual = dias[diaSelecionado] || dias[0];
     const dataSelecionada = diaAtual?.iso;
     const diaAberto = diaAtual?.aberto;
-    const contextoEspera = JSON.stringify([idBarbearia, idsServicos, dataSelecionada, idFuncionario, idCorte, idVisagismo, escolhaCorte]);
+    const contextoEspera = JSON.stringify([idBarbearia, idsServicos, dataSelecionada, idFuncionario, idCorte, idVisagismo, escolhaCorte, recarregar, revisaoProfissionais]);
     const horarioEspera = selecaoEspera?.contexto === contextoEspera ? selecaoEspera.horario : null;
+    const contextoDisponibilidade = JSON.stringify([idBarbearia, idsServicos, dataSelecionada, idFuncionario, recarregar, revisaoProfissionais]);
+    const consultaAtual = profissionaisCarregados && consultaHorarios?.contexto === contextoDisponibilidade ? consultaHorarios : null;
+    const horarios = consultaAtual?.horarios || [];
+    const duracao = consultaAtual?.duracao ?? null;
+    const orcamento = consultaAtual?.orcamento ?? null;
+    const consultandoHorarios = profissionaisCarregados && diaAberto && !consultaAtual;
+    const carregando = ocupado || consultandoHorarios;
+    const horarioSelecionado = selecaoHorario?.contexto === contextoDisponibilidade ? selecaoHorario.horario : null;
+    const setHorarioSelecionado = horario => setSelecaoHorario(horario ? { contexto: contextoDisponibilidade, horario } : null);
+    const resumoAberto = modalResumo === contextoDisponibilidade;
+    const previa = useResumoOperacao('/agendamentos/resumo', corpoAgendamento(idBarbearia, idsServicos, idFuncionario), resumoAberto && orcamento?.valor_total != null);
+    const termos = useTermosUso({ versaoEsperada: previa.resumo?.termos_versao });
+
 
     useEffect(() => {
-        let ativo = true;
-        const carregarProfissionais = async () => {
-            await Promise.resolve();
-            if (!ativo || !idBarbearia) return;
-            try {
-                const dados = await apiFetch(`/barbearias/${encodeURIComponent(idBarbearia)}/funcionarios?servicos=${encodeURIComponent(idsServicos)}`);
-                if (ativo) {
-                    setProfissionais(dados.funcionarios || []);
-                    if (dados.funcionarios?.length === 1) setIdFuncionario((atual) => atual || String(dados.funcionarios[0].id_funcionario));
-                    setDiasAbertos(Array.isArray(dados.dias_abertos) ? dados.dias_abertos : null);
-                }
-            } catch {
-                if (ativo) setProfissionais([]);
-            } finally {
-                if (ativo) setProfissionaisCarregados(true);
-            }
-        };
-        carregarProfissionais();
-        return () => { ativo = false; };
-    }, [idBarbearia, idsServicos]);
+        if (!idBarbearia || !idsServicos) return undefined;
+        const controller = new AbortController();
+        apiFetch(`/barbearias/${encodeURIComponent(idBarbearia)}/funcionarios?servicos=${encodeURIComponent(idsServicos)}`, { signal: controller.signal })
+            .then(dados => {
+                if (controller.signal.aborted) return;
+                const lista = profissionaisDaResposta(dados, idsServicos);
+                setProfissionais(lista);
+                setIdFuncionario(atual => funcionarioValido(atual, lista));
+                setDiasAbertos(Array.isArray(dados.dias_abertos) ? dados.dias_abertos : null);
+                setErroProfissionais('');
+                setProfissionaisCarregados(true);
+            })
+            .catch(error => { if (!controller.signal.aborted) setErroProfissionais(mensagemDaApi(error)); });
+        return () => controller.abort();
+    }, [idBarbearia, idsServicos, revisaoProfissionais]);
 
     useEffect(() => {
-        let ativo = true;
-        const carregarHorarios = async () => {
-            // A primeira pausa evita uma atualização síncrona durante o efeito.
-            await Promise.resolve();
-            if (!ativo || !idBarbearia || !idsServicos || !dataSelecionada || !profissionaisCarregados) return;
-            setSelecaoEspera(null);
-            setOrcamento(null);
-            if (profissionais.length > 0 && !idFuncionario) {
-                setHorarios([]); setHorarioSelecionado(null); setCarregando(false); return;
-            }
-            if (diaAberto === false) {
-                setHorarios([]);
-                setHorarioSelecionado(null);
-                setPaginaHorarios(1);
-                setCarregando(false);
-                return;
-            }
-            setCarregando(true); setErro(''); setHorarioSelecionado(null); setPaginaHorarios(1);
-            try {
-                const params = `id_barbearia=${encodeURIComponent(idBarbearia)}&ids_servicos=${encodeURIComponent(idsServicos)}&data=${dataSelecionada}${idFuncionario ? `&id_funcionario=${encodeURIComponent(idFuncionario)}` : ''}`;
-                const dados = await apiFetch(`/agendamentos/horarios?${params}`);
-                if (ativo) {
-                    setHorarios(dados.horarios || []);
-                    setDuracao(dados.duracao_minutos);
-                    setOrcamento({ valor_total: dados.valor_total, servicos: dados.servicos || [], generos_servico: dados.generos_servico || (dados.servicos || []).map((servico) => servico.genero).filter(Boolean) });
-                }
-            } catch (error) {
-                if (ativo) setErro(mensagemDaApi(error));
-            } finally {
-                if (ativo) setCarregando(false);
-            }
-        };
-        carregarHorarios();
-        return () => { ativo = false; };
-    }, [idBarbearia, idsServicos, dataSelecionada, idFuncionario, recarregar, diaAberto, profissionaisCarregados, profissionais.length]);
+        if (!idBarbearia || !idsServicos || !dataSelecionada || !profissionaisCarregados || diaAberto === false) return undefined;
+        const controller = new AbortController();
+        const query = new URLSearchParams({ id_barbearia: idBarbearia, ids_servicos: idsServicos, data: dataSelecionada });
+        if (idFuncionario) query.set('id_funcionario', idFuncionario);
+        apiFetch(`/agendamentos/horarios?${query}`, { signal: controller.signal })
+            .then(dados => {
+                if (controller.signal.aborted) return;
+                setConsultaHorarios({
+                    contexto: contextoDisponibilidade,
+                    horarios: dados.horarios || [],
+                    duracao: dados.duracao_minutos,
+                    orcamento: { valor_total: dados.valor_total, servicos: dados.servicos || [], generos_servico: dados.generos_servico || (dados.servicos || []).map(servico => servico.genero).filter(Boolean) }
+                });
+            })
+            .catch(error => {
+                if (!controller.signal.aborted) setConsultaHorarios({ contexto: contextoDisponibilidade, erro: mensagemDaApi(error) });
+            });
+        return () => controller.abort();
+    }, [idBarbearia, idsServicos, dataSelecionada, idFuncionario, diaAberto, profissionaisCarregados, contextoDisponibilidade]);
+
+    const trocarProfissional = id => {
+        setIdFuncionario(id);
+        setSelecaoHorario(null);
+        setSelecaoEspera(null);
+        setModalResumo(false);
+        setPaginaHorarios(1);
+        setErro('');
+    };
+    const tentarProfissionais = () => {
+        setProfissionaisCarregados(false);
+        setErroProfissionais('');
+        setSelecaoHorario(null);
+        setSelecaoEspera(null);
+        setModalResumo(false);
+        setRevisaoProfissionais(valor => valor + 1);
+    };
 
     const mudarSemana = (direcao) => {
         const proxima = new Date(inicioSemana);
         proxima.setDate(proxima.getDate() + (direcao * 7));
         const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-        if (proxima >= hoje) { setInicioSemana(proxima); setDiaSelecionado(0); }
+        if (proxima >= hoje) {
+            setInicioSemana(proxima); setDiaSelecionado(0);
+            setSelecaoHorario(null); setSelecaoEspera(null); setModalResumo(false); setPaginaHorarios(1);
+        }
+    };
+
+    const trocarDia = indice => {
+        setDiaSelecionado(indice);
+        setSelecaoHorario(null); setSelecaoEspera(null); setModalResumo(false); setPaginaHorarios(1);
     };
 
     const abrirResumo = () => {
         if (!horarioSelecionado) { setErro('Selecione um horário disponível.'); return; }
         if (orcamento?.valor_total == null) { setErro('Aguarde a consulta do valor antes de confirmar.'); return; }
         setErro('');
-        setModalResumo(true);
+        setModalResumo(contextoDisponibilidade);
     };
     const entrarNaEspera = async () => {
         if (!horarioEspera || entrandoEspera) return;
@@ -160,8 +193,8 @@ function Agendamento() {
         setEntrandoEspera(true); setErro('');
         try {
             const dados = await apiFetch('/agendamentos/lista-espera', { method: 'POST', body: JSON.stringify({
-                id_barbearia: Number(idBarbearia), ids_servicos: idsServicos.split(','), data: dataSelecionada,
-                horario: horarioEspera, id_funcionario: idFuncionario ? Number(idFuncionario) : null,
+                ...corpoAgendamento(idBarbearia, idsServicos, idFuncionario), data: dataSelecionada,
+                horario: horarioEspera,
                 ...dadosEscolhaCorte({ escolhaCorte, idCorte, idVisagismo })
             }) });
             setSucesso(dados.mensagem?.informacao || 'Você entrou na lista de espera. Avisaremos por e-mail quando o horário for liberado. O aviso não reserva o horário.');
@@ -180,7 +213,7 @@ function Agendamento() {
 
     const nomeProfissional = idFuncionario
         ? (profissionais.find((p) => String(p.id_funcionario) === String(idFuncionario))?.nome || 'Profissional selecionado')
-        : 'Sem preferência';
+        : 'Sem profissional definido';
     const descricaoEscolhaCorte = rotuloEscolhaCorte(escolhaCorte, orcamento?.generos_servico || []);
 
     const voltarParaBarbearia = () => {
@@ -197,10 +230,9 @@ function Agendamento() {
             const dados = await apiFetch('/agendamentos', {
                 method: 'POST',
                 body: JSON.stringify({
-                    id_barbearia: Number(idBarbearia), ids_servicos: idsServicos.split(','),
+                    ...corpoAgendamento(idBarbearia, idsServicos, idFuncionario),
                     data: diaAtual.iso, horario: horarioSelecionado, confirmacao_resumo: previa.resumo.confirmacao_resumo,
-                    ...dadosEscolhaCorte({ escolhaCorte, idCorte, idVisagismo }),
-                    id_funcionario: idFuncionario ? Number(idFuncionario) : null
+                    ...dadosEscolhaCorte({ escolhaCorte, idCorte, idVisagismo })
                 })
             });
             setSucesso(dados.mensagem?.informacao || 'Agendamento realizado!');
@@ -313,31 +345,27 @@ function Agendamento() {
             <section className={styles.agendamentoHeader}>
                 <h1>{diaAtual.data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</h1>
             </section>
-            {profissionais.length > 0 && (
-                <section className={styles.profSecao} aria-label="Escolha o profissional">
-                    <h2 className={styles.profTitulo}>Com quem você quer cortar?</h2>
-                    <div className={styles.profLista} role="radiogroup" aria-label="Profissionais">
-                        {profissionais.map((prof) => {
-                            const ativo = String(idFuncionario) === String(prof.id_funcionario);
-                            const inicial = String(prof.nome || '?').trim().charAt(0).toUpperCase();
-                            return <button type="button" key={prof.id_funcionario} role="radio" aria-checked={ativo}
-                                className={`${styles.profCard} ${ativo ? styles.profAtivo : ''}`}
-                                onClick={() => setIdFuncionario(String(prof.id_funcionario))}>
-                                <span className={styles.profAvatar} aria-hidden="true">{inicial}</span>
-                                <span className={styles.profNome}>{prof.nome}</span>
-                                {ativo && <span className={styles.checkHorario}>✓</span>}
-                            </button>;
-                        })}
-                    </div>
-                </section>
-            )}
+            <section className={styles.profSecao} aria-label="Profissional do atendimento">
+                <h2 className={styles.profTitulo}>Profissional do atendimento</h2>
+                {!profissionaisCarregados && !erroProfissionais && <p className={styles.profAviso} role="status">Consultando profissionais que atendem todos os serviços selecionados…</p>}
+                {erroProfissionais && <div className={styles.profAviso} role="alert"><p>Não foi possível consultar os profissionais: {erroProfissionais}</p><button type="button" className={styles.btnVoltarPagina} onClick={tentarProfissionais}>TENTAR NOVAMENTE</button></div>}
+                {profissionaisCarregados && <>
+                    {!profissionais.length && <p className={styles.profAviso} role="status">Não há profissional cadastrado para estes serviços. Você pode reservar um horário livre da barbearia, sem profissional definido.</p>}
+                    <label className={styles.profRotulo} htmlFor="profissional-atendimento">Escolha quem realizará o atendimento</label>
+                    <Select id="profissional-atendimento" className={styles.profSelect} value={idFuncionario} onChange={event => trocarProfissional(event.target.value)} disabled={ocupado}>
+                        <option value="">Sem profissional definido</option>
+                        {profissionais.map(prof => <option key={prof.id_funcionario} value={String(prof.id_funcionario)}>{prof.nome}</option>)}
+                    </Select>
+                    <p className={styles.profAviso}>{idFuncionario ? 'Os preços e horários correspondem ao profissional selecionado.' : 'Serão consultados os preços base dos serviços e os horários livres da barbearia. O profissional será definido depois.'}</p>
+                </>}
+            </section>
             <section className={styles.seletorDias}>
                 <button type="button" className={styles.navegacaoDia} onClick={() => mudarSemana(-1)} aria-label="Semana anterior">‹</button>
                 <div className={styles.diasContainer}>
                     {dias.map((dia, index) => <button type="button" key={dia.iso}
                         disabled={!dia.aberto}
                         className={`${styles.diaCard} ${dia.aberto && diaSelecionado === index ? styles.diaAtivo : ''}`}
-                        onClick={() => dia.aberto && setDiaSelecionado(index)}
+                        onClick={() => dia.aberto && trocarDia(index)}
                         style={!dia.aberto ? {
                             background: '#f3f3f3',
                             border: '2px dashed #999',
@@ -355,11 +383,12 @@ function Agendamento() {
                 {(idCorte || escolhaCorte) && <div className={styles.resumoLista} aria-label="Escolha do corte"><div className={styles.resumoLinha}><span>Corte</span><strong>{descricaoEscolhaCorte}</strong></div></div>}
                 {!carregando && orcamento?.valor_total != null && <div className={styles.resumoLista} aria-label="Preço dos serviços selecionados">{orcamento.servicos.map((servico) => <div className={styles.resumoLinha} key={servico.id_servico}><span>{servico.nome}</span><strong>{dinheiro(servico.preco)}</strong></div>)}<div className={styles.resumoLinha}><span>Total com {nomeProfissional}</span><strong>{dinheiro(orcamento.valor_total)}</strong></div></div>}
                 {!diaAtual.aberto && <p style={{ color: '#999', fontWeight: 800 }}>A barbearia não abre neste dia.</p>}
+                {consultaAtual?.erro && <div role="alert"><p>{consultaAtual.erro}</p><button type="button" className={styles.btnVoltarPagina} onClick={() => setRecarregar(valor => valor + 1)}>TENTAR CONSULTAR HORÁRIOS NOVAMENTE</button></div>}
                 {erro && <MensagemCard mensagem={{ informacao: erro, tipo: 'erro' }} fechar={() => setErro('')} />}
                 {sucesso && <MensagemCard mensagem={{ informacao: sucesso, tipo: 'sucesso' }} fechar={() => setSucesso('')} />}
                 <div className={styles.horariosGrid}>
                     {carregando && <p>Consultando disponibilidade…</p>}
-                    {!carregando && !horarios.length && <p>{profissionais.length > 0 && !idFuncionario ? 'Selecione um profissional para consultar horários e preços.' : 'Nenhum horário neste dia. Tente outra data.'}</p>}
+                    {!carregando && profissionaisCarregados && diaAberto && !consultaAtual?.erro && !horarios.length && <p>Nenhum horário neste dia. Tente outra data.</p>}
                     {!carregando && horariosDaPagina.map((item) => {
                         const ocupado = !item.disponivel;
                         const esperaDisponivel = podeEntrarNaEspera(item);
@@ -414,7 +443,7 @@ function Agendamento() {
                 </div>}
             </section>
 
-            {modalResumo && (
+            {resumoAberto && (
                 <div className={styles.overlay} onClick={() => !carregando && setModalResumo(false)} role="dialog" aria-modal="true" aria-label="Confirmar agendamento">
                     <section className={styles.modal} onClick={(e) => e.stopPropagation()}>
                         <h2>Confirmar agendamento</h2>
@@ -427,7 +456,8 @@ function Agendamento() {
                             {(idCorte || escolhaCorte) && <div className={styles.resumoLinha}><span>Corte</span><strong>{descricaoEscolhaCorte}</strong></div>}
                             
                         </div>
-                        <ResumoTaxa resumo={previa.resumo} servico />{previa.carregando && <p role="status">Conferindo valores…</p>}{previa.erro && <p role="alert">{previa.erro}</p>}<TermosAceite termos={termos} disabled={carregando} />
+                        <ResumoTaxa resumo={previa.resumo} servico />{previa.carregando && <p role="status">Conferindo valores…</p>}{previa.erro && <div role="alert"><p>{previa.erro}</p><button type="button" className={styles.btnVoltarPagina} onClick={previa.recarregar}>CONFERIR VALORES NOVAMENTE</button></div>}<TermosAceite termos={termos} disabled={carregando} />
+                        {termos.erro && <button type="button" className={styles.btnVoltarPagina} disabled={carregando || previa.carregando} onClick={() => { previa.recarregar(); termos.recarregar(); }}>ATUALIZAR VALORES E TERMOS</button>}
                         <div className={styles.modalAcoes}>
                             <button type="button" className={styles.btnVoltar} disabled={carregando} onClick={() => {
                                 setModalResumo(false);

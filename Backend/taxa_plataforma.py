@@ -119,10 +119,10 @@ def resumo_agendamento():
     if not user: return mensagem_json('Faça login.', 'erro'),401
     con = conectar_banco(); cur = con.cursor()
     try:
-        from visagismo import ids_servicos_da_requisicao, carregar_servicos, buscar_funcionario, servicos_do_funcionario
+        from visagismo import ids_servicos_da_requisicao, carregar_servicos, buscar_funcionario, servicos_do_funcionario, profissional_opcional
         data = request.get_json(silent=True) or {}
         from gestao import inteiro
-        salon = inteiro(data.get('id_barbearia')); staff = inteiro(data.get('id_funcionario')) if data.get('id_funcionario') else None
+        salon = inteiro(data.get('id_barbearia'), 'Barbearia'); staff = profissional_opcional(data.get('id_funcionario'))
         role_user=int(user['tipo'])
         if role_user not in (0,1,2,3):raise ValueError('Sem permissão.')
         cliente=user['id_usuario'] if role_user==1 else inteiro(data.get('id_cliente'),'Cliente')
@@ -143,7 +143,9 @@ def resumo_agendamento():
         if staff and (not buscar_funcionario(cur,salon,staff) or not set(ids) <= servicos_do_funcionario(cur,salon,staff)):
             raise ValueError('Profissional inválido para os serviços selecionados.')
         return jsonify(resumo=resumo_servicos(cur,salon,staff,services,user['id_usuario'],cliente))
-    except (ValueError,TypeError):
+    except ValueError as erro:
+        return mensagem_json(str(erro), 'erro'),getattr(erro,'status',400)
+    except TypeError:
         return mensagem_json('Não foi possível calcular: confira barbearia, profissional e serviços.', 'erro'),400
     finally:
         cur.close(); con.close()

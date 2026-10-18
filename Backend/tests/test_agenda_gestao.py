@@ -1,6 +1,5 @@
 """Schedule authorization and immutable financial rules; no production connections."""
 import os
-os.environ['STARTUP_MIGRATIONS']='false'
 os.environ['WAITLIST_WORKER']='false'
 import unittest
 from datetime import datetime,timedelta

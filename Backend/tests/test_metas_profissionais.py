@@ -1,6 +1,5 @@
 """Target validation, authorization and revenue derived only from historical visits."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import unittest
 from datetime import date, datetime

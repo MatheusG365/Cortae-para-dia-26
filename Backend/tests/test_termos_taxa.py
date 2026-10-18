@@ -1,6 +1,5 @@
 """Explicit consent regressions, no provider access or live database migrations."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import unittest
 from datetime import datetime
@@ -13,14 +12,18 @@ from decimal import Decimal
 
 class TermosBehavior(unittest.TestCase):
     def setUp(self):
+        baseline = patch.dict(main.app.config, {
+            'TERMOS_RESPONSAVEL_NOME': '', 'TERMOS_RESPONSAVEL_DOCUMENTO': '',
+            'TERMOS_RESPONSAVEL_CONTATO': '', 'TERMOS_RESPONSAVEL_ENDERECO': '',
+            'PLATAFORMA_TAXA_PAGADOR': ''})
+        baseline.start(); self.addCleanup(baseline.stop)
         self.context = main.app.app_context(); self.context.push()
         self.addCleanup(self.context.pop)
         self.client = main.app.test_client()
 
     def publicar(self):
         config = patch.dict(main.app.config, {'TERMOS_RESPONSAVEL_NOME': 'Operador QA',
-            'TERMOS_RESPONSAVEL_DOCUMENTO': 'Documento QA', 'TERMOS_RESPONSAVEL_CONTATO': 'qa@example.invalid',
-            'TERMOS_RESPONSAVEL_ENDERECO': 'Endereço QA', 'PLATAFORMA_TAXA_PAGADOR': 'cliente'})
+            'TERMOS_RESPONSAVEL_CONTATO': 'qa@example.invalid', 'PLATAFORMA_TAXA_PAGADOR': 'cliente'})
         config.start(); self.addCleanup(config.stop)
 
     def test_public_document_no_database_or_invented_identity(self):
@@ -32,6 +35,73 @@ class TermosBehavior(unittest.TestCase):
         self.assertTrue(data['identificacao_pendente'])
         self.assertEqual(data['estado_publicacao'], 'rascunho')
         self.assertEqual(data['responsavel']['documento'], '')
+
+    def test_name_contact_and_valid_payer_publish_without_optional_identity(self):
+        self.publicar()
+        for payer in ('cliente', 'barbearia'):
+            with self.subTest(payer=payer), patch.dict(main.app.config, {'PLATAFORMA_TAXA_PAGADOR': payer}):
+                data = self.client.get('/termos-uso').get_json()
+                self.assertEqual(data['estado_publicacao'], 'publicado')
+                self.assertTrue(data['aceite_habilitado']); self.assertTrue(data['taxa']['ativa'])
+                self.assertFalse(data['identificacao_pendente'])
+                self.assertEqual(data['responsavel'], {'nome': 'Operador QA',
+                    'contato': 'qa@example.invalid', 'documento': '', 'endereco': ''})
+
+    def test_missing_required_publication_field_keeps_draft(self):
+        self.publicar()
+        for config, value in (('TERMOS_RESPONSAVEL_NOME', '  '),
+                              ('TERMOS_RESPONSAVEL_CONTATO', ''),
+                              ('PLATAFORMA_TAXA_PAGADOR', ''),
+                              ('PLATAFORMA_TAXA_PAGADOR', 'outro')):
+            with self.subTest(config=config, value=value), patch.dict(main.app.config, {config: value}):
+                document = termos.documento_termos()
+                self.assertEqual(document['estado_publicacao'], 'rascunho')
+                self.assertFalse(document['aceite_habilitado']); self.assertFalse(document['taxa']['ativa'])
+                self.assertEqual(document['identificacao_pendente'], config != 'PLATAFORMA_TAXA_PAGADOR')
+                cur = MagicMock()
+                termos.exigir_aceite(cur, 10)
+                with self.assertRaises(termos.AceitePendente):
+                    termos.registrar_aceite(cur, 10, termos.versao_atual(), True)
+                cur.execute.assert_not_called()
+
+    def test_optional_identity_update_requires_new_account_acceptance_and_summary(self):
+        self.publicar()
+        old_version = termos.versao_atual()
+        old_document = termos.texto_documento()
+        old_hash = termos.hashlib.sha256(old_document.encode()).hexdigest()
+        old_summary = taxa.resumo_confirmavel(100, 25, {'staff': 3})
+        for config, value in (('TERMOS_RESPONSAVEL_DOCUMENTO', 'Documento informado depois'),
+                              ('TERMOS_RESPONSAVEL_ENDERECO', 'Endereço informado depois')):
+            with self.subTest(config=config), patch.dict(main.app.config, {config: value}):
+                self.assertNotEqual(termos.versao_atual(), old_version)
+                self.assertTrue(termos.documento_termos()['aceite_habilitado'])
+                cur = MagicMock(); cur.fetchone.return_value = None
+                self.assertFalse(termos.estado_aceite(cur, 10)['aceito'])
+                self.assertEqual(cur.execute.call_args.args[1], (10, termos.versao_atual()))
+                with self.assertRaises(termos.AceitePendente):
+                    termos.exigir_aceite(cur, 10)
+                with self.assertRaises(termos.AceitePendente):
+                    termos.registrar_aceite(cur, 10, old_version, True)
+                cur.fetchone.return_value = (datetime.now(), old_hash)
+                self.assertFalse(termos.estado_aceite(cur, 10)['aceito'])
+                new_summary = taxa.resumo_confirmavel(100, 25, {'staff': 3})
+                with self.assertRaises(taxa.ResumoAlterado):
+                    taxa.confirmar_resumo({'confirmacao_resumo': old_summary['confirmacao_resumo']}, new_summary)
+                self.assertFalse(any('UPDATE' in call.args[0] or 'INSERT' in call.args[0]
+                                     for call in cur.execute.call_args_list))
+
+    def test_published_accept_endpoint_requires_explicit_true_checkbox(self):
+        self.publicar()
+        for payload in ({'versao': termos.versao_atual()},
+                        {'versao': termos.versao_atual(), 'aceito': False},
+                        {'versao': termos.versao_atual(), 'aceito': 'true'}):
+            con = MagicMock(); cur = con.cursor.return_value; cur.fetchone.return_value = (10,)
+            with self.subTest(payload=payload), patch.object(termos, 'decodificar_token', return_value={'id_usuario': 10}), \
+                    patch.object(termos, 'conectar_banco', return_value=con):
+                response = self.client.post('/termos-uso/aceite', json=payload)
+            self.assertEqual(response.status_code, 428)
+            con.commit.assert_not_called(); con.rollback.assert_called_once()
+            self.assertFalse(any('INSERT' in call.args[0] for call in cur.execute.call_args_list))
 
     def test_version_changes_on_content_or_identity(self):
         initial = termos.versao_atual()

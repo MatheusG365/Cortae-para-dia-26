@@ -1,6 +1,5 @@
 """Catálogo mobile real, documentação de consulta e limites de leitura de fontes."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import re
 import stat

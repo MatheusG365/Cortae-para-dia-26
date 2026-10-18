@@ -373,30 +373,3 @@ def serve_image(area, filename, legacy_folder=None, cursor=None):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['Cache-Control'] = 'private, no-cache'
     return response
-
-
-def delete_image(area, filename, cursor=None):
-    """Revoke a known asset; call after business commit or with that transaction's cursor."""
-    _validate(area, filename)
-    con = conectar_banco() if cursor is None else None
-    cur = con.cursor() if con else cursor
-    try:
-        asset = _lookup(cur, area, filename)
-        if asset is None:
-            return False
-        cur.execute('UPDATE IMAGE_ASSET SET ATIVO=0 WHERE AREA=? AND NOME=?', (area, filename))
-        cur.execute('UPDATE IMAGE_SLOT SET NOME=NULL WHERE AREA=? AND NOME=?', (area, filename))
-        if con:
-            con.commit()
-            try:
-                _provider(asset.provider).trash(asset.file_id)
-            except Exception:
-                current_app.logger.warning('Imagem removida pendente de limpeza no armazenamento.')
-        return True
-    except Exception:
-        if con:
-            con.rollback()
-        raise
-    finally:
-        if con:
-            cur.close(); con.close()

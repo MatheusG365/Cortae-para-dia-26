@@ -1,6 +1,5 @@
 """Commercial rules and isolated Firebird checkout tests; providers never called."""
 import os
-os.environ['STARTUP_MIGRATIONS']='false'
 os.environ['WAITLIST_WORKER']='false'
 import unittest
 from datetime import date,timedelta

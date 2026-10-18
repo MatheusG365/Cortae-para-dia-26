@@ -19,6 +19,7 @@ from application import app, conectar_banco
 from barbearia import obter_usuario_logado, pegar_id_barbearia_alvo
 from visagismo import buscar_agendamento, pode_ver_agendamento
 from auditoria import registrar_log
+from arkhe_errors import mensagem_indisponivel
 
 
 TIMEOUT_ARKHE = 20
@@ -172,11 +173,10 @@ def _chamar(
         except ValueError:
             detalhe = {}
 
-        print(
-            'ERRO ARKHÉ:',
-            erro.code,
-            texto
-        )
+        app.logger.warning('Falha Arkhé: método=%s rota=%s status=%s', metodo, caminho, erro.code)
+
+        if erro.code >= 500 or erro.code == 429:
+            raise RuntimeError(mensagem_indisponivel(erro.code, criacao=metodo.upper() == 'POST')) from None
 
         mensagem_api = None
 
@@ -215,12 +215,11 @@ def _chamar(
         )
 
     except URLError as erro:
-        print('ERRO DE CONEXÃO ARKHÉ:', erro)
+        app.logger.warning('Conexão Arkhé indisponível: método=%s rota=%s', metodo, caminho)
+        raise RuntimeError(mensagem_indisponivel(criacao=metodo.upper() == 'POST')) from None
 
-        raise RuntimeError(
-            f'Não foi possível conectar à Arkhé: '
-            f'{getattr(erro, "reason", erro)}'
-        )
+    except TimeoutError:
+        raise RuntimeError(mensagem_indisponivel(criacao=metodo.upper() == 'POST')) from None
 
     except RuntimeError:
         raise

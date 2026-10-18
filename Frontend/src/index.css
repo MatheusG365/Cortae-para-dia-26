@@ -115,6 +115,37 @@ button, input, select, textarea {
 :where(button):disabled { cursor: not-allowed; opacity: 0.6; }
 :where(input, select, textarea)[aria-invalid='true'] { border-color: var(--cor-texto-negativo); }
 
+/* Dá aos seletores de arquivo visíveis o mesmo acabamento dos demais controles. */
+input[type='file']:not([hidden])::file-selector-button {
+  min-height: 36px;
+  margin-inline-end: 12px;
+  padding: 8px 14px;
+  border: 1px solid #252525;
+  border-radius: var(--raio-controle);
+  background: #252525;
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+input[type='file']:not([hidden]):not(:disabled)::file-selector-button:hover {
+  background: #414141;
+  border-color: #414141;
+}
+
+input[type='file']:not([hidden]):focus-visible::file-selector-button {
+  outline: 2px solid var(--cor-check);
+  outline-offset: 2px;
+}
+
+input[type='file']:not([hidden]):disabled::file-selector-button {
+  background: #e4e4e7;
+  border-color: #d4d4d8;
+  color: #52525b;
+  cursor: not-allowed;
+}
+
 .carregamento-pagina {
   display: grid;
   place-items: center;

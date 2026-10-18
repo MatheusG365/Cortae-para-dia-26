@@ -1,6 +1,5 @@
 """Help is read-only, covers live routes and never discloses configuration."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import re
 import stat

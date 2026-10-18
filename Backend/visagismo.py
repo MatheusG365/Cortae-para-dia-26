@@ -6,7 +6,6 @@ integração com OpenAI opcional até uma chave ser configurada no servidor.
 """
 
 from responses import mensagem_json
-from schema_utils import objeto_existe, criar_tabela, criar_sequence, criar_coluna
 import base64
 import ipaddress
 import socket
@@ -14,7 +13,6 @@ import http.client
 import json
 import os
 import re
-import threading
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from urllib.parse import urlparse
@@ -39,10 +37,7 @@ except ImportError:  # Permite iniciar a API antes de instalar a dependência.
     OpenAI = None
 
 
-EXTENSOES_PERMITIDAS = {'jpg', 'jpeg', 'png', 'webp'}
 DIAS_SEMANA = ('segunda', 'terca', 'quarta', 'quinta', 'sexta', 'sabado', 'domingo')
-_schema_pronto = False
-_schema_lock = threading.Lock()
 
 
 def resposta_erro(texto, status=400):
@@ -77,150 +72,6 @@ def encerrar_transacao_imagens(con, cursor, batch, persistido):
             cursor.close()
         finally:
             con.close()
-
-
-def criar_tabela_se_nao_existir(cursor, nome, sql):
-    criar_tabela(cursor, nome, sql)
-
-
-def criar_sequence_se_nao_existir(cursor, nome):
-    criar_sequence(cursor, nome)
-
-
-def garantir_estrutura():
-    """Cria as estruturas do módulo somente quando elas ainda não existem."""
-    global _schema_pronto
-    if _schema_pronto:
-        return
-
-    with _schema_lock:
-        if _schema_pronto:
-            return
-
-        con = conectar_banco()
-        cursor = con.cursor()
-
-        try:
-            criar_tabela_se_nao_existir(cursor, 'CORTE_VISAGISMO', '''
-                                                                   CREATE TABLE CORTE_VISAGISMO (
-                                                                                                    ID_CORTE INTEGER NOT NULL PRIMARY KEY,
-                                                                                                    ID_USUARIO INTEGER,
-                                                                                                    NOME VARCHAR(150) NOT NULL,
-                                                                                                    DESCRICAO BLOB SUB_TYPE TEXT,
-                                                                                                    CATEGORIA VARCHAR(30) NOT NULL,
-                                                                                                    IMAGEM_ROTA VARCHAR(255),
-                                                                                                    ATIVO SMALLINT DEFAULT 1 NOT NULL,
-                                                                                                    CRIADO_EM TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-                                                                   )
-                                                                   ''')
-
-            criar_tabela_se_nao_existir(cursor, 'VISAGISMO_SESSAO', '''
-                                                                    CREATE TABLE VISAGISMO_SESSAO (
-                                                                                                      ID_VISAGISMO INTEGER NOT NULL PRIMARY KEY,
-                                                                                                      ID_USUARIO INTEGER NOT NULL,
-                                                                                                      ID_BARBEARIA INTEGER,
-                                                                                                      SERVICOS_JSON BLOB SUB_TYPE TEXT,
-                                                                                                      FOTO_ROTA VARCHAR(255),
-                                                                                                      ANALISE_JSON BLOB SUB_TYPE TEXT,
-                                                                                                      CRIADO_EM TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-                                                                    )
-                                                                    ''')
-
-            criar_tabela_se_nao_existir(cursor, 'AGENDAMENTO', '''
-                                                               CREATE TABLE AGENDAMENTO (
-                                                                                            ID_AGENDAMENTO INTEGER NOT NULL PRIMARY KEY,
-                                                                                            ID_USUARIO INTEGER NOT NULL,
-                                                                                            ID_BARBEARIA INTEGER NOT NULL,
-                                                                                            ID_FUNCIONARIO INTEGER,
-                                                                                            INICIO_EM TIMESTAMP NOT NULL,
-                                                                                            FIM_EM TIMESTAMP NOT NULL,
-                                                                                            SERVICOS_JSON BLOB SUB_TYPE TEXT,
-                                                                                            ID_CORTE INTEGER,
-                                                                                            ID_VISAGISMO INTEGER,
-                                                                                            STATUS VARCHAR(20) DEFAULT 'agendado' NOT NULL,
-                                                                                            CRIADO_EM TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-                                                               )
-                                                               ''')
-
-            criar_tabela_se_nao_existir(cursor, 'AGENDAMENTO_HISTORICO', '''
-                                                                          CREATE TABLE AGENDAMENTO_HISTORICO (
-                                                                              ID_HISTORICO INTEGER NOT NULL PRIMARY KEY,
-                                                                              ID_AGENDAMENTO INTEGER NOT NULL,
-                                                                              STATUS VARCHAR(20) NOT NULL,
-                                                                              ID_USUARIO_RESPONSAVEL INTEGER,
-                                                                              REGISTRADO_EM TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
-                                                                          )
-                                                                          ''')
-
-            for sequencia in (
-                    'SEQ_CORTE_VISAGISMO',
-                    'SEQ_VISAGISMO_SESSAO',
-                    'SEQ_AGENDAMENTO',
-                    'SEQ_AGENDAMENTO_HISTORICO'
-            ):
-                criar_sequence_se_nao_existir(cursor, sequencia)
-
-            # Migração: bancos criados antes da escolha de barbeiro não têm a coluna.
-            criar_coluna(cursor, 'AGENDAMENTO', 'ID_FUNCIONARIO', 'INTEGER')
-
-            # A simulação gerada por IA fica registrada na sessão para o agendamento exibir.
-            for coluna, tipo_col in (('ID_CORTE_SIMULADO', 'INTEGER'), ('RESULTADO_ROTA', 'VARCHAR(255)')):
-                criar_coluna(cursor, 'VISAGISMO_SESSAO', coluna, tipo_col)
-
-            # Campo GENERO na tabela USUARIO para filtro de cortes por gênero
-            criar_coluna(cursor, 'USUARIO', 'GENERO', 'VARCHAR(10)')
-
-            # Campo GENERO na tabela CORTE_VISAGISMO para filtro de cortes por gênero
-            criar_coluna(cursor, 'CORTE_VISAGISMO', 'GENERO', 'VARCHAR(10)')
-
-            # Campos PIX/Arkhe na tabela PERSONALIZACAO
-            for coluna, tipo_col in (('CHAVE_PIX', 'VARCHAR(100)'), ('ARKHE_CLIENT_ID', 'VARCHAR(100)'), ('ARKHE_CLIENT_SECRET', 'VARCHAR(200)')):
-                criar_coluna(cursor, 'PERSONALIZACAO', coluna, tipo_col)
-
-            # Unificação: a tabela legada AGENDAMENTOS (sem barbearia/datas, sem uso
-            # no código) é removida quando vazia. Com linhas, elas são migradas para
-            # AGENDAMENTO resolvendo a barbearia pelo funcionário vinculado.
-            if objeto_existe(cursor, 'tabela', 'AGENDAMENTOS'):
-                cursor.execute('SELECT COUNT(*) FROM AGENDAMENTOS')
-                if (cursor.fetchone() or [0])[0] == 0:
-                    cursor.execute('DROP TABLE AGENDAMENTOS')
-                else:
-                    cursor.execute('''SELECT ID_AGENDAMENTO, ID_USUARIO, ID_SERVICO,
-                                      ID_FUNCIONARIO, CORTE, HORARIO FROM AGENDAMENTOS''')
-                    for leg in cursor.fetchall():
-                        cursor.execute('''SELECT D.ID_USUARIO FROM FUNCIONARIO_DIA FD
-                                          INNER JOIN DIAS_DE_SERVICO D ON D.ID_DIA = FD.ID_DIA
-                                          WHERE FD.ID_FUNCIONARIO = ?''', (leg[3],))
-                        barb = cursor.fetchone()
-                        if not barb:
-                            continue
-                        try:
-                            cursor.execute('''INSERT INTO AGENDAMENTO
-                                              (ID_AGENDAMENTO, ID_USUARIO, ID_BARBEARIA, ID_FUNCIONARIO,
-                                               INICIO_EM, FIM_EM, SERVICOS_JSON, ID_CORTE, STATUS)
-                                              VALUES (NEXT VALUE FOR SEQ_AGENDAMENTO, ?, ?, ?, ?, ?, ?, ?, 'agendado')''',
-                                           (leg[1], barb[0], leg[3], leg[5], leg[5],
-                                            json.dumps([leg[2]]) if leg[2] is not None else '[]', leg[4]))
-                            cursor.execute('DELETE FROM AGENDAMENTOS WHERE ID_AGENDAMENTO = ?', (leg[0],))
-                        except Exception:
-                            continue
-                    cursor.execute('SELECT COUNT(*) FROM AGENDAMENTOS')
-                    if (cursor.fetchone() or [0])[0] == 0:
-                        cursor.execute('DROP TABLE AGENDAMENTOS')
-
-            con.commit()
-            _schema_pronto = True
-
-        except Exception:
-            con.rollback()
-            raise
-
-        finally:
-            cursor.close()
-            con.close()
-
-
-# Função removida: as sequences são usadas diretamente nos inserts com NEXT VALUE FOR
 
 
 def ids_servicos_da_requisicao(dados):
@@ -290,12 +141,6 @@ def categoria_para_servicos(servicos):
     if tem_tratamento_cabelo or tem_cabelo or tem_corte_cabelo:
         return 'cabelo'
     return 'cabelo'
-
-
-
-
-
-
 
 
 def generos_para_filtro_servicos(servicos):
@@ -382,8 +227,6 @@ class RedirecionamentoImagem(HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-
-
 def url_corte(nome, cursor=None):
     if not nome:
         return None
@@ -419,7 +262,6 @@ def pode_gerenciar_catalogo(usuario):
 @app.route('/visagismo/cortes', methods=['GET'])
 def listar_cortes_visagismo():
     try:
-        garantir_estrutura()
         id_barbearia = request.args.get('id_barbearia', type=int)
         ids_servicos = ids_servicos_da_requisicao(request.args)
         categoria = request.args.get('categoria')
@@ -474,7 +316,6 @@ def criar_corte_visagismo():
     if not pode_gerenciar_catalogo(usuario):
         return resposta_erro('Apenas administradores ou barbearias podem administrar cortes.', 403)
     try:
-        garantir_estrutura()
         dados = request.form if request.form else (request.get_json(silent=True) or {})
         nome = str(dados.get('nome', '')).strip()
         descricao = str(dados.get('descricao', '')).strip()
@@ -537,7 +378,6 @@ def editar_corte_visagismo(id_corte):
     if not pode_gerenciar_catalogo(usuario):
         return resposta_erro('Sem permissão para editar cortes.', 403)
     try:
-        garantir_estrutura()
         dados = request.form if request.form else (request.get_json(silent=True) or {})
         nome = str(dados.get('nome', '')).strip(); descricao = str(dados.get('descricao', '')).strip()
         categoria = str(dados.get('categoria', '')).strip().lower()
@@ -595,7 +435,6 @@ def excluir_corte_visagismo(id_corte):
     if not pode_gerenciar_catalogo(usuario):
         return resposta_erro('Sem permissão para excluir cortes.', 403)
     try:
-        garantir_estrutura()
         con = conectar_banco(); cursor = con.cursor()
         try:
             cursor.execute('SELECT IMAGEM_ROTA FROM CORTE_VISAGISMO WHERE ID_CORTE=?', (id_corte,))
@@ -698,7 +537,6 @@ def analisar_visagismo():
     if not usuario: return resposta_erro('Faça login para usar o visagismo.', 401)
     persistido = False
     try:
-        garantir_estrutura()
         id_barbearia = request.form.get('id_barbearia', type=int)
         ids_servicos = ids_servicos_da_requisicao(request.form)
         if not id_barbearia or not ids_servicos:
@@ -763,7 +601,6 @@ def salvar_foto_visagismo():
     if not usuario: return resposta_erro('Faça login para usar o visagismo.', 401)
     persistido = False
     try:
-        garantir_estrutura()
         id_barbearia = request.form.get('id_barbearia', type=int)
         ids_servicos = ids_servicos_da_requisicao(request.form)
         if not id_barbearia or not ids_servicos: return resposta_erro('Escolha a barbearia e ao menos um serviço.')
@@ -858,7 +695,6 @@ def simular_visagismo(id_visagismo):
     if not usuario: return resposta_erro('Faça login para gerar a simulação.', 401)
     persistido = False
     try:
-        garantir_estrutura()
         dados = request.get_json(silent=True) or {}
         id_corte = dados.get('id_corte')
         if id_corte is not None:
@@ -1014,12 +850,24 @@ def intervalos_do_dia(cursor, id_barbearia, dia):
 
 
 def buscar_funcionario(cursor, id_barbearia, id_funcionario):
-    """Valida que o profissional pertence à barbearia (via dias vinculados)."""
+    """Valida que o profissional está ativo e pertence à barbearia."""
     cursor.execute('SELECT ID_FUNCIONARIO,NOME,DESCRICAO FROM FUNCIONARIO WHERE ID_BARBEARIA=? AND ID_FUNCIONARIO=? AND ATIVO=1',(id_barbearia,id_funcionario))
     linha = cursor.fetchone()
     if not linha:
         return None
     return {'id_funcionario': linha[0], 'nome': linha[1], 'descricao': linha[2]}
+
+
+def profissional_opcional(valor):
+    """Ausência explícita usa a agenda do salão; IDs fornecidos devem ser válidos."""
+    if valor is None or valor == '':
+        return None
+    if isinstance(valor, bool) or not re.fullmatch(r'[1-9]\d*', str(valor)):
+        raise ValueError('Profissional inválido.')
+    resultado = int(valor)
+    if resultado > 2147483647:
+        raise ValueError('Profissional inválido.')
+    return resultado
 
 
 def servicos_do_funcionario(cursor, id_barbearia, id_funcionario):
@@ -1080,19 +928,15 @@ def horarios_disponiveis(cursor, id_barbearia, dia, duracao_minutos, id_funciona
 @app.route('/agendamentos/horarios', methods=['GET'])
 def listar_horarios_agendamento():
     try:
-        garantir_estrutura()
         id_barbearia = request.args.get('id_barbearia', type=int); ids = ids_servicos_da_requisicao(request.args)
         dia = parse_data(request.args.get('data'))
-        id_funcionario = request.args.get('id_funcionario', type=int)
+        id_funcionario = profissional_opcional(request.args.get('id_funcionario'))
         if not id_barbearia or not ids: return resposta_erro('Informe barbearia e serviços.')
         if dia < date.today(): return resposta_erro('Não é possível agendar em data anterior à atual.')
         con = conectar_banco(); cursor = con.cursor()
         try:
             servicos = carregar_servicos(cursor, id_barbearia, ids)
             if not servicos: return resposta_erro('Serviços inválidos para esta barbearia.', 400)
-            if not id_funcionario:
-                cursor.execute('SELECT FIRST 1 ID_FUNCIONARIO FROM FUNCIONARIO WHERE ID_BARBEARIA=? AND ATIVO=1',(id_barbearia,))
-                if cursor.fetchone(): return resposta_erro('Selecione o profissional para consultar horários e preço.')
             funcionario = None
             if id_funcionario:
                 funcionario = buscar_funcionario(cursor, id_barbearia, id_funcionario)
@@ -1118,13 +962,11 @@ def criar_agendamento():
     if not usuario: return resposta_erro('Faça login para agendar.', 401)
     if int(usuario.get('tipo', -1)) not in (0,1,2,3): return resposta_erro('Sem permissão para criar agendamentos.', 403)
     try:
-        garantir_estrutura()
         dados = request.get_json(silent=True) or {}
         id_barbearia = dados.get('id_barbearia'); ids = ids_servicos_da_requisicao(dados)
         if int(usuario.get('tipo',-1)) == 2: id_barbearia=usuario['id_usuario']
         if int(usuario.get('tipo',-1)) == 0: id_barbearia=request.args.get('id_barbearia') or id_barbearia
-        try: id_funcionario = int(dados.get('id_funcionario')) if dados.get('id_funcionario') not in (None, '') else None
-        except (TypeError, ValueError): return resposta_erro('Profissional inválido.')
+        id_funcionario = profissional_opcional(dados.get('id_funcionario'))
         dia = parse_data(dados.get('data')); horario = str(dados.get('horario', ''))
         try: inicio = datetime.combine(dia, datetime.strptime(horario, '%H:%M').time())
         except ValueError: return resposta_erro('Horário inválido.')
@@ -1151,9 +993,6 @@ def criar_agendamento():
             servicos = carregar_servicos(cursor, int(id_barbearia), ids)
             if not servicos: return resposta_erro('Serviços inválidos para a barbearia.', 400)
             escolha=validar_escolha_corte(cursor,dados,id_cliente,int(id_barbearia),servicos)
-            if not id_funcionario:
-                cursor.execute('SELECT FIRST 1 ID_FUNCIONARIO FROM FUNCIONARIO WHERE ID_BARBEARIA=? AND ATIVO=1',(int(id_barbearia),))
-                if cursor.fetchone(): return resposta_erro('Selecione o profissional para consultar o preço e reservar a agenda.')
             funcionario = None
             if id_funcionario:
                 funcionario = buscar_funcionario(cursor, int(id_barbearia), id_funcionario)
@@ -1167,6 +1006,7 @@ def criar_agendamento():
             # concorrentes inclusive quando ainda não existe agendamento no dia.
             cursor.execute('SELECT ID_USUARIO FROM USUARIO WHERE ID_USUARIO=? AND TIPO=2 AND ATIVO=1 WITH LOCK', (int(id_barbearia),))
             if not cursor.fetchone(): return resposta_erro('Barbearia não encontrada.', 404)
+            if inicio < datetime.now(): return resposta_erro('Não é possível agendar no passado.')
             servicos_atuais=carregar_servicos(cursor,int(id_barbearia),ids)
             if not servicos_atuais: return resposta_erro('Os serviços não estão mais disponíveis.',409)
             if id_funcionario and (not buscar_funcionario(cursor,int(id_barbearia),id_funcionario) or not set(ids)<=servicos_do_funcionario(cursor,int(id_barbearia),id_funcionario)):
@@ -1352,7 +1192,6 @@ def listar_agendamentos():
     usuario = obter_usuario_logado()
     if not usuario: return resposta_erro('Faça login para ver agendamentos.', 401)
     try:
-        garantir_estrutura()
         tipo = int(usuario.get('tipo', -1))
         status = request.args.get('status')
         data = request.args.get('data')
@@ -1402,7 +1241,6 @@ def cancelar_agendamento(id_agendamento):
     usuario = obter_usuario_logado()
     if not usuario: return resposta_erro('Faça login para cancelar.', 401)
     try:
-        garantir_estrutura()
         con = conectar_banco(); cursor = con.cursor()
         try:
             linha = travar_agendamento(cursor, id_agendamento)
@@ -1442,7 +1280,6 @@ def reagendar_agendamento(id_agendamento):
     usuario = obter_usuario_logado()
     if not usuario: return resposta_erro('Faça login para reagendar.', 401)
     try:
-        garantir_estrutura()
         dados = request.get_json(silent=True) or {}
         dia = parse_data(dados.get('data')); horario = str(dados.get('horario', ''))
         try: inicio = datetime.combine(dia, datetime.strptime(horario, '%H:%M').time())
@@ -1526,7 +1363,6 @@ def registrar_status_atendimento(id_agendamento):
         return resposta_erro("Informe o status 'concluido' ou 'faltou'.")
 
     try:
-        garantir_estrutura()
         con = conectar_banco(); cursor = con.cursor()
         try:
             linha = travar_agendamento(cursor, id_agendamento)
@@ -1582,7 +1418,6 @@ def avisar_cliente(id_agendamento):
     if int(usuario.get('tipo', -1)) not in (0, 2):
         return resposta_erro('Apenas a barbearia pode enviar avisos.', 403)
     try:
-        garantir_estrutura()
         texto = str((request.get_json(silent=True) or {}).get('texto', '')).strip()
         if not texto: return resposta_erro('Escreva o texto do aviso.')
         if len(texto) > 500: return resposta_erro('O aviso deve ter até 500 caracteres.')

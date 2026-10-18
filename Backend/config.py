@@ -18,19 +18,9 @@ load_dotenv(
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = os.getenv('DEBUG', 'false').lower() in ('1', 'true', 'sim', 'yes')
-STARTUP_MIGRATIONS = os.getenv('STARTUP_MIGRATIONS', 'true').lower() in ('1', 'true', 'sim', 'yes')
 PORT = int(os.getenv('PORT', '5000'))
 API_HOST = os.getenv('API_HOST', '0.0.0.0').strip() or '0.0.0.0'
 MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', str(85 * 1024 * 1024)))
-
-
-# ==========================================================
-# DIRETÓRIO PRINCIPAL DO BACKEND
-# ==========================================================
-
-BASE_DIR = os.path.dirname(
-    os.path.abspath(__file__)
-)
 
 
 # ==========================================================
@@ -174,6 +164,7 @@ MELHOR_ENVIO_USER_AGENT = os.getenv('MELHOR_ENVIO_USER_AGENT', 'Cortae marketpla
 MELHOR_ENVIO_EMITIR_ETIQUETAS = os.getenv('MELHOR_ENVIO_EMITIR_ETIQUETAS', 'false').lower() in ('1','true','yes')
 
 # Legal operator identification: do not infer these values from login credentials.
+# Name/contact and a valid fee payer enable publication; document/address are optional.
 TERMOS_RESPONSAVEL_NOME = os.getenv('TERMOS_RESPONSAVEL_NOME', '')
 TERMOS_RESPONSAVEL_DOCUMENTO = os.getenv('TERMOS_RESPONSAVEL_DOCUMENTO', '')
 TERMOS_RESPONSAVEL_CONTATO = os.getenv('TERMOS_RESPONSAVEL_CONTATO', '')

@@ -1,6 +1,5 @@
 """Native authentication contract; all DB and audit writes are isolated mocks."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import unittest
 from contextlib import ExitStack

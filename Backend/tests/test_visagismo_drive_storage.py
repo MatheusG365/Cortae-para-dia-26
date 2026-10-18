@@ -1,7 +1,5 @@
 """Visagismo image transaction/privacy regressions; no live Drive, AI or Firebird."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
-
 import base64
 from contextlib import ExitStack
 import io
@@ -30,7 +28,6 @@ class VisagismoDriveStorage(unittest.TestCase):
         self.user = {'id_usuario': 7, 'tipo': 1}
         self.stack.enter_context(patch.object(visagismo, 'obter_usuario_logado', side_effect=lambda: self.user))
         self.stack.enter_context(patch.object(visagismo, 'conectar_banco', return_value=self.connection))
-        self.stack.enter_context(patch.object(visagismo, 'garantir_estrutura'))
         self.stack.enter_context(patch.object(visagismo, 'find_image', return_value=None))
         self.stack.enter_context(patch.object(visagismo, 'capturar_registro', return_value={}))
         self.stack.enter_context(patch.object(visagismo, 'registrar_registro'))

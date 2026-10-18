@@ -1,8 +1,8 @@
 """Independent payment regressions: all provider, credential and DB calls mocked."""
 import os
-os.environ['STARTUP_MIGRATIONS']='false'
 os.environ['WAITLIST_WORKER']='false'
-import unittest,json
+import unittest,json,io
+from urllib.error import HTTPError, URLError
 from datetime import datetime,timedelta
 from decimal import Decimal
 from unittest.mock import MagicMock,patch
@@ -105,5 +105,25 @@ class PaymentBehavior(unittest.TestCase):
         with patch.dict(main.app.config,ARKHE_BASE_URL='https://example.invalid'),patch.object(pagamento,'_cabecalhos',return_value={'Content-Type':'application/json'}),patch.object(pagamento,'urlopen',return_value=provider) as request:
             result=pagamento._chamar('POST','/api/v1/cobrancas/pix',{'valor':23.55},id_barbearia=8)
         self.assertEqual(result['id_cobranca'],'qa-pix');self.assertEqual(json.loads(request.call_args.args[0].data),{'valor':23.55})
+
+    def test_upstream_gateway_failure_has_safe_explanation_and_no_automatic_retry(self):
+        for status in (500, 502, 503, 504, 429):
+            failure=HTTPError('https://example.invalid',status,'gateway',{},io.BytesIO(b'<html>private-provider-debug</html>'))
+            with self.subTest(status=status),patch.dict(main.app.config,ARKHE_BASE_URL='https://example.invalid'),patch.object(pagamento,'_cabecalhos',return_value={}),patch.object(pagamento,'urlopen',side_effect=failure) as provider:
+                with self.assertRaises(RuntimeError) as raised:
+                    pagamento._chamar('POST','/api/v1/cobrancas/pix',{'valor':1},id_barbearia=8)
+                self.assertIn('temporariamente indisponível',str(raised.exception))
+                self.assertIn('Confira as cobranças',str(raised.exception))
+                self.assertNotIn('private-provider-debug',str(raised.exception))
+                provider.assert_called_once()
+
+    def test_network_failure_does_not_claim_cobranca_was_not_created(self):
+        for failure in (TimeoutError(), URLError('private-network-details')):
+            with self.subTest(failure=type(failure).__name__),patch.dict(main.app.config,ARKHE_BASE_URL='https://example.invalid'),patch.object(pagamento,'_cabecalhos',return_value={}),patch.object(pagamento,'urlopen',side_effect=failure) as provider:
+                with self.assertRaises(RuntimeError) as raised:
+                    pagamento._chamar('POST','/api/v1/cobrancas/pix',{'valor':1},id_barbearia=8)
+                self.assertIn('Não foi possível confirmar',str(raised.exception))
+                self.assertNotIn('private-network-details',str(raised.exception))
+                provider.assert_called_once()
 
 if __name__=='__main__':unittest.main()

@@ -1,6 +1,5 @@
 """Product image ownership, multipart validation and transaction regressions."""
 import os
-os.environ['STARTUP_MIGRATIONS']='false'
 import io
 import json
 from contextlib import ExitStack

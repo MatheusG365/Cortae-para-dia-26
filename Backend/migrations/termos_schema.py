@@ -1,6 +1,6 @@
 """Additive terms acceptance records; never fabricate acceptance for old accounts."""
 from application import conectar_banco
-from schema_utils import criar_tabela
+from .schema_utils import criar_tabela
 
 
 def migrar_termos_taxa():

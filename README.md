@@ -73,7 +73,7 @@ Cada campo efetivamente alterado gera um histórico em `LOG_ALTERACAO`, com usu�
 
 `/health` verifica o banco principal e a tabela de auditoria. `LOG_OBRIGATORIO=false` permite que a operação continue quando o log estiver indisponível; essa falha é registrada no servidor. Com `true`, a falha é propagada. Como são dois bancos, o log e a gravação principal não formam uma transação atômica: uma falha no log após o commit não desfaz a operação principal.
 
-O startup verifica estruturas e apenas aumenta sequences quando necessário; nunca reduz IDs já alocados. `STARTUP_MIGRATIONS=false` desativa essa preparação, útil em verificações isoladas.
+A API usa o banco já preparado: iniciar o servidor e consultar rotas não cria tabelas, altera campos nem realinha sequences. `/health` confere os campos exigidos sem escrever; estrutura incompleta retorna 503. Na pasta Backend, `python -m migrations` apenas confere o banco. Atualizações futuras são manuais, após backup, com `python -m migrations --aplicar`; a ferramenta fica separada em `Backend/migrations/`. Restaure primeiro o banco base em uma instalação nova.
 
 E-mail, pagamentos Arkhé e análise/geração OpenAI exigem credenciais válidas dos serviços. A suíte de regressão usa simulações dessas integrações e não cobra nem envia mensagens. Os testes de banco devem usar cópias restauradas via `gbak`; nunca use dados reais para testes que alteram registros.
 

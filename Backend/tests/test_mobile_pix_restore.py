@@ -1,6 +1,5 @@
 """Recover a native charge QR by GET, with strict reconciliation validation."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import unittest
 from contextlib import ExitStack

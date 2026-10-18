@@ -1,5 +1,32 @@
 # Limpeza de código e regressão
 
+## Atualização de 18/10/2026
+
+A API passou a usar o banco já preparado: iniciar o servidor, abrir a agenda ou consultar o financeiro não cria tabelas, altera colunas, realinha sequences nem migra registros legados.
+
+- Preparação de banco isolada em `Backend/migrations/`, com um único comando: `python -m migrations` confere sem escrever; `python -m migrations --aplicar` é manutenção manual após backup. Exige um banco base existente.
+- `/health` confere os campos obrigatórios e a largura da origem financeira sem modificar dados. A base local tem as 52 tabelas e os 410 campos esperados; as 30 sequences declaradas estão presentes, sem sequences base atrasadas.
+- Arquivos Python na raiz do backend: 57 → 44. Módulos de esquema foram organizados na pasta de manutenção.
+- Retirados `merge_sessions.py`, `atualizar_referencias.py`, `verificar_categorias.py`, `verificar_servicos.py` e o arquivo inválido `git.ignore`. Foram retiradas cinco funções sem chamadas e duas constantes de extensões sem uso.
+- O manifesto antigo do catálogo foi movido para `docs/referencias/catalogo_cortes.json`, como histórico documental. Cadastro/edição de imagens continuam pelas telas do sistema e pelo Drive.
+- Configuração duplicada de BASE_DIR, flag STARTUP_MIGRATIONS e padrões repetidos do .gitignore foram removidos. Credenciais, bancos, templates de e-mail e ambiente .venv foram preservados.
+- A pasta local .idea e caches de Python foram retirados da pasta do backend, com cópia recuperável fora do projeto. O Python pode recriar caches normalmente.
+- A busca de dependências do frontend não encontrou módulos JS/JSX/CSS sem ligação ao ponto de entrada; nenhuma página foi excluída por suposição.
+- Inventário por decoradores: 176 combinações de rota/método antes e depois, sem remoção de endpoints. Help, contratos OpenAPI e READMEs atualizados.
+
+### Validação
+
+- Backend: **501 casos, 500 aprovados e 1 ignorado por limitação de links simbólicos no Windows**. Integrações Firebird habilitadas em bancos temporários independentes; sem cobrança bancária, envio real de e-mail ou alteração de dados da base principal.
+- Frontend: **124 aprovados**, lint sem erros e build de produção aprovado.
+- Novas regressões verificam importação da API sem conexão ou DDL, detecção de campos ausentes sem escrita, manutenção manual e ausência de DDL nos módulos de requisição.
+- Testes de snapshot foram ajustados para executar a atualização de estrutura explicitamente. Com estrutura antiga não preparada, a consulta falha sem alterar a coluna nem perder o histórico.
+- Conferência manual do banco: estrutura completa, sem alterações realizadas.
+- HTTP real após reiniciar: health pronto; marketplace e consulta de horários HTTP 200; OpenAPI e endereços sem autenticação HTTP 401.
+
+Fontes anteriores e arquivos retirados estão em `C:/Users/mathe/Documents/Backups-Cortae/limpeza-20261018/`. Logs completos de backend, integração, testes frontend, lint/build e inventário de rotas estão nessa mesma pasta. Nenhuma tabela de negócio foi apagada.
+
+## Histórico — 12/10/2026
+
 Concluída em 12/10/2026. Projeto: JOHN2-main.
 
 ## Mudanças

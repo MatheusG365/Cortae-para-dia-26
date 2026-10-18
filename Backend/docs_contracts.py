@@ -214,6 +214,34 @@ def complementar_contratos(documento, operacao):
     adicionar('/marketplace/carrinho/{id_produto}', 'put', 'Alterar quantidade do carrinho', CLIENTE+'Quantidade zero remove somente a linha indicada; adicionar=true soma à existente. id_variacao é obrigatório quando houver variações; nenhuma quantidade pode superar o estoque.', objeto({'quantidade': {'type': 'integer', 'minimum': 0, 'maximum': 999999}, 'id_variacao': {'type': 'integer', 'nullable': True}, 'adicionar': BOOLEANO}, ['quantidade']))
     adicionar('/marketplace/produtos/{id_produto}/avaliacao', 'put', 'Avaliar produto recebido', CLIENTE+'Somente após pedido entregue contendo o produto. Nota inteira de 1 a 5, comentário até 1000 caracteres; atualiza a própria avaliação.', AVALIACAO)
     adicionar('/marketplace/frete', 'post', 'Cotar entrega pelo Melhor Envio', CLIENTE+'Carrinho da loja, CEP de oito dígitos e remetente configurado. Cotação válida por 15 minutos e vinculada ao cliente, carrinho/endereço/remetente. Não compra nem emite etiqueta; cliente paga o frete.', objeto({'id_barbearia': INTEIRO, 'cep': TEXTO}, ['id_barbearia', 'cep']))
+    adicionar('/marketplace/cep/{postal_code}', 'get', 'Preencher endereço pelo CEP', CLIENTE+'ViaCEP gratuito, somente CEP enviado ao serviço. Oito dígitos ou formato 00000-000. Retorna logradouro, bairro, cidade e UF; número e complemento são informados pelo cliente. 400 inválido, 404 inexistente, 503 indisponível; preenchimento manual continua possível.')
+    owner('/gestao/marketplace/cep/{postal_code}', 'get', 'Consultar CEP do remetente', 'Mesma consulta ViaCEP, com autenticação do estabelecimento ou administrador e validação da barbearia alvo.')
+    adicionar('/marketplace/enderecos', 'get', 'Listar endereços de entrega salvos', CLIENTE+'Somente os endereços da conta autenticada, com apelido, padrão e dados de contato/entrega. Não usa armazenamento local do navegador.')
+    endereco_salvo = objeto({'apelido': TEXTO, 'padrao': BOOLEANO, 'endereco': ENDERECO}, ['endereco'])
+    adicionar('/marketplace/enderecos', 'post', 'Salvar novo endereço de entrega', CLIENTE+'Salvamento explícito. Primeiro endereço é padrão; padrao=true substitui o anterior. Não cria pedido nem cobrança.', endereco_salvo)
+    adicionar('/marketplace/enderecos/{id_endereco}', 'put', 'Editar próprio endereço de entrega', CLIENTE+'Exige titularidade. Mantém um endereço padrão e preserva os endereços históricos dos pedidos já criados.', endereco_salvo)
+    consulta_cep = objeto({campo: TEXTO for campo in ('cep', 'logradouro', 'bairro', 'cidade', 'uf')},
+                         ['cep', 'logradouro', 'bairro', 'cidade', 'uf'])
+    salvo = objeto({'id_endereco': INTEIRO, 'apelido': {**TEXTO, 'maxLength': 80},
+                    'padrao': BOOLEANO, 'dados': ENDERECO}, ['id_endereco', 'apelido', 'padrao', 'dados'])
+    def resposta_json(descricao, schema):
+        return {'description': descricao, 'content': {'application/json': {'schema': schema}}}
+    for rota in ('/marketplace/cep/{postal_code}', '/gestao/marketplace/cep/{postal_code}'):
+        contrato_cep = caminhos[rota]['get']
+        contrato_cep['parameters'] = [*contrato_cep.get('parameters', []),
+            {'name': 'postal_code', 'in': 'path', 'required': True,
+             'schema': {'type': 'string', 'pattern': '^[0-9]{5}-?[0-9]{3}$', 'example': '01001000'}}]
+        contrato_cep['responses'] = {**contrato_cep['responses'], '200': resposta_json('Endereço postal; logradouro/bairro podem vir vazios em CEP genérico.', objeto({'endereco': consulta_cep}, ['endereco']))}
+    # Cada contrato recebe sua própria coleção de respostas; os padrões são compartilhados.
+    caminhos['/marketplace/enderecos']['get']['responses'] = {
+        **caminhos['/marketplace/enderecos']['get']['responses'],
+        '200': resposta_json('Endereços da conta autenticada, padrão primeiro.', objeto({'enderecos': {'type': 'array', 'items': salvo}}, ['enderecos']))}
+    for rota, metodo, codigo in (('/marketplace/enderecos', 'post', '201'),
+                                 ('/marketplace/enderecos/{id_endereco}', 'put', '200')):
+        contrato_endereco = caminhos[rota][metodo]
+        contrato_endereco['responses'] = {**contrato_endereco['responses'], codigo: resposta_json('Endereço salvo; dados normalizados e histórico de pedidos preservado.', objeto({'endereco': salvo}, ['endereco']))}
+        if codigo == '201':
+            contrato_endereco['responses'].pop('200', None)
     adicionar('/marketplace/pedidos/resumo', 'post', 'Conferir total e cupom no checkout', CLIENTE+'Endereço completo exigido inclusive na retirada. Entrega exige id_cotacao válido; retirada não cobra frete. Retorna resumo, assinatura e cupom/desconto conferidos. Mudança de carrinho/cupom/valor/endereço invalida confirmação.', CHECKOUT)
     pedido = objeto({**CHECKOUT['properties'], 'chave_idempotencia': TEXTO,
                      'confirmacao_resumo': TEXTO},
@@ -250,14 +278,19 @@ def complementar_contratos(documento, operacao):
     owner('/gestao/metas/{id_meta}', 'patch', 'Ativar/desativar meta', 'Reativação exige profissional ativo.', ATIVO)
     adicionar('/painel-barbeiro/metas', 'get', 'Metas do próprio profissional', 'Exclusivo profissional ativo (tipo 3) vinculado à loja; consulta somente suas metas e progresso. Não cria/edita metas nem vê outro profissional.', query=[('inicio', DATA), ('fim', DATA), ('id_funcionario', INTEIRO)])
 
-    adicionar('/termos-uso', 'get', 'Documento e estado dos termos de uso', 'Público. Termos em rascunho não exigem aceite; retorno informa versão, publicação e aceite_habilitado. Não publica nem ativa taxas.', publico=True)
+    adicionar('/termos-uso', 'get', 'Documento e estado dos termos de uso', 'Público. Retorna versão, estado_publicacao, aceite_habilitado, responsável e taxa. Publicação depende de nome/contato do responsável e pagador válido; documento/endereço são opcionais. Rascunho não exige aceite nem bloqueia agendamento. Publicado exige aceite atual e permite taxa de 1,5% sobre produtos/serviços, excluindo frete, conforme pagador. Consulta não altera configuração; completar dados depois muda a versão.', publico=True)
     adicionar('/termos-uso/aceite', 'get', 'Estado de aceite da própria conta', 'Sessão ativa e confirmada; somente a própria conta.')
-    adicionar('/termos-uso/aceite', 'post', 'Aceitar versão publicada dos termos', 'Sessão ativa; exige versão atual publicada e aceito=true. Persiste documento/hash e auditoria; rascunho não pode ser aceito.', objeto({'versao': TEXTO, 'aceito': BOOLEANO}, ['versao', 'aceito']))
+    adicionar('/termos-uso/aceite', 'post', 'Aceitar versão publicada dos termos', 'Sessão ativa; exige versão atual publicada e aceito=true. Persiste documento/hash e auditoria; rascunho não pode ser aceito. Versão incorreta, rascunho ou aceito diferente de true: 428; recarregue termos e resumo antes de novo aceite. Aceite pendente na operação também retorna 428.', objeto({'versao': TEXTO, 'aceito': BOOLEANO}, ['versao', 'aceito']))
     owner('/gestao/taxas-plataforma', 'get', 'Histórico das taxas da plataforma', PERIODO+'Relatório por estabelecimento; taxa em rascunho permanece inativa. Não realiza repasse bancário.', query=[('inicio', DATA), ('fim', DATA)])
-    adicionar('/agendamentos/resumo', 'post', 'Resumo de serviços antes de agendar', 'Perfis 0, 1, 2 e 3. Cliente usa a própria conta; demais informam id_cliente. Dono limitado à própria barbearia; profissional limitado ao vínculo e a si próprio. Usa serviços e preços individuais; informa taxa vigente e confirmacao_resumo. Não reserva horário.', objeto({'id_barbearia': INTEIRO, 'ids_servicos': {'type': 'array', 'items': INTEIRO}, 'id_funcionario': INTEIRO, 'id_cliente': INTEIRO}, ['id_barbearia', 'ids_servicos']))
+    adicionar('/agendamentos/resumo', 'post', 'Resumo de serviços antes de agendar', 'Perfis 0, 1, 2 e 3. Cliente usa a própria conta; demais informam id_cliente. Dono limitado à própria barbearia; profissional limitado ao vínculo e a si próprio. id_funcionario opcional ou null para cliente/ADM/dono: sem vínculo usa preço-base do salão; com vínculo exige profissional elegível. Perfil 3 é limitado ao próprio vínculo. Informa taxa vigente, termos_versao e confirmacao_resumo. Não reserva horário nem registra aceite. Alterações de contexto exigem novo resumo.', objeto({'id_barbearia': INTEIRO, 'ids_servicos': {'type': 'array', 'items': INTEIRO}, 'id_funcionario': {**INTEIRO, 'nullable': True}, 'id_cliente': INTEIRO}, ['id_barbearia', 'ids_servicos']))
     exclusivo = 'Exclusivo ADM (tipo 0). JWT/cookie válido e conta ativa confirmada; perfil é recarregado do banco em cada consulta. 401 sem sessão válida; 403 para outros perfis. Respostas sem cache. '
     adicionar('/admin/help/catalogo', 'get', 'Catálogo técnico atualizado de rotas e arquivos', exclusivo+'Lê regras Flask e App.jsx, contratos, fluxo e dependências locais. Não executa handlers de negócio. Inclui a própria Help, telas mobile e filtros por texto, origem e método no frontend. O bloco imagens descreve validação, WebP, Drive privado, referência do Firebird, entrega binária, ACL, aliases, migração e limitações, sem acessar integrações nem ler configurações.')
     adicionar('/admin/help/codigo/{codigo_id}', 'get', 'Código autorizado por ID opaco', exclusivo+'ID hexadecimal de 32 caracteres registrado no catálogo; nunca aceita caminho arbitrário. Exclui configurações, bancos, uploads, dependências e links. Limite 500 KB; oculta credenciais literais preservando linhas.')
     adicionar('/docs', 'get', 'Documentação Swagger exclusiva do administrador', exclusivo+'HTML com busca e contrato atual, funciona em /docs no backend ou /api/docs pelo proxy. Usa a sessão existente; não persiste credenciais. Chamadas interativas obedecem permissões das rotas de negócio.')
     adicionar('/openapi.json', 'get', 'Contrato OpenAPI exclusivo do administrador', exclusivo+'Somente métodos/caminhos realmente registrados, parâmetros de URL e contratos de módulos novos. URL de servidor relativa ao contrato para backend direto e proxy /api.')
     adicionar('/static/{filename}', 'get', 'Arquivo estático do Flask', 'Infraestrutura estática; não executa operação de negócio.', publico=True)
+    for rota in ('/agendamentos', '/gestao/agenda', '/marketplace/pedidos', '/termos-uso/aceite'):
+        if 'post' in caminhos.get(rota, {}):
+            contrato_aceite = caminhos[rota]['post']
+            contrato_aceite['responses'] = {**contrato_aceite['responses'], '428': {
+                'description': 'Aceite da versão atual dos termos necessário; recarregue o documento e o resumo. Em rascunho não há exigência de aceite para reservar.'}}

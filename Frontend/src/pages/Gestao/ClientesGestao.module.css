@@ -1,0 +1,58 @@
+.cabecalhoFicha {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.identificacao {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.identificacao h3 {
+    margin: 0 0 .45rem;
+}
+
+.identificacao p {
+    margin: 0;
+}
+
+.acoesFicha {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: .5rem;
+    flex-shrink: 0;
+}
+
+.acoesFicha .baixarPdf {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    white-space: nowrap;
+}
+
+.notaPdf {
+    max-width: 31rem;
+    font-size: .82rem;
+    line-height: 1.5;
+    color: #586174;
+}
+
+.statusPdf {
+    margin: 0 0 1rem;
+}
+
+@media (max-width: 680px) {
+    .cabecalhoFicha {
+        flex-direction: column;
+    }
+
+    .acoesFicha {
+        width: 100%;
+        align-items: stretch;
+    }
+}

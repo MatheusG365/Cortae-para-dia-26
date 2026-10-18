@@ -1,14 +1,27 @@
-.editor { border:1px solid #dddfe4; border-radius:16px; padding:20px; margin:20px 0; display:grid; gap:12px; background:var(--cor-fundo,#fafafa); }
+.editor { border:1px solid #dddfe4; border-radius:16px; padding:20px; margin:20px 0; display:grid; gap:14px; background:#fafafa; color:#252525; min-width:0; }
 .cabecalho { display:flex; justify-content:space-between; gap:16px; align-items:center; }
-.cabecalho h3 { margin:0 0 6px; }
-.cabecalho p,.editor small { margin:0; color:#5b616e; font-size:.85rem; }
-.cabecalho span { flex-shrink:0; font-size:.8rem; font-weight:700; }
-.seletor { display:grid; gap:8px; font-weight:700; }
-.seletor input { width:100%; max-width:100%; padding:12px; border:1px dashed #b8bcc6; border-radius:10px; background:#fff; color:#252525; }
+.editor .cabecalho h3 { margin:0 0 6px; color:#252525; }
+.editor .cabecalho p,.editor small { margin:0; color:#5b616e; font-size:.85rem; line-height:1.6; }
+.contador { flex-shrink:0; padding:6px 10px; border:1px solid #e1d6c1; border-radius:20px; background:#fff7e8; color:#79510f; font-size:.8rem; font-weight:700; white-space:nowrap; }
+.editor .seletor { position:relative; display:flex; flex-direction:row; align-items:center; flex-wrap:wrap; gap:14px; padding:20px; margin:0; border:1px dashed #b8a17a; border-radius:12px; background:#fff; color:#252525; cursor:pointer; }
+.editor .seletor:hover:not([data-desabilitado=true]) { border-color:#9c6612; background:#fffaf1; }
+.editor .seletor:focus-within { outline:3px solid #9c6612; outline-offset:3px; }
+.editor .seletor[data-desabilitado=true] { cursor:not-allowed; background:#f0f1f3; border-color:#c9cdd4; color:#626975; }
+/* Mantém o controle nativo acessível pelo teclado sem expor o texto do navegador. */
+.editor .seletor .arquivoInput[type=file] { position:absolute; width:1px; max-width:1px; height:1px; min-height:0; padding:0; margin:-1px; border:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+.iconeUpload { display:inline-flex; align-items:center; justify-content:center; flex:0 0 46px; height:46px; border-radius:12px; background:#fff2d9; color:#8a5b10; }
+.textoSeletor { display:grid; flex:1 1 180px; gap:5px; min-width:0; }
+.textoSeletor strong { font-size:14px; }
+.textoSeletor>span { font-size:12px; font-weight:400; line-height:1.5; color:#5b616e; }
+.botaoSelecionar { display:inline-flex; align-items:center; justify-content:center; min-height:42px; padding:10px 14px; border-radius:8px; background:#252525; color:#fff; font-size:12px; font-weight:600; line-height:1.4; text-align:center; }
+.seletor[data-desabilitado=true] .botaoSelecionar { background:#dfe2e6; color:#59616a; }
+.informacoes { display:grid; gap:5px; }
+.editor .selecaoStatus { margin:0; color:#484f59; font-size:12px; line-height:1.5; }
 .galeria { display:grid; grid-template-columns:repeat(auto-fill,minmax(115px,1fr)); gap:12px; }
+.galeria:empty { display:none; }
 .galeria figure { margin:0; display:grid; gap:6px; min-width:0; }
 .galeria img,.galeria figure>div { width:100%; height:120px; border-radius:10px; object-fit:cover; background:#eee; }
 .galeria button { padding:7px; font-size:.8rem; }
-.editor summary { cursor:pointer; font-size:.85rem; }
+.editor summary { cursor:pointer; font-size:.85rem; color:#484f59; }
 .editor details label { margin-top:12px; display:grid; gap:8px; }
-@media(max-width:540px) { .editor{padding:14px}.cabecalho{align-items:flex-start}.galeria{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media(max-width:540px) { .editor{padding:14px}.cabecalho{align-items:flex-start;flex-wrap:wrap;gap:10px}.editor .seletor{padding:16px;gap:12px}.textoSeletor{flex-basis:calc(100% - 58px)}.botaoSelecionar{width:100%}.galeria{grid-template-columns:repeat(2,minmax(0,1fr))} }

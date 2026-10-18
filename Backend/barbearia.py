@@ -324,14 +324,6 @@ def alterar_estado_profissional(id_funcionario):
         if con:
             con.close()
 
-EXTENSOES_PERMITIDAS = {
-    'jpg',
-    'jpeg',
-    'png',
-    'webp'
-}
-
-
 # ==========================================================
 # USUÁRIO LOGADO
 # ==========================================================
@@ -345,7 +337,6 @@ def obter_usuario_logado():
 # ==========================================================
 # ID DO USUÁRIO
 # ==========================================================
-
 
 
 def pegar_id_barbearia_alvo():
@@ -777,40 +768,10 @@ def vincular_dias_funcionario(cursor, id_funcionario, ids_dias):
 # PASTA DA BARBEARIA
 # ==========================================================
 
-def criar_pasta_barbearia():
-
-    pasta = os.path.join(
-        app.config['UPLOAD_FOLDER'],
-        'barbearia'
-    )
-
-    if app.config.get('IMAGE_STORAGE_PROVIDER', 'google_drive') == 'local':
-        os.makedirs(pasta, exist_ok=True)
-
-    return pasta
-
 
 # ==========================================================
 # EXTENSÃO DA IMAGEM
 # ==========================================================
-
-def extensao_permitida(nome):
-
-    if not nome:
-        return False
-
-    if '.' not in nome:
-        return False
-
-    extensao = nome.rsplit(
-        '.',
-        1
-    )[-1].lower()
-
-    return (
-        extensao
-        in EXTENSOES_PERMITIDAS
-    )
 
 
 # ==========================================================
@@ -951,10 +912,11 @@ def listar_funcionarios_barbearia(id_barbearia):
             return mensagem_json('Barbearia não encontrada.', 'erro'), 404
         # Dias em que a barbearia realmente funciona.
         cursor.execute("""
-            SELECT DISTINCT DIAS
+            SELECT DIAS
             FROM DIAS_DE_SERVICO
             WHERE ID_USUARIO = ?
-            ORDER BY ID_DIA
+            GROUP BY DIAS
+            ORDER BY MIN(ID_DIA)
         """, (id_barbearia,))
         dias_abertos = [str(linha[0]).strip().lower() for linha in cursor.fetchall() if linha[0]]
 
@@ -985,6 +947,7 @@ def listar_funcionarios_barbearia(id_barbearia):
             'dias_abertos': dias_abertos
         }), 200
     except Exception as erro:
+        app.logger.exception('Falha ao listar profissionais da barbearia %s.', id_barbearia)
         return jsonify({'mensagem': {'informacao': 'Erro ao listar profissionais.', 'tipo': 'erro'}, 'detalhes': 'Consulte o registro do servidor.'}), 500
     finally:
         if cursor:
@@ -1170,21 +1133,6 @@ def remover_servico_barbearia(id_servico):
 # ==========================================================
 # EXCLUIR ARQUIVO
 # ==========================================================
-
-def excluir_arquivo(caminho):
-
-    if os.path.exists(caminho):
-
-        try:
-
-            os.remove(caminho)
-
-        except Exception as erro:
-
-            print(
-                'ERRO AO EXCLUIR ARQUIVO:',
-                erro
-            )
 
 
 # ==========================================================

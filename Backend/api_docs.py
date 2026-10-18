@@ -37,7 +37,7 @@ def operacao(resumo, descricao, corpo=None, autenticada=True):
     resultado = {
         'summary': resumo,
         'description': descricao,
-        'responses': RESPOSTAS_PADRAO,
+        'responses': deepcopy(RESPOSTAS_PADRAO),
     }
     if corpo:
         resultado['requestBody'] = {
@@ -155,7 +155,9 @@ AGENDAMENTO = {
         'horario': {'type': 'string', 'example': '14:30'},
         'id_corte': {'type': 'integer', 'description': 'Opcional: corte escolhido no visagismo.'},
         'id_visagismo': {'type': 'integer', 'description': 'Opcional: sessão de visagismo que originou a escolha.'},
-        'id_funcionario': {'type': 'integer', 'description': 'Opcional: barbeiro escolhido. Deve pertencer à barbearia e atender todos os serviços.'},
+        'escolha_corte': {'type': 'string', 'enum': ['catalogo', 'na_hora', 'profissional'], 'description': 'catalogo exige id_corte. na_hora/profissional não aceitam id_corte/id_visagismo: o cliente deve limpar esses IDs antes de enviar. Serviços de pintura/coloração mantêm o fluxo de simulação.'},
+        'confirmacao_resumo': {'type': 'string', 'description': 'Assinatura recebida de /agendamentos/resumo, exigida com taxa ativa. Alterar serviços, profissional, cliente ou valores exige novo resumo.'},
+        'id_funcionario': {'type': 'integer', 'nullable': True, 'description': 'Opcional ou null: reserva sem profissional definido, usando disponibilidade e preço-base do salão. Quando informado, deve pertencer à barbearia e atender todos os serviços.'},
     },
 }
 
@@ -164,14 +166,14 @@ OPENAPI = {
     'openapi': '3.0.3',
     'info': {
         'title': 'Cortaê API',
-        'version': '2.1.0',
+        'version': '2.2.0',
         'description': 'API compartilhada pelo site React e pelo aplicativo React Native. Imagens enviadas são validadas, convertidas em WebP sem metadados e armazenadas no Google Drive privado; o Firebird guarda referências e a API entrega bytes sem fallback local no modo Drive. Perfis, logos, galerias, produtos, catálogo e mídia fixa são públicos; fotos/resultados de visagismo exigem ACL. /help, /docs e /openapi.json são exclusivos do ADM. O login web grava o JWT no cookie `access_token`; o frontend usa `credentials: include`. Com `X-Cortae-Client: mobile`, o login permite somente cliente (tipo 1) e barbearia (tipo 2), devolve o JWT no JSON sem definir cookie e as chamadas nativas usam `Authorization: Bearer <access_token>`. Agendamentos iniciam como `agendado`; só cliente ou barbearia podem cancelá-los e, após o horário, a barbearia registra se o atendimento foi concluído ou se houve falta.',
     },
     'servers': [{'url': '/', 'description': 'Backend atual'}],
     'paths': {
         '/midia/site/{nome}': {'get': operacao('Exibir imagem fixa do site', 'Logo, banner ou foto fixa registrada no Firebird. Entrega WebP do Drive privado sem revelar IDs; imagem ausente retorna 404, falha do provedor retorna 503. Sem fallback para pasta local.', autenticada=False)},
         '/midia/mobile/{nome}': {'get': operacao('Exibir imagem de conteúdo do app', 'Logo, fundo e banner do aplicativo em WebP pelo Drive privado. Ícones de compilação e splash nativo continuam empacotados localmente. Sem fallback para pasta local.', autenticada=False)},
-        '/health': {'get': operacao('Verificar saúde', 'Verifica a conexão com o banco principal e a tabela de auditoria; retorna 503 quando os recursos obrigatórios não estão disponíveis.', None, False)},
+        '/health': {'get': operacao('Verificar saúde', 'Confere conexão, tabelas/campos exigidos e tabela de auditoria, usando somente consultas. Não cria nem altera estrutura. Retorna 503 quando recursos obrigatórios estão ausentes; manutenção manual: python -m migrations (conferir) ou --aplicar após backup.', None, False)},
         '/cadastro': {'post': operacao('Cadastrar usuário', 'Cria usuário e envia código de confirmação por e-mail. O tipo 0 exige sessão ativa de administrador.', USUARIO, False)},
         '/verificar-codigo': {'post': operacao('Confirmar e-mail', 'Ativa o cadastro usando o código de seis dígitos.', {
             'type': 'object', 'required': ['email', 'codigo'], 'properties': {'email': {'type': 'string'}, 'codigo': {'type': 'string', 'example': '123456'}}
@@ -304,7 +306,7 @@ OPENAPI = {
             'Listar horários disponíveis',
             'Público. Query obrigatória: id_barbearia, ids_servicos (ou servicos, ex: 1,2), data (AAAA-MM-DD). '
             'Query opcional id_funcionario: filtra a agenda do barbeiro (só dias dele, só ocupação dele; 404 se não for da barbearia, 400 se não atender os serviços). '
-            'Retorna {data, duracao_minutos, funcionario, valor_total, servicos, horarios: [{horario, fim, disponivel}]} com orçamento individual e slots dentro dos turnos e bloqueios. Se existe equipe ativa, informe o profissional para obter preço e disponibilidade efetivos.',
+            'Retorna {data, duracao_minutos, funcionario, valor_total, servicos, horarios: [{horario, fim, disponivel}]} com orçamento individual e slots dentro dos turnos e bloqueios. Sem id_funcionario usa o preço-base do salão e horários globais, mesmo havendo equipe ativa; funcionario retorna null. Bloqueios, expediente, duração e reservas em conflito continuam sendo respeitados.',
             autenticada=False)},
         '/agendamentos': {
             'get': operacao(
@@ -314,7 +316,7 @@ OPENAPI = {
                 'Agendamentos não são concluídos automaticamente ao passar do horário e só são cancelados por ação do cliente ou da barbearia.'),
             'post': operacao(
                 'Criar agendamento',
-                'Logado. Cria o agendamento com status `agendado`, valida expediente, turnos e bloqueios, trava contra reserva dupla (409 se ocupado) e vincula id_corte/id_visagismo quando vindos do visagismo. Profissional obrigatório quando existe equipe ativa. Preço e duração individuais aceitos ficam no histórico. '
+                'Logado. Cria o agendamento com status `agendado`, valida expediente, turnos e bloqueios, trava contra reserva dupla (409 se ocupado) e vincula id_corte/id_visagismo quando vindos do visagismo. id_funcionario é opcional ou null, inclusive com equipe ativa; sem vínculo usa preço-base e agenda do salão. Com profissional, valida elegibilidade e preço individual. Preço, duração e profissional aceitos ficam no histórico. Quando a taxa está ativa, consulte /agendamentos/resumo e envie confirmacao_resumo; termos publicados exigem aceite da versão atual (428 se pendente). '
                 'Retorna 201 com {id_agendamento, inicio_em, fim_em, id_funcionario}.',
                 AGENDAMENTO)},
         '/agendamentos/{id_agendamento}/cancelar': {'put': operacao(
@@ -339,7 +341,7 @@ OPENAPI = {
             }})},
         '/pagamentos/pix': {'post': operacao(
             'Gerar cobrança Pix (Arkhé)',
-            'Cliente dono, barbearia proprietária ou ADM; perfil de barbeiro não autorizado. Body {id_agendamento}; valor informado pelo navegador é ignorado. Usa o preço salvo no agendamento, cria a cobrança na Arkhé e registra em FINANCEIRO como pix_pendente. Agendamento legado sem preço histórico retorna 400. Retorna 201 com {id_cobranca, codigo_pagamento, valor, status}.',
+            'Cliente dono, barbearia proprietária ou ADM; perfil de barbeiro não autorizado. Body {id_agendamento}; valor informado pelo navegador é ignorado. Usa o preço salvo no agendamento, cria a cobrança na Arkhé e registra em FINANCEIRO como pix_pendente. Agendamento legado sem preço histórico retorna 400. Retorna 201 com {id_cobranca, codigo_pagamento, valor, status}. Resposta HTTP 5xx da Arkhé é tratada como indisponibilidade, sem repetição automática da criação nem confirmação de pagamento. Em resultado incerto, confira as cobranças antes de tentar novamente.',
             {'type': 'object', 'required': ['id_agendamento'], 'properties': {'id_agendamento': {'type': 'integer'}, 'valor': {'type': 'number'}}})},
         '/pagamentos/pix/{id_cobranca}': {'get': operacao(
             'Consultar cobrança Pix',

@@ -1,6 +1,5 @@
 """Management regressions. No live database or external provider calls."""
 import os
-os.environ['STARTUP_MIGRATIONS']='false'
 os.environ['WAITLIST_WORKER']='false'
 import unittest
 from datetime import date

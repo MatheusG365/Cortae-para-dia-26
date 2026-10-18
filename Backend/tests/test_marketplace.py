@@ -1,6 +1,5 @@
 """Marketplace validation/financial response tests. Provider operations always mocked."""
 import os
-os.environ['STARTUP_MIGRATIONS']='false'
 os.environ['WAITLIST_WORKER']='false'
 import unittest
 from decimal import Decimal

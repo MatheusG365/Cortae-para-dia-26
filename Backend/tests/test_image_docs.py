@@ -1,6 +1,5 @@
 """Image documentation stays descriptive, private to ADM and free of integration I/O."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 from contextlib import ExitStack
 import json

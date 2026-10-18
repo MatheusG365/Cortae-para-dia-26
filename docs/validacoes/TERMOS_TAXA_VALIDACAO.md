@@ -1,6 +1,6 @@
 # Termos de uso e taxa da plataforma
 
-Atualização: 12/10/2026, horário de São Paulo.
+Atualização da regra de publicação: 18/10/2026, horário de São Paulo.
 
 ## Entrega
 
@@ -13,13 +13,20 @@ Atualização: 12/10/2026, horário de São Paulo.
 - Gestão → Taxas da plataforma: relatório por estabelecimento e período, separando registro histórico, taxa prevista e repasse pendente de operações cujo pagamento do cliente foi confirmado.
 - O relatório não executa nem confirma transferência da taxa à plataforma. A integração de pagamento existente não recebeu uma função de divisão automática do pagamento.
 
-## Configuração ainda necessária
+## Configuração e publicação
 
-O usuário ainda deve definir quem paga a taxa: cliente ou barbearia. Também faltam os dados reais do responsável: nome/razão social, documento, endereço e contato. Por isso, a configuração real permanece pendente; o termo é rascunho e nenhuma taxa nova é cobrada.
+A publicação operacional exige nome/razão social, canal de atendimento e pagador da taxa válido (`cliente` ou `barbearia`). Documento e endereço são opcionais: valores ausentes permanecem vazios e não devem ser inventados. Esta é a regra do aplicativo, sem declaração de completude jurídica da identificação.
 
-As chaves de configuração estão documentadas em `Backend/.env.example`: `PLATAFORMA_TAXA_PAGADOR`, `TERMOS_RESPONSAVEL_NOME`, `TERMOS_RESPONSAVEL_DOCUMENTO`, `TERMOS_RESPONSAVEL_CONTATO`, `TERMOS_RESPONSAVEL_ENDERECO`. Credenciais e a configuração local existente não foram alteradas.
+O usuário autorizou publicar com os dados de nome e contato fornecidos e com a taxa paga pelo cliente; documento e endereço serão preenchidos posteriormente. Alterar qualquer dado do responsável, inclusive esses campos opcionais, ou a política muda a versão/hash e exige novo aceite explícito da própria conta antes de novas operações. Aceites e valores históricos permanecem preservados.
 
-## Verificação
+As chaves de configuração estão documentadas em `Backend/.env.example`: `PLATAFORMA_TAXA_PAGADOR`, `TERMOS_RESPONSAVEL_NOME`, `TERMOS_RESPONSAVEL_DOCUMENTO`, `TERMOS_RESPONSAVEL_CONTATO`, `TERMOS_RESPONSAVEL_ENDERECO`. A ausência de nome, contato ou pagador válido mantém o rascunho, sem aceite ou taxa ativa.
+
+## Verificação da regra de publicação em 18/10/2026
+
+- `python -m unittest tests.test_termos_taxa -v`: 19 testes passaram, com configuração isolada da política local, sem acesso a banco ou provedores reais.
+- Cobertos publicação sem documento/endereço, rascunho quando falta requisito, aceite explícito no servidor, nova versão/aceite/confirmação ao completar os opcionais, histórico imutável e taxa de 1,5% sem frete.
+
+## Verificação histórica de 12/10/2026
 
 - Backend: 238 testes passaram, com 23 casos condicionais ignorados.
 - Frontend: 65 testes passaram; lint e build aprovados.
@@ -34,5 +41,5 @@ Relatório independente: `C:/Users/mathe/Documents/Backups-Cortae/termos-taxa-20
 
 ## Referências do texto
 
-O modelo preserva os direitos do consumidor e distingue aceite contratual de consentimento para publicidade. Referências oficiais consultadas: [Código de Defesa do Consumidor](https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm), [Decreto 7.962/2013](https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/decreto/d7962.htm), [LGPD](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm). O texto permanece em rascunho até completar identificação e política comercial.
+O modelo preserva os direitos do consumidor e distingue aceite contratual de consentimento para publicidade. Referências oficiais consultadas na elaboração original: [Código de Defesa do Consumidor](https://www.planalto.gov.br/ccivil_03/leis/l8078compilado.htm), [Decreto 7.962/2013](https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2013/decreto/d7962.htm), [LGPD](https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709compilado.htm). A publicação segue a regra operacional descrita acima.
 

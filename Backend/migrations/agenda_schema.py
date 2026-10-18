@@ -1,6 +1,6 @@
 """Additive and repeatable team/booking migration. Run only after DB backup."""
 from application import conectar_banco
-from schema_utils import criar_tabela, criar_sequence, criar_coluna
+from .schema_utils import criar_tabela, criar_sequence, criar_coluna
 
 
 def migrar_agenda():
@@ -92,11 +92,3 @@ def migrar_gestao_agenda():
         con.rollback(); raise
     finally:
         cur.close(); con.close()
-
-
-if __name__ == '__main__':
-    from application import app
-    with app.app_context():
-        migrar_agenda()
-        migrar_gestao_agenda()
-    print('Migração da agenda aplicada.')

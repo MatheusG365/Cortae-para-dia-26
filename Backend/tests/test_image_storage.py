@@ -10,7 +10,6 @@ import threading
 import unittest
 from unittest.mock import Mock, patch
 
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 from application import app
 import image_storage as storage

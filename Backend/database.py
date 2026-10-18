@@ -1,24 +1,26 @@
-"""Database connections and repeatable Firebird startup preparation."""
+"""Database connections, locks and read-only readiness checks."""
 import firebirdsql as fdb
+import json
+from pathlib import Path
 from flask import current_app
-from schema_utils import criar_sequence, criar_coluna
 
-SEQUENCES = (
-    ('SEQ_FINANCEIRO', 'FINANCEIRO', 'ID_FINANCEIRO'),
-    ('SEQ_USUARIO', 'USUARIO', 'ID_USUARIO'),
-    ('SEQ_AGENDAMENTO', 'AGENDAMENTO', 'ID_AGENDAMENTO'),
-    ('SEQ_AGENDAMENTO_HISTORICO', 'AGENDAMENTO_HISTORICO', 'ID_HISTORICO'),
-    ('SEQ_CORTE_VISAGISMO', 'CORTE_VISAGISMO', 'ID_CORTE'),
-    ('SEQ_VISAGISMO_SESSAO', 'VISAGISMO_SESSAO', 'ID_VISAGISMO'),
-    ('SEQ_PERSONALIZACAO', 'PERSONALIZACAO', 'ID_PERSONALIZACAO'),
-    ('SEQ_DIA', 'DIAS_DE_SERVICO', 'ID_DIA'),
-    ('SEQ_FUNCIONARIO', 'FUNCIONARIO', 'ID_FUNCIONARIO'),
-    ('SEQ_FUNCIONARIO_DIA', 'FUNCIONARIO_DIA', 'ID_FUNCIONARIO_DIA'),
-    ('SEQ_SERVICO', 'SERVICO', 'ID_SERVICO'),
-    ('SEQ_SERVICO_POR_FUNCIONARIO', 'SERVICO_POR_FUNCIONARIO', 'ID_SERVI_FUNCI'),
-    ('SEQ_FINANCEIRO_SNAPSHOT', 'FINANCEIRO_SNAPSHOT', 'ID_SNAPSHOT'),
-    ('SEQ_AVISO', 'AVISO', 'ID_AVISO'),
-)
+ESTRUTURA_ESPERADA = json.loads((Path(__file__).parent / 'migrations' / 'estrutura.json').read_text(encoding='utf-8'))
+
+
+def pendencias_estrutura(cursor):
+    """Detecta campos ausentes sem alterar tabelas, sequences ou dados."""
+    cursor.execute('SELECT TRIM(RDB$RELATION_NAME),TRIM(RDB$FIELD_NAME) FROM RDB$RELATION_FIELDS')
+    existentes = set(cursor.fetchall())
+    pendencias = [f'{tabela}.{campo}' for tabela, campos in ESTRUTURA_ESPERADA.items()
+                  for campo in campos if (tabela, campo) not in existentes]
+    cursor.execute("""SELECT F.RDB$CHARACTER_LENGTH FROM RDB$RELATION_FIELDS RF
+        JOIN RDB$FIELDS F ON F.RDB$FIELD_NAME=RF.RDB$FIELD_SOURCE
+        WHERE TRIM(RF.RDB$RELATION_NAME)='FINANCEIRO_SNAPSHOT'
+          AND TRIM(RF.RDB$FIELD_NAME)='FONTE'""")
+    fonte = cursor.fetchone()
+    if fonte and fonte[0] is not None and fonte[0] < 32:
+        pendencias.append('FINANCEIRO_SNAPSHOT.FONTE: mínimo 32 caracteres')
+    return pendencias
 
 
 def conectar_banco(log=False):
@@ -48,48 +50,9 @@ def verificar_banco(log=False):
         else:
             cursor.execute('SELECT FIRST 1 ID_USUARIO FROM USUARIO')
         cursor.fetchone()
-        return True
+        return log or not pendencias_estrutura(cursor)
     except Exception:
         return False
-    finally:
-        if cursor is not None:
-            cursor.close()
-        if con is not None:
-            con.close()
-
-
-def alinhar_sequence(con, cursor, sequence, tabela, coluna):
-    # Identifiers are internal constants, never user input.
-    criar_sequence(cursor, sequence, con)
-    cursor.execute(f'SELECT COALESCE(MAX({coluna}), 0) FROM {tabela}')
-    maior = int(cursor.fetchone()[0] or 0)
-    cursor.execute(f'SELECT GEN_ID({sequence}, 0) FROM RDB$DATABASE')
-    atual = int(cursor.fetchone()[0] or 0)
-    if maior > atual:
-        # GEN_ID increments atomically; this never lowers a live sequence.
-        cursor.execute(f'SELECT GEN_ID({sequence}, CAST(? AS BIGINT)) FROM RDB$DATABASE', (maior - atual,))
-        cursor.fetchone()
-
-
-def inicializar_banco():
-    con = cursor = None
-    try:
-        con = conectar_banco()
-        cursor = con.cursor()
-        for sequence, tabela, coluna in SEQUENCES:
-            alinhar_sequence(con, cursor, sequence, tabela, coluna)
-        for tabela, coluna, tipo in (('USUARIO', 'JA_BLOQUEADO', 'SMALLINT DEFAULT 0'),
-                                     ('SERVICO', 'GENERO', 'VARCHAR(10)')):
-            criar_coluna(cursor, tabela, coluna, tipo, con)
-        cursor.execute("""UPDATE SERVICO SET GENERO = CASE
-            WHEN LOWER(NOME_SERVICO) SIMILAR TO '%(feminino|feminina|femenino|mulher|noiva|madrinha)%' THEN 'feminino'
-            WHEN LOWER(NOME_SERVICO) SIMILAR TO '%(masculino|masculina|homem|noivo|padrinho|barba|bigode)%' THEN 'masculino'
-            ELSE 'unissex' END WHERE GENERO IS NULL OR TRIM(GENERO) = ''""")
-        con.commit()
-    except Exception:
-        if con is not None:
-            con.rollback()
-        raise
     finally:
         if cursor is not None:
             cursor.close()

@@ -1,6 +1,5 @@
 """Deferred haircut choices are metadata, never fake catalog/session identifiers."""
 import os
-os.environ['STARTUP_MIGRATIONS']='false'
 os.environ['WAITLIST_WORKER']='false'
 import unittest
 from datetime import datetime,timedelta

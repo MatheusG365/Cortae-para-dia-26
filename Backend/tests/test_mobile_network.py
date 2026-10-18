@@ -1,6 +1,5 @@
 """Cross-origin mobile web requests retain the existing authentication rules."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import unittest
 import runpy
@@ -14,7 +13,7 @@ class MobileNetworkTests(unittest.TestCase):
         for host in ('0.0.0.0', '127.0.0.1', '::'):
             with self.subTest(host=host), patch.dict(main.app.config, {
                     'API_HOST': host, 'PORT': 5432,
-                    'STARTUP_MIGRATIONS': False, 'DEBUG': False,
+                    'DEBUG': False,
             }), patch('application.app.run') as serve:
                 runpy.run_path(str(Path(main.__file__)), run_name='__main__')
                 serve.assert_called_once_with(host=host, port=5432,

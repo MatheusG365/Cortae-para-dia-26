@@ -1,6 +1,5 @@
 """Anonymous storefront presentation never reads or writes private account data."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import unittest
 from pathlib import Path

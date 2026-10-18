@@ -420,3 +420,19 @@ ARKHE_BASE_URL=https://arkhe-backend.zbbquj.easypanel.host
 | 500 | Internal Server Error |
 | 502 | Bad Gateway (Arkhé error) |
 | 503 | Service Unavailable |
+
+
+## Atualização de 18/10/2026
+
+O contrato executável fica em `api_docs.py` e `docs_contracts.py`, publicado em `/docs` e `/openapi.json` somente com sessão ADM. A versão documental é 2.2.0; nenhum arquivo `docs.py` duplicado é necessário.
+
+- Agendamento aceita `id_funcionario` ausente ou `null`: utiliza preço-base e disponibilidade do salão. Com profissional, valida vínculo e serviços. Consulte `/agendamentos/resumo` para taxa e assinatura antes de confirmar.
+- `escolha_corte`: `catalogo`, `na_hora` ou `profissional`. As duas últimas escolhas não aceitam IDs antigos de corte/sessão e não substituem a simulação em serviços de coloração.
+- CEP: `/marketplace/cep/{postal_code}` para clientes; `/gestao/marketplace/cep/{postal_code}` para remetente. Envia apenas CEP ao ViaCEP; número/complemento continuam manuais.
+- Endereços: GET/POST `/marketplace/enderecos`, PUT `/marketplace/enderecos/{id_endereco}`. Cadastro por conta com apelido/padrão/dados; não altera endereços de pedidos anteriores. O OpenAPI descreve os envelopes e HTTP 201 da criação.
+- PDF da ficha é gerado no navegador pela aba Clientes de `/gestao`, usando os dados autorizados exibidos. Não existe uma rota de PDF no backend.
+- Termos: publicação por nome/contato do responsável e pagador válido; documento/endereço são opcionais. A taxa de 1,5% incide em produtos/serviços, sem frete. Aceite ausente ou versão incorreta retorna 428; resumo alterado retorna 409. Em rascunho, reservas não exigem aceite.
+- Pix: falhas 5xx do provedor não confirmam cobrança/pagamento nem provocam repetição automática da criação. Em resultado incerto, confira cobranças antes de repetir.
+- Banco: inicialização e rotas não executam DDL. `python -m migrations` somente confere; `--aplicar` é manutenção manual após backup, em banco base existente. `/health` detecta campos obrigatórios ausentes sem criá-los.
+
+O Help descreve esses fluxos junto às páginas e APIs correspondentes. A documentação não registra aceites, cria pedidos, envia e-mails, consulta provedores nem executa manutenção.

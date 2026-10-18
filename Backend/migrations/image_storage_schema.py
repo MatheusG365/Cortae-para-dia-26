@@ -1,6 +1,6 @@
 """Image references only; binary image data stays in the configured provider."""
 from application import conectar_banco
-from schema_utils import criar_tabela
+from .schema_utils import criar_tabela
 
 
 TABLES = {

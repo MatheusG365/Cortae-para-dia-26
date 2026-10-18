@@ -1,6 +1,5 @@
 """Regression checks without email, payment, AI calls or live DB writes."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
@@ -8,6 +7,7 @@ import jwt
 import main
 import auditoria
 import database
+from migrations import database_schema
 import funcoes
 import visagismo
 
@@ -100,14 +100,14 @@ class Regressions(unittest.TestCase):
     def test_startup_never_lowers_advanced_sequence(self):
         con, cursor = self.connection()
         cursor.fetchone.side_effect = [(1,), (8,), (20,)]
-        database.alinhar_sequence(con, cursor, 'SEQ_USUARIO', 'USUARIO', 'ID_USUARIO')
+        database_schema.alinhar_sequence(con, cursor, 'SEQ_USUARIO', 'USUARIO', 'ID_USUARIO')
         self.assertEqual(cursor.execute.call_count, 3)
         self.assertFalse(any('SET GENERATOR' in call.args[0] for call in cursor.execute.call_args_list))
 
     def test_startup_commits_new_sequence_then_raises(self):
         con, cursor = self.connection()
         cursor.fetchone.side_effect = [None, (8,), (0,), (8,)]
-        database.alinhar_sequence(con, cursor, 'SEQ_USUARIO', 'USUARIO', 'ID_USUARIO')
+        database_schema.alinhar_sequence(con, cursor, 'SEQ_USUARIO', 'USUARIO', 'ID_USUARIO')
         con.commit.assert_called_once()
         self.assertIn('CAST(? AS BIGINT)', cursor.execute.call_args.args[0])
         self.assertEqual(cursor.execute.call_args.args[1], (8,))

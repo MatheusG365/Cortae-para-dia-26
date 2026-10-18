@@ -6,15 +6,12 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import firebirdsql
 from PIL import Image
 from application import app
 import image_storage as storage
-import image_storage_schema as schema
-
-
+from migrations import image_storage_schema as schema
 @unittest.skipUnless(os.environ.get('RUN_FIREBIRD_IMAGE_TESTS') == '1', 'isolated Firebird opt-in')
 class ImageStorageFirebird(unittest.TestCase):
     def setUp(self):

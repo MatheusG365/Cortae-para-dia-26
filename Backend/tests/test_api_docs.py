@@ -1,6 +1,5 @@
 """Documentation never discloses contracts/HTML before current ADM authorization."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 
 from datetime import datetime, timedelta, timezone

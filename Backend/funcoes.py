@@ -1,7 +1,6 @@
 import os
 import re
 import secrets
-import datetime
 import jwt
 import smtplib
 
@@ -177,42 +176,9 @@ def enviar_aviso_email(destinatario, nome, assunto, mensagem, remetente='Cortaê
 # ==========================================================
 
 
-
 # ==========================================================
 # DECODIFICAR TOKEN
 # ==========================================================
-
-def gerar_token(
-        tipo,
-        id_usuario,
-        email=None,
-        minutos=120
-):
-
-    payload = {
-
-        'id_usuario':
-            id_usuario,
-
-        'tipo':
-            tipo,
-
-        'email':
-            email,
-
-        'exp':
-            datetime.datetime.utcnow()
-            + datetime.timedelta(
-                minutes=minutos
-            )
-    }
-
-    return jwt.encode(
-        payload,
-        current_app.config['SECRET_KEY'],
-        algorithm='HS256'
-    )
-
 
 
 def decodificar_token():
@@ -358,4 +324,3 @@ def salvar_foto_perfil(arquivo, id_usuario, batch):
 # ==========================================================
 # EXCLUIR FOTO DE PERFIL
 # ==========================================================
-

@@ -3,7 +3,6 @@
 RUN_FIREBIRD_RANKING_TESTS=1 creates disposable databases; never opens production.
 """
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import tempfile
 import unittest
@@ -18,7 +17,7 @@ import firebirdsql
 import main
 import agenda_gestao
 import ranking_avaliacoes as rankings
-import ranking_schema
+from migrations import ranking_schema
 import visagismo
 
 

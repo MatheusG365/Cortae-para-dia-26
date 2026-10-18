@@ -1,0 +1,516 @@
+{
+  "AGENDAMENTO": [
+    "CRIADO_EM",
+    "DURACAO_MINUTOS",
+    "ESCOLHA_CORTE",
+    "FIM_EM",
+    "ID_AGENDAMENTO",
+    "ID_BARBEARIA",
+    "ID_CORTE",
+    "ID_FUNCIONARIO",
+    "ID_USUARIO",
+    "ID_VISAGISMO",
+    "INICIO_EM",
+    "SERVICOS_JSON",
+    "SERVICOS_SNAPSHOT",
+    "STATUS",
+    "VALOR_TOTAL"
+  ],
+  "AGENDAMENTO_AVALIACAO": [
+    "ATUALIZADO_EM",
+    "COMENTARIO",
+    "CRIADO_EM",
+    "ID_AGENDAMENTO",
+    "NOTA"
+  ],
+  "AGENDAMENTO_HISTORICO": [
+    "FIM_ANTES",
+    "FIM_DEPOIS",
+    "ID_AGENDAMENTO",
+    "ID_FUNCIONARIO",
+    "ID_HISTORICO",
+    "ID_USUARIO_RESPONSAVEL",
+    "INICIO_ANTES",
+    "INICIO_DEPOIS",
+    "REGISTRADO_EM",
+    "STATUS"
+  ],
+  "AGENDA_BLOQUEIO": [
+    "FIM_EM",
+    "ID_BARBEARIA",
+    "ID_BLOQUEIO",
+    "ID_FUNCIONARIO",
+    "INICIO_EM",
+    "MOTIVO"
+  ],
+  "AGENDA_CONFIG": [
+    "CANCELAMENTO_HORAS",
+    "ID_BARBEARIA",
+    "LEMBRETE_HORAS",
+    "REAGENDAMENTO_HORAS"
+  ],
+  "AVISO": [
+    "DATA_POSTAGEM",
+    "ID_AVISO",
+    "ID_USUARIO",
+    "TEXTO"
+  ],
+  "BARBEIRO_CONVITE": [
+    "CRIADO_EM",
+    "EXPIRA_EM",
+    "ID_CONVITE",
+    "ID_FUNCIONARIO",
+    "TOKEN_HASH",
+    "UTILIZADO_EM"
+  ],
+  "COMISSAO_ATENDIMENTO": [
+    "ID_AGENDAMENTO",
+    "ID_BARBEARIA",
+    "ID_FUNCIONARIO",
+    "PERCENTUAL",
+    "REGISTRADO_EM",
+    "TIPO",
+    "VALOR_BASE",
+    "VALOR_COMISSAO",
+    "VALOR_CONFIGURADO"
+  ],
+  "CORTE_VISAGISMO": [
+    "ATIVO",
+    "CATEGORIA",
+    "CRIADO_EM",
+    "DESCRICAO",
+    "GENERO",
+    "ID_CORTE",
+    "ID_USUARIO",
+    "IMAGEM_ROTA",
+    "NOME"
+  ],
+  "DIAS_DE_SERVICO": [
+    "DIAS",
+    "ENTRADA_MANHA",
+    "ENTRADA_TARDE",
+    "ID_DIA",
+    "ID_USUARIO",
+    "SAIDA_MANHA",
+    "SAIDA_TARDE"
+  ],
+  "EMAIL_OUTBOX": [
+    "ASSUNTO",
+    "CHAVE",
+    "CRIADO_EM",
+    "DESTINATARIO",
+    "ENVIADO_EM",
+    "ESTADO",
+    "EVENTO",
+    "ID_AGENDAMENTO",
+    "ID_EMAIL",
+    "ID_ESPERA",
+    "INICIO_REFERENCIA",
+    "MENSAGEM",
+    "NOME",
+    "PROXIMA_TENTATIVA",
+    "TENTATIVAS"
+  ],
+  "FINANCEIRO": [
+    "DATA_TRANSACAO",
+    "DESCRICAO",
+    "ID_FINANCEIRO",
+    "ID_USUARIO",
+    "TIPO",
+    "VALOR"
+  ],
+  "FINANCEIRO_SNAPSHOT": [
+    "ATUALIZADO_EM",
+    "DATA_MOV",
+    "DESCRICAO",
+    "FONTE",
+    "ID_BARBEARIA",
+    "ID_SNAPSHOT",
+    "ORIGEM",
+    "TIPO",
+    "VALOR"
+  ],
+  "FUNCIONARIO": [
+    "ATIVO",
+    "COMISSAO_PERCENTUAL",
+    "COMISSAO_TIPO",
+    "COMISSAO_VALOR",
+    "DESCRICAO",
+    "EMAIL",
+    "HORARIOS_CONFIGURADOS",
+    "ID_BARBEARIA",
+    "ID_FUNCIONARIO",
+    "ID_USUARIO_LOGIN",
+    "NOME",
+    "TELEFONE"
+  ],
+  "FUNCIONARIO_DIA": [
+    "ID_DIA",
+    "ID_FUNCIONARIO",
+    "ID_FUNCIONARIO_DIA"
+  ],
+  "FUNCIONARIO_HORARIO": [
+    "DIA",
+    "FIM",
+    "ID_FUNCIONARIO",
+    "ID_HORARIO",
+    "INICIO"
+  ],
+  "FUNCIONARIO_PRECO": [
+    "ID_FUNCIONARIO",
+    "ID_SERVICO",
+    "PRECO"
+  ],
+  "GESTAO_CATEGORIA": [
+    "ATIVO",
+    "CRIADO_EM",
+    "ID_BARBEARIA",
+    "ID_CATEGORIA",
+    "NOME",
+    "TIPO"
+  ],
+  "GESTAO_CLIENTE": [
+    "ATUALIZADO_EM",
+    "ID_BARBEARIA",
+    "ID_USUARIO",
+    "OBSERVACOES",
+    "PREFERENCIAS"
+  ],
+  "GESTAO_COMISSAO_PAGAMENTO": [
+    "CRIADO_EM",
+    "DATA_PAGAMENTO",
+    "ID_AGENDAMENTO",
+    "ID_BARBEARIA",
+    "ID_LANCAMENTO",
+    "ID_PAGAMENTO",
+    "ID_USUARIO_RESPONSAVEL",
+    "OBSERVACAO",
+    "VALOR"
+  ],
+  "GESTAO_LANCAMENTO": [
+    "ATUALIZADO_EM",
+    "CRIADO_EM",
+    "DATA_PAGAMENTO",
+    "DESCRICAO",
+    "ID_BARBEARIA",
+    "ID_CATEGORIA",
+    "ID_LANCAMENTO",
+    "STATUS",
+    "TIPO",
+    "VALOR",
+    "VENCIMENTO"
+  ],
+  "GESTAO_OPERACAO": [
+    "CHAVE",
+    "CRIADO_EM",
+    "HASH_PEDIDO",
+    "ID_BARBEARIA",
+    "ID_REFERENCIA",
+    "TIPO"
+  ],
+  "GESTAO_RECEBIMENTO": [
+    "CRIADO_EM",
+    "DATA_PAGAMENTO",
+    "FORMA",
+    "ID_AGENDAMENTO",
+    "ID_BARBEARIA",
+    "ID_FINANCEIRO",
+    "ID_RECEBIMENTO",
+    "ID_USUARIO_RESPONSAVEL",
+    "OBSERVACAO",
+    "VALOR"
+  ],
+  "IMAGE_ASSET": [
+    "ALTURA",
+    "AREA",
+    "ATIVO",
+    "CRIADO_EM",
+    "FILE_ID",
+    "LARGURA",
+    "MIME",
+    "NOME",
+    "OWNER_ID",
+    "PROVIDER",
+    "SHA256",
+    "SLOT",
+    "TAMANHO"
+  ],
+  "IMAGE_SLOT": [
+    "AREA",
+    "NOME",
+    "OWNER_ID",
+    "SLOT"
+  ],
+  "LISTA_ESPERA": [
+    "CRIADO_EM",
+    "ESCOLHA_CORTE",
+    "FIM_EM",
+    "ID_BARBEARIA",
+    "ID_CORTE",
+    "ID_ESPERA",
+    "ID_FUNCIONARIO",
+    "ID_USUARIO",
+    "ID_VISAGISMO",
+    "INICIO_EM",
+    "NOTIFICADO_EM",
+    "SERVICOS_JSON",
+    "STATUS"
+  ],
+  "META_PROFISSIONAL": [
+    "ALVO",
+    "ATIVO",
+    "ATUALIZADO_EM",
+    "CRIADO_EM",
+    "FIM",
+    "ID_BARBEARIA",
+    "ID_FUNCIONARIO",
+    "ID_META",
+    "INICIO",
+    "TIPO"
+  ],
+  "MP_AVALIACAO": [
+    "ATUALIZADO_EM",
+    "COMENTARIO",
+    "ID_PRODUTO",
+    "ID_USUARIO",
+    "NOTA"
+  ],
+  "MP_CARRINHO": [
+    "ID_PRODUTO",
+    "ID_USUARIO",
+    "QUANTIDADE"
+  ],
+  "MP_CARRINHO_VAR": [
+    "ID_USUARIO",
+    "ID_VARIACAO",
+    "QUANTIDADE"
+  ],
+  "MP_COMERCIAL": [
+    "CUSTO_COMPRA",
+    "ID_FORNECEDOR",
+    "ID_PRODUTO",
+    "LANCAMENTO_ATE",
+    "PROMOCAO_FIM",
+    "PROMOCAO_INICIO",
+    "PROMOCAO_PRECO"
+  ],
+  "MP_COTACAO": [
+    "CEP",
+    "DADOS",
+    "EXPIRA_EM",
+    "HASH_CARRINHO",
+    "ID_BARBEARIA",
+    "ID_COTACAO",
+    "ID_USUARIO"
+  ],
+  "MP_CUPOM": [
+    "ATIVO",
+    "CODIGO",
+    "FIM",
+    "ID_BARBEARIA",
+    "ID_CUPOM",
+    "INICIO",
+    "LIMITE_USOS",
+    "TIPO",
+    "VALOR"
+  ],
+  "MP_CUPOM_USO": [
+    "ATIVO",
+    "ID_CUPOM",
+    "ID_PEDIDO"
+  ],
+  "MP_DESEJO": [
+    "ID_PRODUTO",
+    "ID_USUARIO"
+  ],
+  "MP_ENDERECO": [
+    "APELIDO",
+    "ATUALIZADO_EM",
+    "CRIADO_EM",
+    "DADOS",
+    "ID_ENDERECO",
+    "ID_USUARIO",
+    "PADRAO"
+  ],
+  "MP_ESTOQUE": [
+    "CHAVE",
+    "CRIADO_EM",
+    "HASH_PEDIDO",
+    "ID_MOVIMENTO",
+    "ID_PRODUTO",
+    "ID_USUARIO",
+    "ID_VARIACAO",
+    "OBSERVACAO",
+    "QUANTIDADE",
+    "TIPO"
+  ],
+  "MP_FAVORITO": [
+    "ID_PRODUTO",
+    "ID_USUARIO"
+  ],
+  "MP_FORNECEDOR": [
+    "ATIVO",
+    "DOCUMENTO",
+    "EMAIL",
+    "ID_BARBEARIA",
+    "ID_FORNECEDOR",
+    "NOME",
+    "OBSERVACOES",
+    "TELEFONE"
+  ],
+  "MP_INTEGRACAO": [
+    "ID",
+    "LIMITE"
+  ],
+  "MP_PEDIDO": [
+    "ATUALIZADO_EM",
+    "CHAVE",
+    "COTACAO",
+    "CRIADO_EM",
+    "ENDERECO",
+    "ENTREGA_DADOS",
+    "ENTREGA_ID",
+    "ENTREGA_STATUS",
+    "FRETE",
+    "HASH_PEDIDO",
+    "ID_BARBEARIA",
+    "ID_PEDIDO",
+    "ID_USUARIO",
+    "ITENS",
+    "PAGAMENTO_DADOS",
+    "PAGAMENTO_ID",
+    "PAGAMENTO_STATUS",
+    "RETIRADA",
+    "STATUS",
+    "SUBTOTAL",
+    "TOTAL"
+  ],
+  "MP_PEDIDO_COMERCIAL": [
+    "CODIGO_CUPOM",
+    "CUSTOS",
+    "DESCONTO",
+    "ID_PEDIDO",
+    "SUBTOTAL_ORIGINAL"
+  ],
+  "MP_PRODUTO": [
+    "ALTURA",
+    "ATIVO",
+    "ATUALIZADO_EM",
+    "CATEGORIA",
+    "COMPRIMENTO",
+    "CRIADO_EM",
+    "DESCRICAO",
+    "DETALHES",
+    "ESTOQUE",
+    "ESTOQUE_MINIMO",
+    "ID_BARBEARIA",
+    "ID_PRODUTO",
+    "IMAGENS",
+    "LARGURA",
+    "MARCA",
+    "NOME",
+    "PESO",
+    "PRECO"
+  ],
+  "MP_REMETENTE": [
+    "DADOS",
+    "ID_BARBEARIA"
+  ],
+  "MP_VARIACAO": [
+    "ATIVO",
+    "COR",
+    "CUSTO_COMPRA",
+    "ESTOQUE",
+    "ID_PRODUTO",
+    "ID_VARIACAO",
+    "NOME",
+    "PRECO",
+    "SKU",
+    "TAMANHO",
+    "VOLUME"
+  ],
+  "PERSONALIZACAO": [
+    "ARKHE_CLIENT_ID",
+    "ARKHE_CLIENT_SECRET",
+    "CHAVE_PIX",
+    "CONTATO_EMAIL",
+    "CONTATO_TELEFONE",
+    "COR_PRIMARIA",
+    "COR_SECUNDARIA",
+    "COR_TERCIARIA",
+    "COR_TEXTO_PRIMARIO",
+    "COR_TEXTO_SECUNDARIO",
+    "ID_PERSONALIZACAO",
+    "ID_USUARIO",
+    "INSTAGRAM",
+    "LOCALIZACAO",
+    "NUM_FUNCIONARIOS",
+    "TEXTO"
+  ],
+  "PLATAFORMA_TAXA": [
+    "CRIADO_EM",
+    "FRETE",
+    "ID_ATOR",
+    "ID_BARBEARIA",
+    "ID_CLIENTE",
+    "ID_OPERACAO",
+    "LIQUIDO_BARBEARIA",
+    "PAGADOR",
+    "PERCENTUAL",
+    "TERMOS_VERSAO",
+    "TIPO",
+    "TOTAL_CLIENTE",
+    "VALOR_BASE",
+    "VALOR_TAXA"
+  ],
+  "SERVICO": [
+    "ATIVO",
+    "DESCRICAO_BREVE",
+    "DURACAO",
+    "GENERO",
+    "ID_SERVICO",
+    "ID_USUARIO",
+    "NOME_SERVICO",
+    "PRECO"
+  ],
+  "SERVICO_POR_FUNCIONARIO": [
+    "ID_FUNCIONARIO",
+    "ID_SERVICO",
+    "ID_SERVI_FUNCI"
+  ],
+  "TERMO_ACEITE": [
+    "ACEITO_EM",
+    "DOCUMENTO",
+    "DOCUMENTO_HASH",
+    "ID_USUARIO",
+    "VERSAO"
+  ],
+  "USUARIO": [
+    "ATIVO",
+    "CODIGO_VERIFICACAO",
+    "DATA_CADASTRO",
+    "EMAIL",
+    "EMAIL_CONFIRMADO",
+    "GENERO",
+    "ID_USUARIO",
+    "JA_BLOQUEADO",
+    "NOME",
+    "SENHA2",
+    "SENHA3",
+    "SENHA_HASH",
+    "TELEFONE",
+    "TENTATIVA",
+    "TIPO"
+  ],
+  "VISAGISMO_SESSAO": [
+    "ANALISE_JSON",
+    "CRIADO_EM",
+    "FOTO_ROTA",
+    "ID_BARBEARIA",
+    "ID_CORTE_SIMULADO",
+    "ID_USUARIO",
+    "ID_VISAGISMO",
+    "RESULTADO_ROTA",
+    "SERVICOS_JSON"
+  ]
+}

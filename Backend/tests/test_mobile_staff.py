@@ -1,6 +1,5 @@
 """Scoped staff creation/state changes; email and database fully isolated."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
 os.environ['WAITLIST_WORKER'] = 'false'
 import unittest
 from contextlib import ExitStack

@@ -1,6 +1,5 @@
 """Disposable Firebird marketplace integration tests; never opens existing application databases."""
 import os
-os.environ['STARTUP_MIGRATIONS']='false'
 os.environ['WAITLIST_WORKER']='false'
 import tempfile
 import unittest
@@ -11,8 +10,8 @@ from threading import Barrier
 import firebirdsql
 import main
 import marketplace as mp
-import marketplace_schema
-import termos_schema
+from migrations import marketplace_schema
+from migrations import termos_schema
 import termos
 from test_marketplace import PRODUCT,ADDRESS
 

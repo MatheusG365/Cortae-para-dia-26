@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from contact_utils import digitos_telefone, email_sem_espacos
 from financial_reference import id_agendamento_descricao
-from schema_utils import criar_coluna, criar_sequence, criar_tabela, objeto_existe
+from migrations.schema_utils import criar_coluna, criar_sequence, criar_tabela, objeto_existe
 
 
 class SharedUtilityContracts(unittest.TestCase):

@@ -1,6 +1,6 @@
 """Additive, repeatable appointment rating schema. Run after a verified backup."""
 from application import conectar_banco
-from schema_utils import criar_tabela
+from .schema_utils import criar_tabela
 
 
 def migrar_ranking_avaliacoes():
@@ -17,8 +17,3 @@ def migrar_ranking_avaliacoes():
         con.rollback(); raise
     finally:
         cur.close(); con.close()
-
-
-if __name__ == '__main__':
-    from application import app
-    with app.app_context(): migrar_ranking_avaliacoes()

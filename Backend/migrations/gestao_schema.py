@@ -1,6 +1,6 @@
 """Additive local management tables. Run only after a verified backup."""
 from application import conectar_banco
-from schema_utils import criar_tabela, criar_sequence
+from .schema_utils import criar_tabela, criar_sequence
 
 
 TABLES = {
@@ -63,8 +63,3 @@ def migrar_gestao():
         con.rollback(); raise
     finally:
         cur.close(); con.close()
-
-
-if __name__ == '__main__':
-    from application import app
-    with app.app_context(): migrar_gestao()

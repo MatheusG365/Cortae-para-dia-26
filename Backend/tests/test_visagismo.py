@@ -1,7 +1,5 @@
 """Behavioral visagismo tests: synthetic images, mocked AI, no live DB writes."""
 import os
-os.environ['STARTUP_MIGRATIONS'] = 'false'
-
 import base64
 import copy
 from datetime import datetime, timedelta
@@ -268,7 +266,6 @@ class VisagismoBehavior(unittest.TestCase):
         cursor.fetchone.return_value = (91,)
         self.provider.responses.create.return_value = SimpleNamespace(output_text=json.dumps(self.raw_analysis()))
         patches = [patch.object(visagismo, 'obter_usuario_logado', return_value={'id_usuario': 7, 'tipo': 1}),
-                   patch.object(visagismo, 'garantir_estrutura'),
                    patch.object(visagismo, 'carregar_servicos', return_value=services or [{'id_servico': 100, 'nome': 'Corte de cabelo', 'duracao': 30, 'genero': 'masculino'}]),
                    patch.object(visagismo, 'conectar_banco', return_value=connection),
                    patch.object(visagismo, 'OpenAI', return_value=self.provider),
@@ -335,7 +332,6 @@ class VisagismoBehavior(unittest.TestCase):
         elif category == 'pintura':
             services[0]['nome'] = 'Pintar cabelo'
         with patch.object(visagismo, 'obter_usuario_logado', return_value={'id_usuario': 7, 'tipo': 1}), \
-                patch.object(visagismo, 'garantir_estrutura'), \
                 patch.object(visagismo, 'carregar_servicos', return_value=services), \
                 patch.object(visagismo, 'conectar_banco', return_value=connection), \
                 patch.object(visagismo, 'OpenAI', return_value=self.provider), \
@@ -389,7 +385,6 @@ class VisagismoBehavior(unittest.TestCase):
         connection = MagicMock()
         connection.cursor.return_value.fetchone.return_value = None
         with patch.object(visagismo, 'obter_usuario_logado', return_value={'id_usuario': 7, 'tipo': 1}), \
-                patch.object(visagismo, 'garantir_estrutura'), \
                 patch.object(visagismo, 'conectar_banco', return_value=connection), \
                 patch.object(visagismo, 'OpenAI', return_value=self.provider):
             response = self.client.post('/visagismo/91/simular', json={'id_corte': 11})
@@ -518,7 +513,6 @@ class VisagismoBehavior(unittest.TestCase):
                 connection = MagicMock()
                 connection.cursor.return_value = cursor
                 with patch.object(visagismo, 'obter_usuario_logado', return_value={'id_usuario': 7, 'tipo': 0}), \
-                        patch.object(visagismo, 'garantir_estrutura'), \
                         patch.object(visagismo, 'conectar_banco', return_value=connection), \
                         patch.object(visagismo, 'validar_url_imagem', side_effect=lambda url: url), \
                         patch.object(visagismo, 'capturar_registro', return_value={}), \
