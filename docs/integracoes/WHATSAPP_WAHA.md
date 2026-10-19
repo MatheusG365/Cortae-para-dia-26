@@ -20,6 +20,22 @@ Use HTTPS para um serviço remoto. HTTP é aceito somente em loopback literal ou
 
 Instale Docker com contêineres Linux. Na raiz do projeto, execute:
 
+No Windows sem WSL, primeiro habilite-o em um PowerShell como administrador:
+
+```powershell
+wsl --install --no-distribution
+```
+
+Reinicie o Windows quando solicitado e instale o Docker Desktop. A distribuição
+Ubuntu não é necessária para o backend WSL do Docker. A instalação Docker por
+usuário (`install --user --backend=wsl-2`) não requer administrador, mas habilitar
+os recursos Windows do WSL pela primeira vez requer. Não desative essa exigência
+nem reinicie automaticamente uma máquina em uso. Consulte
+[Docker no Windows](https://docs.docker.com/desktop/setup/install/windows-install/)
+e [instalação do WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+
+Com o Docker iniciado, suba o serviço:
+
 ```powershell
 docker compose --env-file 'C:\segredos\cortae-waha.env' -f compose.waha.yaml up -d
 ```
@@ -53,4 +69,10 @@ Uma resposta aceita pelo WAHA não comprova entrega. Em timeout, o envio pode te
 
 Foram executados apenas os 15 testes novos `test_waha_client.py`, com Python 3.12.10 de 32 bits e transporte simulado. Eles cobrem contrato, isolamento da CLI, chave, destino, timeout, redirects, respostas grandes, QR e preservação de arquivos. Não houve envio real.
 
-Docker não está disponível nesta máquina durante esta implementação. O contêiner não foi iniciado e nenhum número foi pareado. A conexão real depende de instalar/iniciar o serviço e ler o QR; esta entrega não declara WhatsApp conectado.
+Na primeira rodada, Docker estava ausente. Depois, com autorização do responsável,
+WSL 3.0.3.0 e Docker Desktop 4.95.0 foram instalados nesta máquina. A configuração
+Compose passou na verificação sem imprimir segredos. Os recursos Windows
+habilitados exigem reinício; o motor Docker ainda não iniciou. O computador não
+foi reiniciado automaticamente. O contêiner WAHA não foi iniciado e nenhum número
+foi pareado. Após reiniciar, falta iniciar Docker/WAHA e ler o QR; esta entrega
+não declara WhatsApp conectado.

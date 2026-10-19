@@ -4,7 +4,7 @@ Esta pasta reúne documentação de integração e relatórios históricos. A ap
 
 ## Auditoria mais recente
 
-[Drive central e WAHA — 19/10/2026](validacoes/DRIVE_WAHA_2026-10-19.md): diagnóstico `deleted_client`, configuração de credenciais no servidor, 44 testes focados e pendências de conexão real.
+[Drive central e WAHA — 19/10/2026](validacoes/DRIVE_WAHA_2026-10-19.md): autorização Drive renovada, 19 imagens reais restauradas, 44 testes focados e instalação WSL/Docker aguardando reinício Windows para iniciar WAHA.
 
 [Android com Python de 32 bits — 19/10/2026](validacoes/MOBILE_ANDROID_PYTHON32_2026-10-19.md): execução real no emulador, compra e agendamento isolados, 36 rotas autenticadas e correção da agenda.
 
