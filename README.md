@@ -23,6 +23,10 @@ Os dois bancos estão versionados nesses caminhos. As cópias publicadas em
 19/10/2026 foram produzidas por backup completo e restauração verificada, com os
 dados existentes, preservando os arquivos ativos do computador de origem.
 Configure a autenticação do seu servidor Firebird em `Backend/.env`.
+As credenciais Arkhé são removidas das cópias destinadas ao GitHub; configure a
+integração da barbearia somente no servidor utilizado. A primeira publicação
+continha uma chave Arkhé no banco. Essa chave deve ser revogada no Arkhé, pois
+limpar uma cópia atual não remove versões já publicadas no histórico Git.
 Os arquivos locais podem aparecer modificados no Git durante o uso normal do
 sistema; publicar outra cópia requer um novo backup consistente, sem copiar
 arquivos enquanto o Firebird estiver escrevendo neles.
