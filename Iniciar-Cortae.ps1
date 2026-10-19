@@ -89,6 +89,8 @@ if (Test-Path -LiteralPath $statePath) {
     Copy-Item -LiteralPath $statePath -Destination $previousStatePath
 }
 $pythonPath = Join-Path $projectRoot 'Backend\.venv\Scripts\python.exe'
+. (Join-Path $projectRoot 'Python-Cortae.ps1')
+$null = Assert-CortaePython $pythonPath
 $mainPath = Join-Path $projectRoot 'Backend\main.py'
 $vitePath = Join-Path $projectRoot 'Frontend\node_modules\vite\bin\vite.js'
 if (-not (Test-Path -LiteralPath $pythonPath) -or -not (Test-Path -LiteralPath $vitePath)) {

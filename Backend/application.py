@@ -1,4 +1,8 @@
 """Shared Flask application, input checks and service readiness."""
+from runtime_check import require_supported_python
+
+require_supported_python()
+
 from responses import mensagem_json
 import os
 from flask import Flask, jsonify, request

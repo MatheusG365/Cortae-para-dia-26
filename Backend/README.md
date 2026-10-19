@@ -121,10 +121,23 @@ requisições simultâneas.
 
 ## Execução local
 
-```bash
-pip install -r requirements.txt
-python main.py
+Use Python 3.12 ou superior **de 32 bits (Windows x86)**. Na raiz do projeto,
+`Configurar-Cortae.cmd` valida o interpretador, prepara `Backend/.venv` e instala o lock completo.
+Para escolher explicitamente um Python instalado, use
+`Configurar-Cortae.ps1 -PythonPath 'C:\caminho\Python312-32\python.exe'`.
+Ambientes incompatíveis são preservados em `.runtime/python-environments/`, sem apagar dados.
+
+Na pasta `Backend`:
+
+```powershell
+.\.venv\Scripts\python.exe runtime_check.py
+.\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe main.py
 ```
+
+A aplicação valida a arquitetura antes de carregar dependências ou acessar dados, incluindo
+importações WSGI. Python de 64 bits ou anterior a 3.12 encerra com mensagem de correção.
 
 ## Banco já preparado
 
@@ -148,3 +161,14 @@ A variável antiga `STARTUP_MIGRATIONS` foi retirada; ela não reativa alteraç�
 `WAITLIST_WORKER` continua controlando somente a fila de e-mails.
 
 `.venv` contém as dependências do backend, `templates/ativacao.html` é usado nos e-mails, `.env` guarda a configuração privada e os arquivos FDB contêm os dados. Esses itens continuam necessários.
+
+## Integrações no servidor
+
+O [Drive](../docs/integracoes/GOOGLE_DRIVE_IMAGENS.md) aceita a autorização completa
+em `GOOGLE_DRIVE_CREDENTIALS_JSON`, no ambiente privado da hospedagem, ou arquivo
+externo legado. O mapa padrão das pastas está em `google_drive_folders.json`.
+Site e aplicativo usam a mesma API; os aparelhos não recebem credenciais Google.
+
+O [WAHA](../docs/integracoes/WHATSAPP_WAHA.md) usa configuração `WAHA_*`,
+`configurar_whatsapp.py` e `compose.waha.yaml` na raiz. Instale o serviço e pareie
+o número pelo QR antes de usar o cliente. Não há envio automático durante setup.

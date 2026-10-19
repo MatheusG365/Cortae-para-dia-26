@@ -1,0 +1,26 @@
+services:
+  waha:
+    image: ${WAHA_IMAGE:-devlikeapro/waha:latest}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      WAHA_API_KEY: ${WAHA_API_KEY:?Defina a chave WAHA fora do Git}
+      WAHA_DASHBOARD_ENABLED: "false"
+      WHATSAPP_SWAGGER_ENABLED: "false"
+      WHATSAPP_DEFAULT_ENGINE: WEBJS
+      WHATSAPP_RESTART_ALL_SESSIONS: "true"
+      WAHA_PRINT_QR: "false"
+      WHATSAPP_FILES_FOLDER: /app/.media
+    volumes:
+      - waha_sessions:/app/.sessions
+      - waha_media:/app/.media
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  waha_sessions:
+  waha_media:

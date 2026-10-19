@@ -93,7 +93,12 @@ class CommercialFirebird(unittest.TestCase):
 
     def purchase(self,uid=20,**extra):
         data={'id_barbearia':10,'retirada':True,'endereco':ADDRESS,'chave_idempotencia':'commercial_order_1234567',**extra}
-        with self.as_user(uid,1):response=self.client.post('/marketplace/pedidos',json=data)
+        self.accept_user(uid);self.accept_user(10)
+        with self.as_user(uid,1):
+            preview=self.client.post('/marketplace/pedidos/resumo',json=data)
+            if preview.status_code==200:
+                data['confirmacao_resumo']=preview.get_json()['resumo']['confirmacao_resumo']
+            response=self.client.post('/marketplace/pedidos',json=data)
         return response
 
     def sql(self,query,params=()):
@@ -229,10 +234,18 @@ class CommercialFirebird(unittest.TestCase):
 
     def test_concurrent_coupon_last_use_and_variant_last_unit(self):
         v=self.variant(estoque=1);self.coupon();self.add(uid=20,vid=v['id_variacao']);self.add(uid=21,vid=v['id_variacao'])
+        self.accept_user(10)
+        payloads={}
+        for uid in (20,21):
+            self.accept_user(uid)
+            data={'id_barbearia':10,'retirada':True,'endereco':ADDRESS,'cupom':'BEMVINDO','chave_idempotencia':f'concurrent_order_{uid}_1234'}
+            with self.as_user(uid,1):preview=self.client.post('/marketplace/pedidos/resumo',json=data)
+            self.assertEqual(preview.status_code,200,preview.get_json())
+            payloads[uid]=data|{'confirmacao_resumo':preview.get_json()['resumo']['confirmacao_resumo']}
         barrier=Barrier(2)
         def buy(uid):
             barrier.wait(timeout=10)
-            return main.app.test_client().post('/marketplace/pedidos',headers={'X-QA-User':str(uid)},json={'id_barbearia':10,'retirada':True,'endereco':ADDRESS,'cupom':'BEMVINDO','chave_idempotencia':f'concurrent_order_{uid}_1234'}).status_code
+            return main.app.test_client().post('/marketplace/pedidos',headers={'X-QA-User':str(uid)},json=payloads[uid]).status_code
         with patch.object(mp,'obter_usuario_logado',side_effect=lambda:{'id_usuario':int(request.headers['X-QA-User']),'tipo':1}),ThreadPoolExecutor(max_workers=2) as pool:
             a,b=pool.submit(buy,20),pool.submit(buy,21);codes=sorted([a.result(timeout=30),b.result(timeout=30)])
         self.assertEqual(codes,[201,409]);self.assertEqual(self.sql('SELECT ESTOQUE FROM MP_VARIACAO')[0][0],0)

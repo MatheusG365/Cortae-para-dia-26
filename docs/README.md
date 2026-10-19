@@ -4,6 +4,12 @@ Esta pasta reúne documentação de integração e relatórios históricos. A ap
 
 ## Auditoria mais recente
 
+[Drive central e WAHA — 19/10/2026](validacoes/DRIVE_WAHA_2026-10-19.md): diagnóstico `deleted_client`, configuração de credenciais no servidor, 44 testes focados e pendências de conexão real.
+
+[Android com Python de 32 bits — 19/10/2026](validacoes/MOBILE_ANDROID_PYTHON32_2026-10-19.md): execução real no emulador, compra e agendamento isolados, 36 rotas autenticadas e correção da agenda.
+
+[Python de 32 bits — 19/10/2026](validacoes/PYTHON_32_BITS_2026-10-19.md): validação obrigatória de arquitetura, instalação limpa, testes de backend/Firebird, frontend e mobile.
+
 [Help e documentação da API — 17/10/2026](validacoes/HELP_DRIVE_2026-10-17.md): novo guia de imagens no Help, contratos de upload e mídia, mobile e validação do acesso ADM.
 
 [Migração completa de imagens — 17/10/2026](validacoes/GOOGLE_DRIVE_IMAGENS_COMPLETA_2026-10-17.md): 77 arquivos no Drive, remoção das pastas locais, verificações HTTP, site e aplicativo.
@@ -21,6 +27,7 @@ Esta pasta reúne documentação de integração e relatórios históricos. A ap
 ## Integrações
 
 - [Imagens no Google Drive](integracoes/GOOGLE_DRIVE_IMAGENS.md): OAuth do servidor, estrutura de pastas, verificação e migração das imagens locais.
+- [WhatsApp pelo WAHA](integracoes/WHATSAPP_WAHA.md): serviço privado, configuração central, QR e CLI de envio explícito.
 - [Arkhé](integracoes/ARKHE_INTEGRACAO.md): documentação da integração e do escopo de comissões. Consulte também os limites de pagamento registrados na auditoria mais recente.
 
 ## Histórico de validações

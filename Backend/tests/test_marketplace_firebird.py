@@ -30,6 +30,8 @@ class MarketplaceFirebird(unittest.TestCase):
         with patch.object(marketplace_schema,'conectar_banco',side_effect=self.connect):marketplace_schema.migrar_marketplace();marketplace_schema.migrar_marketplace()
         with patch.object(termos_schema,'conectar_banco',side_effect=self.connect):termos_schema.migrar_termos_taxa();termos_schema.migrar_termos_taxa()
         self.addCleanup(patch.stopall);patch.object(mp,'conectar_banco',side_effect=self.connect).start();patch.object(mp,'registrar_log').start()
+        # Exercise the published policy regardless of the developer's .env.
+        fixture_policy=MarketplaceFirebird.fee_policy(self,'barbearia');fixture_policy.start();self.addCleanup(fixture_policy.stop)
         self.client=main.app.test_client()
         with self.as_user(10,2):response=self.client.post('/gestao/marketplace/produtos',json=PRODUCT)
         self.assertEqual(response.status_code,201,response.get_json());self.pid=response.get_json()['produto']['id_produto']
@@ -40,7 +42,12 @@ class MarketplaceFirebird(unittest.TestCase):
     def as_user(self,id_,role):return patch.object(mp,'obter_usuario_logado',return_value={'id_usuario':id_,'tipo':role})
     def purchase(self,key='order_test_12345678'):
         self.assertEqual(self.client.put(f'/marketplace/carrinho/{self.pid}',json={'quantidade':2}).status_code,200)
-        return self.client.post('/marketplace/pedidos',json={'id_barbearia':10,'retirada':True,'endereco':ADDRESS,'chave_idempotencia':key})
+        MarketplaceFirebird.accept_user(self,20);MarketplaceFirebird.accept_user(self,10)
+        self.last_purchase_data={'id_barbearia':10,'retirada':True,'endereco':ADDRESS,'chave_idempotencia':key}
+        preview=self.client.post('/marketplace/pedidos/resumo',json=self.last_purchase_data)
+        self.assertEqual(preview.status_code,200,preview.get_json())
+        self.last_purchase_data['confirmacao_resumo']=preview.get_json()['resumo']['confirmacao_resumo']
+        return self.client.post('/marketplace/pedidos',json=self.last_purchase_data)
     def test_store_route_scope_overrides_query_and_filters_categories(self):
         with self.as_user(10,2):
             a2=self.client.post('/gestao/marketplace/produtos',json=PRODUCT|{'nome':'Shampoo A','categoria':'Shampoo'}).get_json()['produto']
@@ -70,8 +77,8 @@ class MarketplaceFirebird(unittest.TestCase):
     def test_checkout_snapshot_replay_cancel_exact_once(self):
         with self.as_user(20,1):
             response=self.purchase();self.assertEqual(response.status_code,201,response.get_json());order=response.get_json()['pedido'];id_=order['id_pedido'];self.assertEqual(order['total'],51.98)
-            replay=self.client.post('/marketplace/pedidos',json={'id_barbearia':10,'retirada':True,'endereco':ADDRESS,'chave_idempotencia':'order_test_12345678'});self.assertEqual(replay.status_code,200)
-            changed=self.client.post('/marketplace/pedidos',json={'id_barbearia':10,'retirada':True,'endereco':ADDRESS|{'numero':'11'},'chave_idempotencia':'order_test_12345678'});self.assertEqual(changed.status_code,409)
+            replay=self.client.post('/marketplace/pedidos',json=self.last_purchase_data);self.assertEqual(replay.status_code,200)
+            changed=self.client.post('/marketplace/pedidos',json=self.last_purchase_data|{'endereco':ADDRESS|{'numero':'11'}});self.assertEqual(changed.status_code,409)
             for _ in range(2):self.assertEqual(self.client.post(f'/marketplace/pedidos/{id_}/cancelar',json={}).status_code,200)
         self.assertEqual(self.client.get(f'/marketplace/produtos/{self.pid}').get_json()['produto']['estoque'],10)
         with self.as_user(21,1):self.assertEqual(self.client.get(f'/marketplace/pedidos/{id_}').status_code,404)
@@ -123,11 +130,13 @@ class MarketplaceFirebird(unittest.TestCase):
             'TERMOS_RESPONSAVEL_ENDERECO':'QA','PLATAFORMA_TAXA_PAGADOR':payer})
 
     def accept_user(self,id_):
-        con=self.connect();cur=con.cursor()
-        try:
-            with main.app.app_context():termos.registrar_aceite(cur,id_,termos.versao_atual(),True)
-            con.commit()
-        finally:cur.close();con.close()
+        with patch.object(termos,'conectar_banco',side_effect=self.connect), \
+             patch.object(termos,'decodificar_token',return_value={'id_usuario':id_}), \
+             patch('auditoria.registrar_log'):
+            document=self.client.get('/termos-uso').get_json()
+            response=self.client.post('/termos-uso/aceite',json={'versao':document['versao'],'aceito':True})
+        self.assertEqual(response.status_code,200,response.get_json())
+        self.assertTrue(response.get_json()['aceito'])
 
     def test_fee_customer_preview_reprice_consent_retry_cancel_snapshot(self):
         with main.app.app_context(),self.fee_policy('cliente'),self.as_user(20,1):

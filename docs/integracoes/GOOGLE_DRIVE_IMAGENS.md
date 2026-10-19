@@ -6,6 +6,43 @@ Com o provedor Google Drive, a aplicação resolve as imagens pelo Firebird e pe
 
 ## Autorizar a conta usada pelo servidor
 
+### Acesso pelo site e aplicativo em qualquer aparelho
+
+Todos os aparelhos devem usar a mesma API hospedada. A autorização do Drive fica
+somente nesse servidor; clientes e barbearias não criam credenciais Google.
+Configure `VITE_API_URL` no site e `EXPO_PUBLIC_API_URL` no build do aplicativo
+com a URL HTTPS dessa API. Um backend acessível apenas no computador de
+desenvolvimento não passa a estar hospedado ao publicar o código no GitHub.
+
+O backend aceita `GOOGLE_DRIVE_CREDENTIALS_JSON`: o conteúdo completo da
+autorização `authorized_user`, incluindo `refresh_token`, guardado no cofre de
+segredos ou ambiente privado da hospedagem. Assim, não depende de um caminho
+Windows nem de um arquivo de credenciais em cada aparelho. O JSON é obtido após
+o consentimento descrito abaixo; Client ID e Client Secret sozinhos identificam
+o aplicativo, mas não concedem acesso às imagens. Veja o
+[fluxo OAuth oficial](https://developers.google.com/identity/protocols/oauth2/web-server#offline).
+
+Quando preenchido, esse segredo tem prioridade sobre
+`GOOGLE_DRIVE_CREDENTIALS_FILE`. Um JSON inválido falha explicitamente, sem usar
+uma credencial antiga como alternativa. Não publique Client Secret ou refresh
+token no código, nos builds ou em exemplos. O cache interno identifica o JSON
+por SHA-256; não inclui o segredo nas chaves.
+
+`Backend/google_drive_folders.json` já contém os IDs das oito áreas existentes
+na pasta Cortaê informada pelo responsável. Esses IDs são configuração, não
+autorização. O mapa padrão é usado quando `GOOGLE_DRIVE_FOLDER_IDS` está vazio;
+um JSON explícito o substitui e `GOOGLE_DRIVE_FOLDER_IDS_FILE` tem prioridade
+sobre ambos. Remova um valor legado literal `{}` para usar o mapa padrão.
+Nenhuma pasta é criada ou tornada pública por essa configuração.
+
+Se o Google retornar `deleted_client`, o cliente vinculado ao refresh token foi
+excluído. Autorize novamente um cliente válido: trocar somente ID e Secret na
+autorização antiga não transforma o refresh token em uma nova autorização.
+O consentimento é feito uma vez pelo responsável pelo servidor, não a cada
+instalação do aplicativo. Revogação ou expiração podem exigir novo consentimento.
+
+### Consentimento inicial
+
 Esta configuração pertence ao servidor. Não existe uma tela de conexão para clientes ou barbearias e nenhuma credencial vai para o React ou o React Native. A conexão do Google Drive feita em outra ferramenta, inclusive no Codex, não substitui a autorização OAuth do backend.
 
 Para um Drive pessoal, use OAuth de usuário com acesso contínuo. Uma conta de serviço só é aceita pelo backend quando houver um Drive compartilhado configurado; ela não substitui o proprietário de um Drive pessoal.

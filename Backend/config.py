@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
 BASE_DIR = os.path.dirname(
@@ -101,11 +102,21 @@ PERFIL_FOLDER = os.path.join(
 # New runtime uploads use private Google Drive media. Missing credentials fail
 # explicitly; selecting local is only an intentional development setting.
 IMAGE_STORAGE_PROVIDER = os.getenv('IMAGE_STORAGE_PROVIDER', 'google_drive').strip().lower()
+# Full authorized_user JSON (including refresh_token), held only by the server.
+GOOGLE_DRIVE_CREDENTIALS_JSON = os.getenv('GOOGLE_DRIVE_CREDENTIALS_JSON', '').strip()
 GOOGLE_DRIVE_CREDENTIALS_FILE = os.getenv('GOOGLE_DRIVE_CREDENTIALS_FILE', '').strip()
-GOOGLE_DRIVE_FOLDER_IDS = os.getenv('GOOGLE_DRIVE_FOLDER_IDS', '{}').strip()
+GOOGLE_DRIVE_FOLDER_IDS = (os.getenv('GOOGLE_DRIVE_FOLDER_IDS', '').strip()
+                          or Path(BASE_DIR, 'google_drive_folders.json').read_text(encoding='utf-8'))
 GOOGLE_DRIVE_FOLDER_IDS_FILE = os.getenv('GOOGLE_DRIVE_FOLDER_IDS_FILE', '').strip()
 GOOGLE_DRIVE_SHARED_DRIVE_ID = os.getenv('GOOGLE_DRIVE_SHARED_DRIVE_ID', '').strip()
 IMAGE_LOCAL_FOLDER = os.getenv('IMAGE_LOCAL_FOLDER', os.path.join(UPLOAD_FOLDER, '.managed'))
+
+# WAHA runs independently; setup and pairing are performed by the server operator.
+WAHA_ENABLED = os.getenv('WAHA_ENABLED', 'false').lower() in ('1', 'true', 'sim', 'yes')
+WAHA_BASE_URL = os.getenv('WAHA_BASE_URL', 'http://127.0.0.1:3000').strip()
+WAHA_API_KEY = os.getenv('WAHA_API_KEY', '').strip()
+WAHA_SESSION = os.getenv('WAHA_SESSION', 'default').strip()
+WAHA_TIMEOUT = os.getenv('WAHA_TIMEOUT', '20').strip()
 
 
 # ==========================================================

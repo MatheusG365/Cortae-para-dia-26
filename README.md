@@ -17,17 +17,36 @@ Os relatórios não são necessários para executar a aplicação. Foram mantido
 
 ## Iniciar no Windows
 
-Requisitos: Python 3.12+, Node.js 22+ e servidor Firebird 5 disponível. Os arquivos `Backend/CORTAE.FDB` e `Backend/LOG_CORTAE.FDB` precisam estar acessíveis ao Firebird.
+Requisitos: **Python 3.12 ou superior de 32 bits (Windows x86)**, Node.js 22+ e servidor Firebird 5 disponível. Os arquivos `Backend/CORTAE.FDB` e `Backend/LOG_CORTAE.FDB` precisam estar acessíveis ao Firebird.
 
 1. Execute `Configurar-Cortae.cmd` para instalar as dependências nas versões verificadas.
 2. Preencha `Backend/.env` a partir de `.env.example` se ainda não existir. Informe banco, senha, chave da aplicação e credenciais das integrações utilizadas.
 3. Execute `Iniciar-Cortae.cmd`.
 
+O instalador conserva um `Backend/.venv` válido de 32 bits. Ao criar ou substituir o ambiente,
+prefere `py -3.12-32`, verifica os outros interpretadores disponíveis e rejeita Python de 64 bits.
+Para indicar o executável instalado, execute na raiz:
+
+```powershell
+.\Configurar-Cortae.ps1 -PythonPath 'C:\caminho\Python312-32\python.exe'
+.\Backend\.venv\Scripts\python.exe .\Backend\runtime_check.py
+```
+
+Um ambiente incompatível é preservado em `.runtime/python-environments/venv-backup-*`, com o
+caminho informado no terminal. Se a criação falhar, o instalador restaura o ambiente anterior;
+tentativas incompletas permanecem nessa mesma pasta para inspeção. Não altera Python global,
+configurações existentes nem bancos. Os iniciadores e a aplicação recusam um processo de 64 bits,
+inclusive ao executar `main.py` manualmente ou importar a aplicação WSGI.
+As dependências completas, incluindo imagens e Google Drive, ficam em `Backend/requirements-lock.txt`;
+o instalador executa `pip check` após a instalação.
+
 Acesse [Cortaê](http://127.0.0.1:5173), [saúde da API](http://127.0.0.1:5000/health) e [documentação](http://127.0.0.1:5000/docs).
 
 O administrador encontra a central técnica em `/help`, digitando o endereço no site. Ela documenta as páginas web, as rotas da API e o aplicativo mobile: telas públicas, cliente, gestão da barbearia, fluxos e código associado. O mobile utiliza a mesma API e não possui painel de administrador; sua documentação é consultada pelo ADM no site. O catálogo e a leitura de código continuam exigindo sessão de administrador no backend.
 
-As fotos enviadas pelo site e pelo aplicativo usam o armazenamento compartilhado do backend: conversão para WebP, referência no Firebird e arquivo privado no Google Drive. A ativação exige autorização OAuth no servidor; uma chave de API sozinha não autoriza imagens privadas. Consulte o [guia de configuração e migração](docs/integracoes/GOOGLE_DRIVE_IMAGENS.md). As imagens locais antigas continuam legíveis durante a transição.
+As fotos enviadas pelo site e pelo aplicativo usam o armazenamento compartilhado do backend: conversão para WebP, referência no Firebird e arquivo privado no Google Drive. A ativação exige autorização OAuth no servidor; uma chave de API sozinha não autoriza imagens privadas. A hospedagem pode guardar a autorização completa em `GOOGLE_DRIVE_CREDENTIALS_JSON`, sem caminhos locais de credenciais nos aparelhos. Consulte o [guia de configuração e migração](docs/integracoes/GOOGLE_DRIVE_IMAGENS.md). O provedor Drive não usa arquivos locais como alternativa.
+
+O [WhatsApp pelo WAHA](docs/integracoes/WHATSAPP_WAHA.md) dispõe de cliente e CLI no backend, com instalação em `compose.waha.yaml`. Configure a chave privada no servidor e faça o pareamento pelo QR. Começa desativado; notificações automáticas não foram adicionadas.
 
 Para encerrar, execute `Parar-Cortae.cmd`. Ele encerra apenas os processos registrados deste projeto, verificando o comando e a data de início. Portas ocupadas por outros processos geram aviso na inicialização. Os registros de execução ficam em `.runtime/`. Uma instância ainda ativa deste projeto impede outra inicialização, mesmo em outras portas. Registros residuais após uma interrupção são preservados em `.runtime/processes-anterior-*.json`, sem bloquear uma nova execução nem encerrar processos de outro programa.
 

@@ -3,6 +3,10 @@
 OAuth secrets and refresh tokens remain in a private file outside this project.
 The optional upload check creates one synthetic file and moves only it to Trash.
 """
+from runtime_check import require_supported_python
+
+require_supported_python()
+
 import argparse
 from contextlib import contextmanager
 import csv
@@ -218,9 +222,10 @@ def load_config(*, credentials=None, folders_file=None):
     # Config only reads server environment; importing main/application would run DB work.
     import config
     settings = {key: getattr(config, key, '') for key in (
-        'GOOGLE_DRIVE_CREDENTIALS_FILE', 'GOOGLE_DRIVE_FOLDER_IDS',
+        'GOOGLE_DRIVE_CREDENTIALS_JSON', 'GOOGLE_DRIVE_CREDENTIALS_FILE', 'GOOGLE_DRIVE_FOLDER_IDS',
         'GOOGLE_DRIVE_FOLDER_IDS_FILE', 'GOOGLE_DRIVE_SHARED_DRIVE_ID')}
     if credentials:
+        settings['GOOGLE_DRIVE_CREDENTIALS_JSON'] = ''
         settings['GOOGLE_DRIVE_CREDENTIALS_FILE'] = str(external_path(credentials, existing=True))
     if folders_file:
         settings['GOOGLE_DRIVE_FOLDER_IDS_FILE'] = str(external_path(folders_file, existing=True))

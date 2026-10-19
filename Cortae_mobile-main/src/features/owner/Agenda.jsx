@@ -141,9 +141,7 @@ export default function OwnerAgenda() {
             </Copy>
             <Copy muted>
               {a.funcionario_nome || "Sem profissional"} ·{" "}
-              {(a.servicos || [])
-                .map((v) => v.nome || v.nome_servico)
-                .join(", ")}
+              {(a.servicos_nomes || []).join(", ")}
             </Copy>
             {a.corte_nome && <Copy>Corte: {a.corte_nome}</Copy>}
             <Copy>{money(a.valor_total)}</Copy>

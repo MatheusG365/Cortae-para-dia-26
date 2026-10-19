@@ -1,5 +1,6 @@
 """Private Drive media transport. No sharing, public links or arbitrary URLs."""
 import json
+import hashlib
 import re
 import uuid
 import threading
@@ -43,17 +44,28 @@ class GoogleDriveStorage:
         self.session = requests.Session()
         self.session.trust_env = False
         try:
-            path = Path(config.get('GOOGLE_DRIVE_CREDENTIALS_FILE') or '')
-            if not path.is_file() or path.is_symlink() or path.stat().st_size > 65536:
+            # Hosted deployments can keep the authorization in their secret store.
+            # A supplied invalid secret must fail closed, never use an older file.
+            raw = config.get('GOOGLE_DRIVE_CREDENTIALS_JSON')
+            if raw:
+                if not isinstance(raw, str) or len(raw.encode('utf-8')) > 65536:
+                    raise ValueError('credentials')
+                info = json.loads(raw)
+                source_key = ('environment', hashlib.sha256(raw.encode('utf-8')).hexdigest())
+            else:
+                path = Path(config.get('GOOGLE_DRIVE_CREDENTIALS_FILE') or '')
+                if not path.is_file() or path.is_symlink() or path.stat().st_size > 65536:
+                    raise ValueError('credentials')
+                info = json.loads(path.read_text(encoding='utf-8-sig'))
+                file_stat = path.stat()
+                source_key = ('file', str(path.resolve()), file_stat.st_mtime_ns, file_stat.st_size)
+            if not isinstance(info, dict):
                 raise ValueError('credentials')
-            info = json.loads(path.read_text(encoding='utf-8-sig'))
             if info.get('token_uri', 'https://oauth2.googleapis.com/token') not in TOKEN_URIS:
                 raise ValueError('token endpoint')
             if info.get('universe_domain', 'googleapis.com') != 'googleapis.com':
                 raise ValueError('universe')
-            file_stat = path.stat()
-            cache_key = (str(path.resolve()), file_stat.st_mtime_ns, file_stat.st_size,
-                         bool(config.get('GOOGLE_DRIVE_SHARED_DRIVE_ID')))
+            cache_key = source_key + (bool(config.get('GOOGLE_DRIVE_SHARED_DRIVE_ID')),)
             with _CACHE_LOCK:
                 cached = _CREDENTIALS.get(cache_key)
             if cached:
