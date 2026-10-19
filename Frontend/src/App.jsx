@@ -107,7 +107,7 @@ export default function App() {
 
                 <Route
                     path="/cadastrobarbearia"
-                    element={<CadastroBarbearia />}
+                    element={<RequireAuth tipos={[0]}><CadastroBarbearia /></RequireAuth>}
                 />
 
                 <Route

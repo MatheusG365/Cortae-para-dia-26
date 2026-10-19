@@ -4,7 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
-const ts = require("typescript");
+const { compileJavaScript } = require("./helpers/compile.cjs");
 
 // Execute the actual button callback without a device, network or payment provider.
 function harness(responses) {
@@ -60,15 +60,11 @@ function harness(responses) {
   };
   const filename = path.resolve(
     __dirname,
-    "../src/features/client/Payment.tsx",
+    "../src/features/client/Payment.jsx",
   );
-  const compiled = ts.transpileModule(fs.readFileSync(filename, "utf8"), {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      jsx: ts.JsxEmit.ReactJSX,
-    },
-    fileName: filename,
-  }).outputText;
+  const compiled = compileJavaScript(fs.readFileSync(filename, "utf8"), {
+    jsx: "automatic",
+  });
   const module = { exports: {} };
   vm.runInNewContext(
     compiled,

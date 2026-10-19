@@ -45,7 +45,7 @@ class ImageDocumentationTests(unittest.TestCase):
         self.assertTrue(all(source['id'] in all_sources for source in images['arquivos']))
         text = json.dumps(images, ensure_ascii=False)
         for term in ('10 MB', '24 megapixels', '512 px', '1600 px', 'WebP', 'EXIF', 'Firebird',
-                     'Drive', 'oito', 'seis', 'não há fallback', 'sete dias', 'tenta limpar'):
+                     'Drive', 'oito', 'cinco', 'não há fallback', 'sete dias', 'tenta limpar'):
             self.assertIn(term, text)
         for forbidden in ('PRIVATE_CONFIG_SENTINEL', 'PRIVATE_FOLDER_SENTINEL', 'apps.googleusercontent.com',
                           'authorized_user.json', 'folders.json', 'FILE_ID=', 'GOCSPX-', str(admin_help.RAIZ)):
@@ -103,7 +103,7 @@ class ImageDocumentationTests(unittest.TestCase):
         flow = next(f for f in mobile['fluxos'] if f['id'] == 'imagens')
         self.assertTrue({'mobile:/cliente/perfil', 'mobile:/cliente/visagismo', 'mobile:/barbearia/produto'} <= set(flow['rotas']))
         text = json.dumps(mobile, ensure_ascii=False)
-        for term in ('/midia/mobile/<nome>', 'seis', 'sem fallback', 'Drive'):
+        for term in ('/midia/mobile/<nome>', 'cinco', 'sem fallback', 'Drive'):
             self.assertIn(term, text)
         self.assertNotIn('PRIVATE_CONFIG_SENTINEL', text)
 

@@ -3,6 +3,13 @@
 .pagina button,.pagina input,.pagina :global([data-select-trigger]){font:inherit}
 .pagina button{cursor:pointer}
 .pagina button:disabled{cursor:default;opacity:.45}
+.guiaRequisicao{min-width:0;overflow-wrap:anywhere}
+.guiaRequisicao h3{font-size:14px;margin:18px 0 8px}
+.guiaRequisicao>p{margin-top:12px}
+.requisicao{padding:14px 0;border-top:1px solid #e5e7df;display:grid;gap:8px}
+.requisicao h4{margin:0;line-height:1.7;font-size:13px;overflow-wrap:anywhere}
+.requisicao pre{margin:0;padding:12px;border-radius:8px;background:#f4f5f0;white-space:pre-wrap;overflow-wrap:anywhere;max-height:280px;overflow:auto;font-size:12px}
+.abrirRequisicao{display:inline-flex;align-items:center;gap:8px;justify-self:start;border:1px solid #d9ddd3;border-radius:8px;background:#fff;padding:9px 12px;color:#394331;font-size:12px}
 .pagina button:focus-visible,.pagina input:focus-visible,.pagina :global([data-select-trigger]):focus-visible,.pagina summary:focus-visible,.pagina pre:focus-visible{outline:3px solid #e9a225;outline-offset:3px}
 .pagina h1,.pagina h2,.pagina h3,.pagina p{margin:0}
 .cabecalho{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:0 0 28px;border-bottom:1px solid #e6e5dd;margin-bottom:24px}

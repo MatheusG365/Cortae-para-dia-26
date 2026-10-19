@@ -5,7 +5,7 @@ const {
   canRequestBookingCharge,
   canCreateOrderPix,
   validQuantity,
-} = require("../src/features/client/clientRules.ts");
+} = require("../src/features/client/clientRules.js");
 test("deferred cut removes old catalog and photo session", () => {
   for (const choice of ["na_hora", "profissional"])
     assert.deepEqual(

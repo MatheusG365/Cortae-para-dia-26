@@ -4,7 +4,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
-const ts = require("typescript");
+const { compileJavaScript } = require("./helpers/compile.cjs");
 
 const tick = () => new Promise((resolve) => setImmediate(resolve));
 const person = (id) => ({
@@ -108,12 +108,9 @@ function harness(os = "android", initial = {}, { logoutError, env = {} } = {}) {
   };
   function compile(filename, imports) {
     const file = path.resolve(__dirname, "../src/lib", filename);
-    const code = ts.transpileModule(fs.readFileSync(file, "utf8"), {
-      compilerOptions: {
-        module: ts.ModuleKind.CommonJS,
-        jsx: ts.JsxEmit.ReactJSX,
-      },
-    }).outputText;
+    const code = compileJavaScript(fs.readFileSync(file, "utf8"), {
+      jsx: "automatic",
+    });
     const module = { exports: {} };
     vm.runInNewContext(
       code,
@@ -144,14 +141,14 @@ function harness(os = "android", initial = {}, { logoutError, env = {} } = {}) {
     Platform: { OS: os },
     AppState: { addEventListener: () => ({ remove() {} }) },
   };
-  const address = compile("apiAddress.ts", {});
-  const api = compile("api.ts", {
+  const address = compile("apiAddress.js", {});
+  const api = compile("api.js", {
     "expo-constants": { __esModule: true, default: constants },
     "./apiAddress": address,
     "react-native": native,
     "expo-secure-store": secure,
   });
-  const session = compile("session.tsx", {
+  const session = compile("session.jsx", {
     react,
     "react/jsx-runtime": { jsx: (type, props) => ({ type, props }) },
     "react-native": native,

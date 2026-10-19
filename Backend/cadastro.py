@@ -110,16 +110,15 @@ def cadastro():
 
             return mensagem_json('Tipo de usuário inválido.', 'erro'), 400
 
-        if tipo == 0:
-            ator = decodificar_token()
-            if not ator or ator.get('tipo') != 0:
-                return mensagem_json('Somente administradores podem cadastrar administradores.', 'erro'), 403
+        ator_cadastro = decodificar_token()
+        por_administrador = bool(ator_cadastro and ator_cadastro.get('tipo') == 0)
+        if tipo in (0, 2) and not por_administrador:
+            perfil = 'administradores' if tipo == 0 else 'barbearias'
+            return mensagem_json(f'Somente administradores podem cadastrar {perfil}.', 'erro'), 403
 
         if genero and genero not in ['masculino', 'feminino', 'outro']:
             return mensagem_json('Gênero inválido. Use: masculino, feminino ou outro.', 'erro'), 400
 
-        ator_cadastro = decodificar_token()
-        por_administrador = bool(ator_cadastro and int(ator_cadastro.get('tipo', -1)) == 0)
         termos_habilitados = documento_termos()['aceite_habilitado']
         if termos_habilitados and not por_administrador and (dados.get('termos_aceitos') is not True or dados.get('termos_versao') != versao_atual()):
             return jsonify(mensagem={'informacao': 'Leia e aceite a versão atual dos termos de uso.', 'tipo': 'erro'},

@@ -22,7 +22,7 @@ class HelpMobileTests(unittest.TestCase):
 
     def test_exactly_matches_real_expo_router_pages_and_curated_current_map(self):
         pasta = help_api.RAIZ / 'Cortae_mobile-main/src/app'
-        arquivos = {p for p in pasta.rglob('*.tsx') if p.stem != '_layout'}
+        arquivos = {p for p in pasta.rglob('*.jsx') if p.stem != '_layout'}
         self.assertEqual(len(self.telas), len(arquivos))
         self.assertEqual({r['rota'] for r in self.telas}, {caminho_router(p, pasta) for p in arquivos})
         self.assertEqual({r['rota'] for r in self.telas}, set(TELAS))
@@ -37,13 +37,13 @@ class HelpMobileTests(unittest.TestCase):
                 self.assertGreaterEqual(len(rota['como_funciona']), 3)
                 self.assertEqual(rota['arquivos'][0]['caminho'], 'Cortae_mobile-main/src/app/' + rota['endpoint'])
 
-    def test_layouts_and_typescript_implementations_are_code_dependencies_not_pages(self):
+    def test_layouts_and_javascript_implementations_are_code_dependencies_not_pages(self):
         booking = next(r for r in self.telas if r['rota'] == '/cliente/agendar')
         paths = {f['caminho'] for f in booking['arquivos']}
-        for esperado in ('src/app/_layout.tsx', 'src/app/cliente/_layout.tsx',
-                         'src/features/client/Booking.tsx', 'src/features/client/clientRules.ts',
-                         'src/lib/session.tsx', 'src/lib/api.ts', 'src/lib/apiAddress.ts',
-                         'src/lib/dialogs.tsx', 'src/lib/dialogQueue.ts', 'src/ui.tsx'):
+        for esperado in ('src/app/_layout.jsx', 'src/app/cliente/_layout.jsx',
+                         'src/features/client/Booking.jsx', 'src/features/client/clientRules.js',
+                         'src/lib/session.jsx', 'src/lib/api.js', 'src/lib/apiAddress.js',
+                         'src/lib/dialogs.jsx', 'src/lib/dialogQueue.js', 'src/ui.jsx'):
             self.assertIn('Cortae_mobile-main/' + esperado, paths)
         self.assertTrue(all('_layout' not in r['rota'] for r in self.telas))
         for rota in self.telas:
@@ -116,7 +116,7 @@ class HelpMobileTests(unittest.TestCase):
         self.assertNotIn('conteudo', resposta.json)
 
     def test_mobile_sources_require_admin_and_registered_opaque_id(self):
-        arquivo = help_api.RAIZ / 'Cortae_mobile-main/src/lib/apiAddress.ts'
+        arquivo = help_api.RAIZ / 'Cortae_mobile-main/src/lib/apiAddress.js'
         endereco = '/admin/help/codigo/' + help_api._id(arquivo)
         client = main.app.test_client()
         for usuario, status in ((None, 401), ({'tipo': 1}, 403), ({'tipo': 2}, 403), ({'tipo': 3}, 403)):
@@ -126,7 +126,7 @@ class HelpMobileTests(unittest.TestCase):
         with patch.object(help_api, 'decodificar_token', return_value={'tipo': 0}):
             resposta = client.get(endereco)
         self.assertEqual(resposta.status_code, 200)
-        self.assertEqual(resposta.json['linguagem'], 'typescript')
+        self.assertEqual(resposta.json['linguagem'], 'javascript')
         self.assertIn('resolveAutomaticApiUrl', resposta.json['conteudo'])
         self.assertEqual(resposta.headers['Cache-Control'], 'private, no-store')
 
@@ -137,7 +137,7 @@ class HelpMobileTests(unittest.TestCase):
                      'src/lib/api.py', 'src/lib/styles.css', 'src/.private.ts', 'src/config.py'):
             with self.subTest(nome=nome):
                 self.assertFalse(help_api._permitido(raiz / nome))
-        self.assertTrue(help_api._permitido(raiz / 'src/lib/api.ts'))
+        self.assertTrue(help_api._permitido(raiz / 'src/lib/api.js'))
 
     def test_typescript_index_reexports_expand_without_following_escape(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -4,18 +4,17 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
-const ts = require("typescript");
+const { compileJavaScript } = require("./helpers/compile.cjs");
 const source = fs.readFileSync(
-  path.resolve(__dirname, "../src/lib/apiAddress.ts"),
+  path.resolve(__dirname, "../src/lib/apiAddress.js"),
   "utf8",
 );
 const moduleUnderTest = { exports: {} };
-vm.runInNewContext(
-  ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS },
-  }).outputText,
-  { module: moduleUnderTest, exports: moduleUnderTest.exports, URL },
-);
+vm.runInNewContext(compileJavaScript(source, { jsx: "automatic" }), {
+  module: moduleUnderTest,
+  exports: moduleUnderTest.exports,
+  URL,
+});
 const { resolveAutomaticApiUrl: resolve, normalizeApiUrl: normalize } =
   moduleUnderTest.exports;
 const dev = { platform: "android", development: true };

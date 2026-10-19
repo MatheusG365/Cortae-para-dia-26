@@ -65,7 +65,7 @@ USUARIO = {
         'telefone': {'type': 'string', 'example': '11999999999'},
         'senha': {'type': 'string', 'format': 'password'},
         'confirmarSenha': {'type': 'string', 'format': 'password'},
-        'tipo': {'type': 'integer', 'enum': [0, 1, 2], 'description': '0 ADM, 1 cliente, 2 barbearia.'},
+        'tipo': {'type': 'integer', 'enum': [0, 1, 2], 'description': '1 cliente no cadastro público. Tipos 0 ADM e 2 barbearia exigem sessão de administrador.'},
         'genero': {'type': 'string', 'enum': ['masculino', 'feminino', 'outro'], 'description': 'Opcional no cadastro e disponível somente para o perfil cliente.'},
     },
 }
@@ -166,15 +166,15 @@ OPENAPI = {
     'openapi': '3.0.3',
     'info': {
         'title': 'Cortaê API',
-        'version': '2.2.0',
+        'version': '2.4.0',
         'description': 'API compartilhada pelo site React e pelo aplicativo React Native. Imagens enviadas são validadas, convertidas em WebP sem metadados e armazenadas no Google Drive privado; o Firebird guarda referências e a API entrega bytes sem fallback local no modo Drive. Perfis, logos, galerias, produtos, catálogo e mídia fixa são públicos; fotos/resultados de visagismo exigem ACL. /help, /docs e /openapi.json são exclusivos do ADM. O login web grava o JWT no cookie `access_token`; o frontend usa `credentials: include`. Com `X-Cortae-Client: mobile`, o login permite somente cliente (tipo 1) e barbearia (tipo 2), devolve o JWT no JSON sem definir cookie e as chamadas nativas usam `Authorization: Bearer <access_token>`. Agendamentos iniciam como `agendado`; só cliente ou barbearia podem cancelá-los e, após o horário, a barbearia registra se o atendimento foi concluído ou se houve falta.',
     },
     'servers': [{'url': '/', 'description': 'Backend atual'}],
     'paths': {
         '/midia/site/{nome}': {'get': operacao('Exibir imagem fixa do site', 'Logo, banner ou foto fixa registrada no Firebird. Entrega WebP do Drive privado sem revelar IDs; imagem ausente retorna 404, falha do provedor retorna 503. Sem fallback para pasta local.', autenticada=False)},
-        '/midia/mobile/{nome}': {'get': operacao('Exibir imagem de conteúdo do app', 'Logo, fundo e banner do aplicativo em WebP pelo Drive privado. Ícones de compilação e splash nativo continuam empacotados localmente. Sem fallback para pasta local.', autenticada=False)},
+        '/midia/mobile/{nome}': {'get': operacao('Exibir imagem de conteúdo do app', 'Logo, fundo e banner do aplicativo em WebP pelo Drive privado. Os cinco ícones referenciados por app.json continuam empacotados localmente. Sem fallback para pasta local.', autenticada=False)},
         '/health': {'get': operacao('Verificar saúde', 'Confere conexão, tabelas/campos exigidos e tabela de auditoria, usando somente consultas. Não cria nem altera estrutura. Retorna 503 quando recursos obrigatórios estão ausentes; manutenção manual: python -m migrations (conferir) ou --aplicar após backup.', None, False)},
-        '/cadastro': {'post': operacao('Cadastrar usuário', 'Cria usuário e envia código de confirmação por e-mail. O tipo 0 exige sessão ativa de administrador.', USUARIO, False)},
+        '/cadastro': {'post': operacao('Cadastrar usuário', 'Cadastro público somente de cliente (tipo 1). Administradores e barbearias (tipos 0 e 2) são cadastrados exclusivamente por administrador autenticado; tentativas de outros perfis retornam 403 antes de escrever no banco. Envia código de confirmação por e-mail. O app não possui cadastro de barbearia nem área ADM.', USUARIO, False)},
         '/verificar-codigo': {'post': operacao('Confirmar e-mail', 'Ativa o cadastro usando o código de seis dígitos.', {
             'type': 'object', 'required': ['email', 'codigo'], 'properties': {'email': {'type': 'string'}, 'codigo': {'type': 'string', 'example': '123456'}}
         }, False)},
@@ -481,9 +481,11 @@ OPENAPI['paths'].update({
 
 from docs_contracts import complementar_contratos
 from image_docs import complementar_imagens
+from request_docs import complementar_requisicoes
 
 complementar_contratos(OPENAPI, operacao)
 complementar_imagens(OPENAPI)
+complementar_requisicoes(OPENAPI)
 
 
 def contrato_atual():

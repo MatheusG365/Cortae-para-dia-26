@@ -29,7 +29,7 @@ PAGINAS = {
     '/editarusuario/:id': ('Editar usuário por ID', 'Abre a edição do usuário indicado no caminho; a API valida a permissão.'),
     '/estabelecimento': ('Estabelecimento e sua loja integrada', 'Com ?usuario=ID mostra apresentação pública, serviços, equipe e loja completa em #loja-barbearia, com as cinco cores escolhidas pelo salão. Sem ID, o próprio estabelecimento exige sessão. A vitrine tem busca, categoria, ordenação, promoções e lançamentos.'),
     '/barbearias-disponiveis': ('Encontrar estabelecimentos', 'Lista estabelecimentos e permite pesquisar pelo nome.'),
-    '/cadastrobarbearia': ('Cadastrar estabelecimento', 'Recebe os dados de cadastro de uma barbearia ou salão.'),
+    '/cadastrobarbearia': ('Cadastrar estabelecimento', 'Exclusivo do administrador no site. Recebe os dados da barbearia ou salão; a API bloqueia cadastro de estabelecimento sem sessão ADM. O aplicativo permite somente cadastro de clientes.'),
     '/personalizacaobarbearia': ('Personalizar estabelecimento', 'Organiza apresentação, fotos e informações do estabelecimento.'),
     '/editarbarbearia': ('Editar estabelecimento', 'Permite editar cadastro, equipe e serviços do estabelecimento.'),
     '/visagismo': ('Escolher corte e visagismo', 'Permite analisar a imagem, consultar cortes com Ver mais ou escolher na_hora/profissional. Essas escolhas removem IDs de corte anteriores; cards proporcionais preservam a foto e os detalhes completos.'),
@@ -323,6 +323,7 @@ def _frontend(memo):
 def _catalogo():
     from mobile_help import catalogo_mobile
     from image_docs import catalogo_imagens
+    from request_docs import catalogo_requisicoes
     memo = {'imports': {}, 'fechos': {}}
     backend = _backend(memo)
     telas, mobile = catalogo_mobile(RAIZ, memo, backend, _permitido, _ler, _dependencias, _metadado)
@@ -333,11 +334,13 @@ def _catalogo():
     imagens['arquivos'] = list({source['id']: source for route in backend for source in route['arquivos']
                                 if source['caminho'] in fontes_imagem}.values())
     return {'rotas': rotas, 'mobile': mobile, 'imagens': imagens,
+            'requisicoes': catalogo_requisicoes(backend),
             'total': {origem: sum(r['origem'] == origem for r in rotas) for origem in ('frontend', 'backend', 'mobile')},
             'ajuda': {'titulo': 'Como funciona esta página', 'passos': [
                 'Digite /help na URL e entre com uma conta de administrador. Esta página não tem link nos menus.',
                 'O catálogo lê App.jsx, as telas de Cortae_mobile-main/src/app e as regras do Flask; nenhuma rota de negócio é executada.',
                 'Use a busca e os filtros para encontrar um caminho, método, função ou arquivo.',
+                'Abra os guias de requisições para acompanhar logs, visagismo, agendamento, compras, Melhor Envio e busca por CEP, com sequência, entradas, respostas e diagnóstico.',
                 'Abra uma rota para consultar o fluxo, as entradas, as saídas e os arquivos de implementação.',
                 'Selecione Mobile para conhecer as telas de cliente e barbearia, seus parâmetros, a navegação e as APIs relacionadas; o ADM continua acessando somente o site.',
                 'Consulte Imagens para entender validação, WebP, Drive privado, referências do Firebird, permissões, migração e entrega ao site e ao aplicativo.',

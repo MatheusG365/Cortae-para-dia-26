@@ -5,6 +5,7 @@ import { apiFetch, mensagemDaApi, urlDaApi } from '../../services/api';
 import { filtrarRotas, rotuloArea, rotuloOrigem, rotaVinculada, selecionarRota } from './helpCatalogo';
 import styles from './HelpAdmin.module.css';
 import VisaoImagens from './VisaoImagens';
+import VisaoRequisicoes from './VisaoRequisicoes';
 
 function ListaInformacao({ titulo, itens, vazio }) {
     return <section className={styles.informacao}>
@@ -149,6 +150,7 @@ export default function HelpAdmin() {
                 </div>
                 <details><summary>Sobre acesso e documentação</summary>{consulta.dados.ajuda?.seguranca?.map((texto, indice) => <p key={indice}>{texto}</p>)}<p>Esta central também está no catálogo: busque por “help” para consultar seu funcionamento e seus arquivos.</p></details>
             </section>
+            <VisaoRequisicoes requisicoes={consulta.dados.requisicoes} rotas={rotas || []} onSelecionar={abrirDocumento} />
             <VisaoImagens imagens={consulta.dados.imagens} rotas={rotas || []} onSelecionar={abrirDocumento} />
             <VisaoMobile mobile={consulta.dados.mobile} rotas={rotas || []} onSelecionar={abrirDocumento} onArea={filtrarArea} />
             <section id="help-filtros" className={styles.filtros} aria-label="Filtrar documentação">

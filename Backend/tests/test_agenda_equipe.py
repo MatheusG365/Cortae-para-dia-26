@@ -174,7 +174,7 @@ class AgendaEquipeBehavior(unittest.TestCase):
 
     def test_booking_foreign_session_never_inserted(self):
         con=MagicMock();cursor=con.cursor.return_value;cursor.fetchone.return_value=None
-        with patch.object(visagismo,'obter_usuario_logado',return_value={'id_usuario':7,'tipo':1}),patch.object(visagismo,'conectar_banco',return_value=con),patch.object(visagismo,'carregar_servicos',return_value=[{'id_servico':3,'nome':'QA','duracao':30}]):
+        with patch('termos.exigir_aceite'),patch.object(visagismo,'obter_usuario_logado',return_value={'id_usuario':7,'tipo':1}),patch.object(visagismo,'conectar_banco',return_value=con),patch.object(visagismo,'carregar_servicos',return_value=[{'id_servico':3,'nome':'QA','duracao':30}]):
             response=self.client.post('/agendamentos',json={'id_barbearia':8,'ids_servicos':[3],'id_visagismo':91,'data':(self.now+timedelta(days=2)).date().isoformat(),'horario':'09:00'})
         self.assertEqual(response.status_code,400);con.commit.assert_not_called()
         self.assertFalse(any('INSERT INTO AGENDAMENTO' in c.args[0] for c in cursor.execute.call_args_list))

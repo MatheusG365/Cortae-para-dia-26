@@ -1,6 +1,6 @@
 # Cortaê API Documentation
 
-Contrato atualizado: **2.1.0**. A implementação da documentação fica em
+Contrato atualizado: **2.4.0**. A implementação da documentação fica em
 `Backend/api_docs.py` (não existe um módulo `docs.py`). Consulte `/docs` e
 `/openapi.json` para o contrato gerado a partir das rotas atuais.
 Ambos e os endpoints `/admin/help/*` exigem sessão de administrador,
@@ -9,6 +9,35 @@ A interface React `/help` é protegida por `RequireAuth` para administrador;
 seus dados e códigos são obtidos dos endpoints protegidos.
 A ajuda técnica é somente leitura e também documenta o aplicativo pelo site;
 o aplicativo não possui painel ADM nem configuração de conexão acessível ao usuário.
+
+## Guias das requisições
+
+O Help possui uma seção com seis guias expansíveis: auditoria de logs, visagismo,
+agendamento, compras, entregas Melhor Envio e consulta de CEP/endereços salvos.
+Cada guia descreve a sequência, entradas, respostas, efeitos, permissões e diagnóstico.
+Os botões abrem somente o contrato e o código; não executam a operação.
+
+`Backend/request_docs.py` é a fonte compartilhada desses guias. `api_docs.py`
+inclui o mesmo conteúdo na apresentação de `/docs`, na extensão
+`x-cortae-fluxos` de `/openapi.json` e nos vínculos das operações correspondentes.
+Os exemplos são ilustrativos, sem credenciais e sem dados pessoais reais.
+
+- Logs são gravados por handlers instrumentados no banco separado de auditoria;
+  o commit não é distribuído com o banco principal. `LOG_OBRIGATORIO` determina
+  se uma falha de auditoria é propagada; erro de log não prova rollback do negócio.
+- Visagismo separa análise de foto, sessão manual e simulação. Fotos privadas
+  passam pela API/Drive e a IA pode consumir créditos; falhas não viram sucesso fictício.
+- Agendamento consulta disponibilidade, confere resumo/termos e revalida conflitos
+  sob lock na criação. Cancelar o calendário do app preserva a seleção anterior.
+- Compra separa carrinho, resumo, pedido idempotente, cobrança e pagamento.
+  Estoque/cupom são reservados no pedido e o endereço vira snapshot histórico.
+- Entrega separa cotação de 15 minutos, etiqueta e rastreio. Emissão é condicionada
+  à configuração/permissão e confirmação de custo; três etiquetas não são fretes gratuitos.
+- CEP é consultado pelo backend no ViaCEP: retorna rua, bairro, cidade e UF;
+  número/complemento são manuais. Criar/editar endereço salvo é ação explícita.
+  O site possui essa interface automática; o checkout/remetente do app atual
+  ainda preenche o endereço manualmente. As duas interfaces não são apresentadas
+  como se tivessem funcionalidades idênticas.
 
 ## Base URL
 ```
@@ -20,6 +49,12 @@ All protected endpoints require a JWT token stored in an HttpOnly cookie named `
 
 No aplicativo, `POST /login` com `X-Cortae-Client: mobile` aceita somente cliente
 e barbearia e retorna Bearer para as chamadas seguintes; não define cookie web.
+
+O cadastro público (`POST /cadastro`) permite somente clientes (`tipo: 1`).
+Barbearias (`tipo: 2`) e administradores (`tipo: 0`) exigem sessão ativa de ADM;
+outros perfis recebem 403 antes da conexão de cadastro e do envio de e-mail.
+O app permite login de barbearias já cadastradas, mas não possui cadastro de
+estabelecimento ou área administrativa. O ADM utiliza exclusivamente o site.
 
 ### Login
 ```
@@ -424,7 +459,7 @@ ARKHE_BASE_URL=https://arkhe-backend.zbbquj.easypanel.host
 
 ## Atualização de 18/10/2026
 
-O contrato executável fica em `api_docs.py` e `docs_contracts.py`, publicado em `/docs` e `/openapi.json` somente com sessão ADM. A versão documental é 2.2.0; nenhum arquivo `docs.py` duplicado é necessário.
+O contrato executável fica em `api_docs.py` e `docs_contracts.py`, publicado em `/docs` e `/openapi.json` somente com sessão ADM. A versão documental é 2.4.0; nenhum arquivo `docs.py` duplicado é necessário.
 
 - Agendamento aceita `id_funcionario` ausente ou `null`: utiliza preço-base e disponibilidade do salão. Com profissional, valida vínculo e serviços. Consulte `/agendamentos/resumo` para taxa e assinatura antes de confirmar.
 - `escolha_corte`: `catalogo`, `na_hora` ou `profissional`. As duas últimas escolhas não aceitam IDs antigos de corte/sessão e não substituem a simulação em serviços de coloração.

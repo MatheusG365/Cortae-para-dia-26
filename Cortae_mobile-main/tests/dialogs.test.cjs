@@ -4,15 +4,13 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
-const ts = require("typescript");
+const { compileJavaScript } = require("./helpers/compile.cjs");
 
 // Run the production queue, without a device, React mock or network side effects.
-const filename = path.resolve(__dirname, "../src/lib/dialogQueue.ts");
+const filename = path.resolve(__dirname, "../src/lib/dialogQueue.js");
 const moduleUnderTest = { exports: {} };
 vm.runInNewContext(
-  ts.transpileModule(fs.readFileSync(filename, "utf8"), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS },
-  }).outputText,
+  compileJavaScript(fs.readFileSync(filename, "utf8"), { jsx: "automatic" }),
   { module: moduleUnderTest, exports: moduleUnderTest.exports },
   { filename },
 );

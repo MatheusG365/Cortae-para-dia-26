@@ -1,8 +1,10 @@
 # Cortaê Mobile
 
-Aplicativo React Native com Expo SDK 57 e Expo Router. Possui áreas separadas para **cliente** e **barbearia**, usando a mesma API Flask e os mesmos dados do site. Não oferece páginas de administrador ou painel do profissional.
+Aplicativo React Native em **JavaScript e JSX**, com Expo SDK 57 e Expo Router. Telas e componentes usam `.jsx`; regras e serviços usam `.js`. Possui áreas separadas para **cliente** e **barbearia**, usando a mesma API Flask e os mesmos dados do site. Não oferece páginas de administrador ou painel do profissional.
 
-O visual segue a referência mobile do Figma: base escura, destaque laranja, tipografia Montserrat e navegação inferior. Páginas de estabelecimento e produtos aplicam o destaque cadastrado pela barbearia, com contraste de texto.
+O visual segue os quadros da página APP do Figma: login com foto e logo, cadastro com cabeçalho sobre a imagem, títulos compactos, base preta/cinza, destaque laranja, tipografia Montserrat e navegação inferior. Fotos e logo são servidos pelo Drive através da API. Páginas de estabelecimento e produtos aplicam o destaque cadastrado pela barbearia, com contraste de texto.
+
+**Cadastro público somente de clientes.** Barbearias são criadas pelo administrador no site e depois podem entrar no app com a conta existente. Não há seletor de tipo de conta, cadastro de barbearia ou área de administrador no aplicativo. A API exige administrador para criar contas de estabelecimento, mesmo que alguém tente enviar `tipo: 2` manualmente.
 
 ## Executar no Android Studio
 
@@ -67,19 +69,21 @@ src/app/cliente/         Área do cliente
 src/app/barbearia/       Área de gestão do proprietário
 src/features/           Fluxos e componentes de cada área
 src/lib/                API, armazenamento de sessão e carregamento de dados
-src/ui.tsx               Componentes visuais compartilhados
-src/theme.ts             Cores e fontes
-assets/                  Identidade visual e imagens locais
+src/ui.jsx               Componentes visuais compartilhados
+src/theme.js             Cores e fontes
+assets/                  Cinco ícones usados pela configuração de compilação
 tests/                   Regressões de regras, pagamento e concorrência da sessão
 ```
 
 O ponto de entrada é `expo-router/entry`, definido em `package.json`. A implementação inicial de duas telas foi arquivada fora do projeto antes da substituição; o app atual usa `src/app/`.
 
+As pastas vazias da implementação antiga (`Screens`, `Services` e `components`) foram removidas. Os componentes atuais ficam em `src/features` e `src/ui.jsx`. Fotos, logos e fundos do aplicativo são obtidos pela API; os cinco arquivos em `assets` continuam locais porque são referenciados por `app.json`. `node_modules` contém as dependências de execução e ferramentas, enquanto `.expo` guarda o estado local do Expo; ambos ficam fora do Git.
+
 ## Verificações
 
 ```powershell
 npm run lint
-npm run typecheck
+npm run check
 npm test
 npx expo-doctor
 npx expo export --platform android
@@ -87,4 +91,8 @@ npx expo export --platform android
 
 Os testes automatizados não pagam cobranças, enviam e-mail, geram imagens por IA ou compram etiquetas. Para testes HTTP com escrita, use cópias descartáveis do Firebird e provedores bloqueados/simulados. Não utilize os bancos reais como fixtures.
 
+`npm run check` valida a sintaxe JavaScript/JSX e os imports locais de todas as fontes; `npm run typecheck` permanece como alias de compatibilidade para esse comando, sem análise de tipos TypeScript. Os testes usam Babel para executar os módulos JavaScript reais. O projeto não declara TypeScript como dependência direta; ferramentas do Expo podem utilizá-lo internamente.
+
 Referências técnicas: [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/), [Expo Router](https://docs.expo.dev/router/introduction/) e [emulador Android](https://docs.expo.dev/workflow/android-studio-emulator/).
+
+Auditoria de uso, remoções, correções de calendário e limites dos testes: [relatório de limpeza de 18/10/2026](../docs/validacoes/MOBILE_LIMPEZA_2026-10-18.md).

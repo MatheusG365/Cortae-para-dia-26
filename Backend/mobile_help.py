@@ -14,13 +14,13 @@ TELAS = {
     '/': tela('Entrada automática do aplicativo', 'Direciona a navegação conforme a sessão validada.',
         ['Aguarda o carregamento da sessão.', 'Sem sessão abre /entrar; cliente segue para /cliente e estabelecimento para /barbearia.']),
     '/*': tela('Tela nativa não encontrada', 'Oferece retorno ao início para um caminho inexistente.',
-        ['Expo Router utiliza +not-found.tsx quando não encontra a tela.', 'O botão de início volta ao redirecionamento de sessão.']),
+        ['Expo Router utiliza +not-found.jsx quando não encontra a tela.', 'O botão de início volta ao redirecionamento de sessão.']),
     '/entrar': tela('Entrar no aplicativo', 'Login compartilhado pelos clientes e responsáveis pelas barbearias.',
         ['Valida os campos e envia o login com identificação de cliente mobile.', 'Armazena a sessão nativa no SecureStore e abre a área correspondente ao perfil.', 'Exibe recuperação, cadastro e acesso à confirmação de e-mail quando aplicável.'],
         api=('/login', '/dados-perfil/:id'),
         observacoes=('Contas de administrador e profissional não possuem painel mobile; o administrador utiliza o site.',)),
-    '/cadastro': tela('Cadastrar cliente ou barbearia', 'Cria uma conta de cliente ou estabelecimento com contato e senha.',
-        ['Seleciona o uso como cliente (tipo 1) ou barbearia (tipo 2) e confere dados pessoais, telefone e confirmação da senha.', 'Consulta os termos vigentes e envia o cadastro.', 'Encaminha ao código enviado por e-mail.'],
+    '/cadastro': tela('Cadastrar cliente', 'Cria exclusivamente uma conta de cliente com contato e senha. Barbearias são cadastradas pelo administrador no site.',
+        ['Confere nome, contato, telefone e confirmação da senha; o tipo enviado é sempre cliente (1).', 'Consulta os termos vigentes e envia o cadastro.', 'Encaminha ao código enviado por e-mail. Não existe seleção de perfil, cadastro de barbearia nem área ADM no aplicativo.'],
         api=('/cadastro', '/termos-uso')),
     '/verificar-codigo': tela('Verificar cadastro por e-mail', 'Confirma o código de ativação da conta.',
         ['Recebe o e-mail da etapa anterior.', 'Envia o código informado à API e orienta o retorno ao login.'],
@@ -145,7 +145,7 @@ FLUXOS = [
      ['Perfil, visagismo e fotos de produtos usam uploads pela mesma API do site.',
       'O backend valida até 10 MB e 24 megapixels, aplica orientação, reduz e converte a imagem estática para WebP sem metadados.',
       'O Drive guarda arquivos privados e o Firebird guarda referências; o aplicativo exibe URLs da API, com sessão autorizada para selfies e resultados.',
-      'Logo, fundo e banner de conteúdo usam /midia/mobile/<nome>; seis recursos nativos de ícones e splash ficam locais. Nenhuma tela oferece configuração da conexão ou acesso ADM.']),
+      'Logo, fundo e banner de conteúdo usam /midia/mobile/<nome>; cinco ícones nativos ficam locais. Nenhuma tela oferece configuração da conexão ou acesso ADM.']),
 ]
 
 # Um mesmo caminho pode ter handlers distintos para consulta e escrita.
@@ -207,9 +207,9 @@ def _api_relacionada(padroes, backend, caminho):
 def catalogo_mobile(raiz, memo, backend, permitido, ler, dependencias, metadado):
     pasta = raiz / 'Cortae_mobile-main' / 'src' / 'app'
     rotas = []
-    comuns = [pasta / '_layout.tsx', pasta.parent / 'lib' / 'session.tsx',
-              pasta.parent / 'lib' / 'api.ts', pasta.parent / 'lib' / 'apiAddress.ts',
-              pasta.parent / 'lib' / 'dialogs.tsx']
+    comuns = [pasta / '_layout.jsx', pasta.parent / 'lib' / 'session.jsx',
+              pasta.parent / 'lib' / 'api.js', pasta.parent / 'lib' / 'apiAddress.js',
+              pasta.parent / 'lib' / 'dialogs.jsx']
     for arquivo in _paginas(pasta, permitido):
         caminho = caminho_router(arquivo, pasta)
         area = 'cliente' if caminho.startswith('/cliente') else 'barbearia' if caminho.startswith('/barbearia') else 'publico'
@@ -220,7 +220,7 @@ def catalogo_mobile(raiz, memo, backend, permitido, ler, dependencias, metadado)
             'Tela encontrada no Expo Router; consulte seus arquivos para o comportamento implementado.',
             ['Expo Router resolve este caminho pelo arquivo indicado.', 'Os imports locais e layouts listados implementam a navegação e as validações.']))
         fontes = dependencias(arquivo, memo)
-        layouts = [pai / '_layout.tsx' for pai in arquivo.parents if pai.is_relative_to(pasta)]
+        layouts = [pai / '_layout.jsx' for pai in arquivo.parents if pai.is_relative_to(pasta)]
         for extra in layouts + comuns:
             if permitido(extra):
                 fontes += dependencias(extra, memo)
@@ -236,11 +236,11 @@ def catalogo_mobile(raiz, memo, backend, permitido, ler, dependencias, metadado)
             'observacoes': list(dados['observacoes'])})
     ids = {r['id'] for r in rotas}
     mobile = {'titulo': 'Como funciona o aplicativo Cortaê',
-        'descricao': 'Aplicativo React Native com Expo Router para clientes e barbearias. O administrador acompanha a documentação pelo site; não há painel ADM mobile.',
+        'descricao': 'Aplicativo React Native em JavaScript/JSX, com Expo Router para clientes e barbearias. O administrador acompanha a documentação pelo site; não há painel ADM mobile.',
         'funcionamento': [
             'As abas do cliente são Descobrir, Agenda, Loja e Perfil; as da barbearia são Visão geral, Agenda, Minha loja e Gestão.',
             'Os arquivos em src/app definem os caminhos. Layouts organizam navegação e proteção de perfil e aparecem como fontes de apoio, sem serem contados como telas.',
-            'Componentes em src/features implementam as telas; UI, confirmações personalizadas, sessão, API e regras compartilhadas ficam em src/ui.tsx e src/lib.',
+            'Componentes em src/features implementam as telas; UI, confirmações personalizadas, sessão, API e regras compartilhadas ficam em src/ui.jsx e src/lib. Telas usam .jsx e regras usam .js, sem fontes TypeScript no aplicativo.',
             'A sessão nativa usa SecureStore; dados e permissões continuam sendo validados pelo backend compartilhado com o site.',
             'Cada imagem enviada pela API compartilhada é validada e convertida em WebP no servidor; os arquivos ficam privados no Google Drive e o banco guarda a referência. O aplicativo usa as URLs da API, sem receber credenciais do Drive. Fotos privadas de visagismo exigem a sessão autorizada; aliases registrados mantêm nomes antigos compatíveis, sem fallback para pasta local no modo Drive.',
             'Em desenvolvimento o endereço da API deriva do servidor Expo; na publicação é definido pela equipe. Não existe tela nem botão de configurar conexão para o usuário.',
@@ -249,7 +249,7 @@ def catalogo_mobile(raiz, memo, backend, permitido, ler, dependencias, metadado)
                     'rotas': ['mobile:' + p for p in caminhos if 'mobile:' + p in ids]}
                    for ident, titulo, caminhos, etapas in FLUXOS],
         'observacoes': [
-            'Banners, logos e fundos do aplicativo são conteúdo servido por /midia/mobile/<nome>; somente os seis recursos exigidos pela compilação nativa permanecem locais.',
+            'Banners, logos e fundos do aplicativo são conteúdo servido por /midia/mobile/<nome>; somente os cinco ícones referenciados pela compilação nativa permanecem locais.',
             'Nova URL HTTPS cadastrada como referência continua externa até importação técnica explícita; consultar Help não inicia migração nem acessa o Drive.',
             'O catálogo descreve a implementação atual e não certifica que todos os serviços externos estejam operacionais.',
             'Pagamentos reais, geração de imagem por IA e entrega de e-mails dependem da configuração e da validação externa; abrir esta ajuda não realiza esses testes.',

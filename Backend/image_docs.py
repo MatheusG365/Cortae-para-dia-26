@@ -16,7 +16,7 @@ TIPOS = [
     'Catálogo de cortes: referências públicas. Novo arquivo vira WebP no Drive; uma nova imagem_url HTTPS permanece URL externa até importação explícita.',
     'Visagismo: fotos do cliente e resultados são privados. A API verifica cliente dono, barbearia responsável, profissional vinculado ao atendimento ou ADM antes de buscar bytes.',
     'Imagens fixas: fotos, banners e logos do site usam /midia/site/<nome>; conteúdo visual do aplicativo usa /midia/mobile/<nome>.',
-    'Compilação nativa: seis ícones e recursos de splash exigidos pelo Android/Expo permanecem locais; não são fotos de conteúdo nem uploads.',
+    'Compilação nativa: cinco ícones referenciados em app.json para Android/Expo permanecem locais; não são fotos de conteúdo nem uploads.',
 ]
 OBSERVACOES = [
     'No modo Google Drive não há fallback para imagens locais. Aliases registrados mantêm URLs antigas compatíveis mesmo após remover as pastas de fotos.',

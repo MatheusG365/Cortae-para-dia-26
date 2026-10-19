@@ -4,13 +4,11 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
-const ts = require("typescript");
+const { compileJavaScript } = require("./helpers/compile.cjs");
 
 function load(file, imports) {
   const source = fs.readFileSync(path.join(__dirname, "../src", file), "utf8");
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React },
-  }).outputText;
+  const compiled = compileJavaScript(source, { jsx: "classic" });
   const exports = {};
   vm.runInNewContext(compiled, {
     exports,
@@ -76,14 +74,14 @@ function harness() {
     Text: "Text",
     StyleSheet: { create: (styles) => styles },
   };
-  const assets = load("lib/mobileAssets.ts", { "./api": api });
-  const hook = load("lib/useMobileAsset.ts", {
+  const assets = load("lib/mobileAssets.js", { "./api": api });
+  const hook = load("lib/useMobileAsset.js", {
     react,
     "react-native": native,
     "./api": api,
     "./mobileAssets": assets,
   });
-  const ui = load("ui.tsx", {
+  const ui = load("ui.jsx", {
     react,
     "react-native": native,
     "./lib/api": api,
