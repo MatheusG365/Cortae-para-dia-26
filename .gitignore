@@ -163,9 +163,8 @@ celerybeat.pid
 .dmypy.json
 dmypy.json
 
-# Local process registry and Firebird databases
+# Local process registry and temporary database backups
 .runtime/
-*.FDB
 *.fbk
 
 # Private environments: publish examples only, never local configurations.
@@ -186,8 +185,6 @@ google-drive/
 *.p12
 *.pfx
 
-# Firebird files, including lowercase/mixed-case names.
-*.[fF][dD][bB]
-*.[gG][dD][bB]
+# Temporary Firebird backups; database snapshots (.FDB/.GDB) are versioned.
 *.[fF][bB][kK]
 

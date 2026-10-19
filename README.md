@@ -9,7 +9,7 @@ Frontend React/Vite e API Flask com Firebird principal e banco separado de audit
 - `Cortae_mobile-main/`: [aplicativo React Native para cliente e barbearia](Cortae_mobile-main/README.md), com instruções de execução no Android Studio.
 - `docs/`: [índice da documentação](docs/README.md), integrações e relatórios de validação.
 - `.runtime/`: logs e registro dos processos iniciados pelos atalhos; conteúdo local, ignorado pelo Git.
-- `.gitignore`: regras para não publicar dependências, segredos, bancos e arquivos gerados.
+- `.gitignore`: regras para não publicar dependências, segredos, backups temporários e arquivos gerados.
 
 Os três comandos de uso ficam na raiz: `Configurar-Cortae.cmd`, `Iniciar-Cortae.cmd` e `Parar-Cortae.cmd`. Cada `.cmd` abre o `.ps1` de mesmo nome, que contém a implementação. Os pares não são cópias redundantes e precisam permanecer juntos.
 
@@ -18,6 +18,14 @@ Os relatórios não são necessários para executar a aplicação. Foram mantido
 ## Iniciar no Windows
 
 Requisitos: **Python 3.12 ou superior de 32 bits (Windows x86)**, Node.js 22+ e servidor Firebird 5 disponível. Os arquivos `Backend/CORTAE.FDB` e `Backend/LOG_CORTAE.FDB` precisam estar acessíveis ao Firebird.
+
+Os dois bancos estão versionados nesses caminhos. As cópias publicadas em
+19/10/2026 foram produzidas por backup completo e restauração verificada, com os
+dados existentes, preservando os arquivos ativos do computador de origem.
+Configure a autenticação do seu servidor Firebird em `Backend/.env`.
+Os arquivos locais podem aparecer modificados no Git durante o uso normal do
+sistema; publicar outra cópia requer um novo backup consistente, sem copiar
+arquivos enquanto o Firebird estiver escrevendo neles.
 
 1. Execute `Configurar-Cortae.cmd` para instalar as dependências nas versões verificadas.
 2. Preencha `Backend/.env` a partir de `.env.example` se ainda não existir. Informe banco, senha, chave da aplicação e credenciais das integrações utilizadas.
