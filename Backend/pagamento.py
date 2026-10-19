@@ -20,6 +20,8 @@ from barbearia import obter_usuario_logado, pegar_id_barbearia_alvo
 from visagismo import buscar_agendamento, pode_ver_agendamento
 from auditoria import registrar_log
 from arkhe_errors import mensagem_indisponivel
+from arkhe_cartao import (CartaoErro, bloquear_outro_pagamento, obter_tentativa,
+                          validar_cartao, executar_venda, recibo, resposta_erro as erro_cartao)
 
 
 TIMEOUT_ARKHE = 20
@@ -291,10 +293,8 @@ def _agendamento_pagavel(
     except (TypeError, ValueError):
         return None, 'Agendamento inválido.'
 
-    linha = buscar_agendamento(
-        cursor,
-        id_agendamento
-    )
+    from agenda_equipe import travar_agendamento
+    linha = travar_agendamento(cursor, id_agendamento)
 
     if not linha:
         return None, 'Agendamento não encontrado.'
@@ -447,6 +447,7 @@ def criar_cobranca_pix():
                 )
 
             linha, valor_calculado = resultado
+            bloquear_outro_pagamento(cursor, 'agendamento', linha[0])
 
             # ------------------------------------------------
             # ID DA BARBEARIA
@@ -598,6 +599,9 @@ def criar_cobranca_pix():
             cursor.close()
             con.close()
 
+    except CartaoErro as exc:
+        return erro_cartao(exc)
+
     except RuntimeError as erro:
         print(
             'ERRO PAGAMENTO PIX:',
@@ -670,6 +674,11 @@ def consultar_cobranca_pix(id_cobranca):
                     'esta cobrança.',
                     403
                 )
+
+            try:
+                bloquear_outro_pagamento(cursor, 'agendamento', linha[0])
+            except CartaoErro as exc:
+                return erro_cartao(exc)
 
             cobranca = _chamar(
                 'GET',
@@ -858,6 +867,7 @@ def criar_cobranca_boleto():
                 )
 
             linha, valor = resultado
+            bloquear_outro_pagamento(cursor, 'agendamento', linha[0])
 
             id_barbearia = linha[2]
 
@@ -966,6 +976,9 @@ def criar_cobranca_boleto():
             cursor.close()
             con.close()
 
+    except CartaoErro as exc:
+        return erro_cartao(exc)
+
     except Exception as erro:
 
         print(
@@ -985,158 +998,68 @@ def criar_cobranca_boleto():
 
 @app.route('/pagamentos/cartao', methods=['POST'])
 def criar_cobranca_cartao():
-
     usuario = obter_usuario_logado()
-
     if not usuario:
-        return resposta_erro(
-            'Faça login para pagar.',
-            401
-        )
-
+        return resposta_erro('Faça login para pagar.', 401)
     if not _perfil_financeiro_permitido(usuario):
         return resposta_erro('Perfil sem permissão para operações financeiras.', 403)
-
+    con = cursor = None
     try:
-
-        dados = request.get_json(
-            silent=True
-        ) or {}
-
-        if not dados.get('id_agendamento'):
-            return resposta_erro(
-                'Informe o agendamento.'
-            )
-
+        dados = request.get_json(silent=True) or {}
+        if not isinstance(dados, dict) or type(dados.get('id_agendamento')) is not int or dados['id_agendamento'] <= 0:
+            return resposta_erro('Informe um agendamento válido.')
         con = conectar_banco()
         cursor = con.cursor()
-
+        resultado, erro = _agendamento_pagavel(cursor, usuario, dados['id_agendamento'], permitir_concluido=True)
+        if erro:
+            return resposta_erro(erro)
+        linha, valor = resultado
+        attempt = obter_tentativa(cursor, 'agendamento', linha[0])
+        if attempt and attempt['estado'] == 'aprovado':
+            return jsonify(**recibo(attempt['resultado'])), 200
+        bloquear_outro_pagamento(cursor, 'agendamento', linha[0])
+        cursor.execute('SELECT TIPO,DESCRICAO,VALOR FROM FINANCEIRO WHERE ID_USUARIO=? AND DESCRICAO CONTAINING ?', (linha[1], f'ag#{linha[0]}'))
+        for entry in cursor.fetchall():
+            if (_id_agendamento_descricao(entry[1]) == linha[0] and entry[0] in
+                    ('pix_pendente', 'pix_pago', 'boleto_pendente', 'boleto_pago', 'cartao_pendente', 'cartao_pago', 'na_hora')):
+                raise CartaoErro('O agendamento já possui cobrança ou recebimento. Confira o financeiro antes de pagar por cartão.', 409)
+        payload = validar_cartao(dados, valor)
         try:
+            credentials = _credenciais_da_barbearia(linha[2])
+        except RuntimeError:
+            raise CartaoErro('Conta Arkhé da barbearia não configurada.', 503) from None
 
-            resultado, erro = _agendamento_pagavel(
-                cursor,
-                usuario,
-                dados['id_agendamento']
-            )
+        def confirmar(safe):
+            from agenda_equipe import travar_agendamento
+            current = travar_agendamento(cursor, linha[0])
+            if not current or current[9] in ('cancelado', 'faltou') or _valor_do_agendamento(cursor, current) != valor:
+                raise CartaoErro('O agendamento mudou durante o pagamento. Confira o recebimento manualmente.', 409, 'incerto')
+            cursor.execute("""INSERT INTO FINANCEIRO(ID_FINANCEIRO,ID_USUARIO,TIPO,DESCRICAO,VALOR,DATA_TRANSACAO)
+                VALUES(NEXT VALUE FOR SEQ_FINANCEIRO,?,'cartao_pago',?,?,CURRENT_TIMESTAMP)""",
+                (linha[1], f'ag#{linha[0]}|cartao|compra#{safe["id_compra"]}', valor))
 
-            if erro:
-                return resposta_erro(
-                    erro,
-                    400
-                )
-
-            linha, valor = resultado
-
-            id_barbearia = linha[2]
-
-            try:
-
-                cobranca = _chamar(
-                    'POST',
-                    '/api/v1/cobrancas/cartao',
-                    {
-                        'valor': round(
-                            float(valor),
-                            2
-                        )
-                    },
-                    id_barbearia=id_barbearia
-                )
-
-                cartao = {
-                    'id_cobranca':
-                        cobranca.get(
-                            'id_cobranca'
-                        ),
-
-                    'url_checkout':
-                        cobranca.get(
-                            'url_checkout'
-                        ),
-
-                    'valor':
-                        cobranca.get(
-                            'valor',
-                            round(float(valor), 2)
-                        ),
-
-                    'status':
-                        cobranca.get(
-                            'status',
-                            0
-                        )
-                }
-
-            except RuntimeError as erro_arkhe:
-                # Não cria URL/checkout fictício quando a API falha.
-                raise RuntimeError(f'Falha ao gerar checkout na Arkhé: {erro_arkhe}')
-
-            cursor.execute(
-                """
-                INSERT INTO FINANCEIRO
-                (
-                    ID_FINANCEIRO,
-                    ID_USUARIO,
-                    TIPO,
-                    DESCRICAO,
-                    VALOR,
-                    DATA_TRANSACAO
-                )
-                VALUES
-                    (
-                        NEXT VALUE FOR SEQ_FINANCEIRO,
-                             ?,
-                             'cartao_pendente',
-                             ?,
-                             ?,
-                             CURRENT_TIMESTAMP
-                    )
-                """,
-                (
-                    linha[1],
-                    f'ag#{linha[0]}|cartao',
-                    round(float(valor), 2)
-                )
-            )
-
-            con.commit()
-            registrar_log(
-                'INSERT', 'FINANCEIRO', id_usuario=usuario['id_usuario'],
-                dados_depois={
-                    'ID_USUARIO': linha[1],
-                    'TIPO': 'cartao_pendente',
-                    'DESCRICAO': f'ag#{linha[0]}|cartao',
-                    'VALOR': round(float(valor), 2)
-                }
-            )
-
-            return jsonify({
-                'mensagem': {
-                    'informacao':
-                        'Checkout gerado.',
-                    'tipo': 'sucesso'
-                },
-
-                'metodo': 'cartao',
-
-                **cartao
-            }), 201
-
-        finally:
+        safe = executar_venda(cursor, con, 'agendamento', linha[0], linha[1], linha[2], payload, credentials, confirmar)
+        try:
+            registrar_log('INSERT', 'FINANCEIRO', id_usuario=usuario['id_usuario'],
+                dados_depois={'ID_USUARIO': linha[1], 'TIPO': 'cartao_pago',
+                              'DESCRICAO': f'ag#{linha[0]}|cartao|compra#{safe["id_compra"]}',
+                              'VALOR': str(valor)})
+        except Exception:
+            # A committed sale must not become an apparent refusal because the
+            # separate audit database is unavailable. Do not log exception data.
+            app.logger.warning('Pagamento de cartão confirmado; auditoria indisponível.')
+        return jsonify(**recibo(safe)), 201
+    except CartaoErro as exc:
+        return erro_cartao(exc)
+    except Exception:
+        if con is not None:
+            con.rollback()
+        return erro_cartao(CartaoErro('Não foi possível concluir o pagamento. Consulte o estado local e confira a Arkhé antes de repetir.', 503, 'incerto'))
+    finally:
+        if cursor is not None:
             cursor.close()
+        if con is not None:
             con.close()
-
-    except Exception as erro:
-
-        print(
-            'ERRO CARTÃO:',
-            erro
-        )
-
-        return resposta_erro(
-            f'Não foi possível gerar o checkout: {erro}',
-            500
-        )
 
 
 # ============================================================
@@ -1166,6 +1089,10 @@ def confirmar_pagamento_na_hora():
             return resposta_erro('Sem permissão para este agendamento.', 403)
         if linha[9] in ('cancelado', 'faltou'):
             return resposta_erro('Agendamento cancelado ou com falta não aceita novo recebimento.')
+        try:
+            bloquear_outro_pagamento(cursor, 'agendamento', linha[0])
+        except CartaoErro as exc:
+            return erro_cartao(exc)
         # Completed bookings can be settled by the salon after the appointment.
         confirmar = int(usuario['tipo']) in (0, 2)
         try:
@@ -1322,6 +1249,8 @@ def cobrancas_do_agendamento(id_agendamento):
             saldo=max(Decimal('0.00'),total-recebido) if total is not None else None
             quitado=total is not None and total>0 and saldo==0
 
+            cartao = obter_tentativa(cursor, 'agendamento', linha[0])
+
             return jsonify({
                 'mensagem': {
                     'informacao':
@@ -1329,6 +1258,8 @@ def cobrancas_do_agendamento(id_agendamento):
                     'tipo': 'sucesso'
                 },
 
+                'cartao_estado':cartao['estado'] if cartao else None,
+                'cartao_resultado':recibo(cartao['resultado']) if cartao and cartao['estado']=='aprovado' else None,
                 'valor_total':float(total) if total is not None else None,
                 'valor_recebido':float(recebido),'saldo':float(saldo) if saldo is not None else None,
                 'quitado':quitado,'parcial':recebido>0 and not quitado,
@@ -1341,6 +1272,9 @@ def cobrancas_do_agendamento(id_agendamento):
         finally:
             cursor.close()
             con.close()
+
+    except CartaoErro as exc:
+        return erro_cartao(exc)
 
     except Exception as erro:
 

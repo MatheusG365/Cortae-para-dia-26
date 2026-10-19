@@ -479,6 +479,11 @@ def recebimentos(user,salon,cur,con,id_agendamento):
     row=reserva(cur,salon,id_agendamento,request.method=='POST')
     if not row:return erro('Agendamento não encontrado nesta barbearia.',404)
     if request.method=='GET':return jsonify(estado_recebimentos(cur,salon,row))
+    from arkhe_cartao import bloquear_outro_pagamento, CartaoErro, resposta_erro as erro_cartao
+    try:
+        bloquear_outro_pagamento(cur, 'agendamento', row[0])
+    except CartaoErro as exc:
+        return erro_cartao(exc)
     data=request.get_json(silent=True) or {};operation,repeated=repetir_operacao(cur,salon,'recebimento',row[0],data)
     if repeated:return jsonify(estado_recebimentos(cur,salon,row))
     if row[6] in ('cancelado','faltou'):raise ValueError('Atendimento cancelado ou com falta não aceita recebimento.')

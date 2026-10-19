@@ -1,11 +1,8 @@
-import { rotaPagamentoAgendamento } from '../../services/pagamentoState';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { apiFetch, mensagemDaApi } from '../../services/api';
 import MensagemCard from '../../components/MensagemCard/MensagemCard';
 import styles from './Agendamento.module.css';
-import { FiCreditCard, FiFileText, FiDollarSign, FiBriefcase } from 'react-icons/fi';
-import { QRCodeSVG } from 'qrcode.react';
 import { dataLocal as isoData, podeEntrarNaEspera } from '../../services/agendaState';
 import { dinheiro } from '../../services/gestaoState';
 import { dadosEscolhaCorte, rotuloEscolhaCorte } from '../../services/escolhaCorte';
@@ -14,6 +11,7 @@ import TermosAceite from '../../components/TermosAceite/TermosAceite';
 import ResumoTaxa from '../../components/ResumoTaxa/ResumoTaxa';
 import Select from '../../components/Select/Select';
 import useResumoOperacao from '../../services/useResumoOperacao';
+import PagamentoAgendamento from '../../components/PagamentoAgendamento/PagamentoAgendamento';
 import { useAuth } from '../../contexts/useAuth';
 import { contextoProfissionais, profissionaisDaResposta, funcionarioValido, corpoAgendamento, rotaAgendaGestao, idsServicosAgendamento } from '../../services/agendaProfissionaisState';
 
@@ -66,10 +64,6 @@ function AgendamentoCliente() {
     const [sucesso, setSucesso] = useState('');
     const [idAgendamento, setIdAgendamento] = useState(null);
     const [valorTotal, setValorTotal] = useState(null);
-    const [pagamento, setPagamento] = useState(null);
-    const [verificando, setVerificando] = useState(false);
-    const [copiado, setCopiado] = useState(false);
-    const [metodoPagamento, setMetodoPagamento] = useState(null); // 'pix', 'boleto', 'cartao', 'na_hora'
     const [modalResumo, setModalResumo] = useState(false); // confirmação do horário
     const [modalPagamento, setModalPagamento] = useState(null); // null | 'metodos' | 'detalhe'
     const [recarregar, setRecarregar] = useState(0); // força recarregar horários (ex.: após cancelar)
@@ -239,62 +233,9 @@ function AgendamentoCliente() {
             setIdAgendamento(dados.agendamento?.id_agendamento || null);
             setValorTotal(dados.agendamento?.resumo?.valor_total_cliente ?? dados.agendamento?.valor_total ?? null);
             setResumoAgendamento(dados.agendamento?.resumo ?? null);
-            setPagamento(null);
-            setMetodoPagamento(null);
             // Fecha o resumo e abre o modal de pagamento
             setModalResumo(false);
             setModalPagamento('metodos');
-        } catch (error) { if (error.status === 409) previa.recarregar(); setErro(mensagemDaApi(error)); }
-        finally { setCarregando(false); }
-    };
-
-    const verificarPagamento = async () => {
-        if (!pagamento?.id_cobranca) return;
-        setVerificando(true);
-        try {
-            const dados = await apiFetch(`/pagamentos/pix/${pagamento.id_cobranca}`);
-            if (dados.pago) {
-                setPagamento((atual) => ({ ...atual, status: 1 }));
-                setSucesso('Pagamento confirmado! Redirecionando para a página da barbearia…');
-                window.setTimeout(() => navigate(`/estabelecimento?usuario=${encodeURIComponent(idBarbearia)}`), 2500);
-            } else {
-                setErro('Pagamento ainda pendente. Conclua no app e tente de novo.');
-            }
-        } catch (error) { if (error.status === 409) previa.recarregar(); setErro(mensagemDaApi(error)); }
-        finally { setVerificando(false); }
-    };
-
-    useEffect(() => {
-        if (!pagamento?.id_cobranca || pagamento.status === 1) return undefined;
-        const intervalo = window.setInterval(() => { verificarPagamento(); }, 15000);
-        return () => window.clearInterval(intervalo);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [pagamento]);
-
-    const copiarCodigo = async () => {
-        if (!pagamento?.codigo_pagamento) return;
-        try {
-            await navigator.clipboard.writeText(pagamento.codigo_pagamento);
-            setCopiado(true);
-            window.setTimeout(() => setCopiado(false), 2000);
-        } catch { setErro('Não foi possível copiar. Selecione o código manualmente.'); }
-    };
-
-    const selecionarMetodoPagamento = (metodo) => {
-        setMetodoPagamento(metodo);
-        setModalPagamento('detalhe');
-        solicitarPagamento(metodo);
-    };
-
-    const solicitarPagamento = async (metodo) => {
-        const rota = rotaPagamentoAgendamento(metodo);
-        if (!idAgendamento || !rota) return;
-        setCarregando(true); setErro('');
-        try {
-            const dados = await apiFetch(rota, {
-                method: 'POST', body: JSON.stringify({ id_agendamento: idAgendamento })
-            });
-            setPagamento({ ...dados, metodo });
         } catch (error) { if (error.status === 409) previa.recarregar(); setErro(mensagemDaApi(error)); }
         finally { setCarregando(false); }
     };
@@ -304,12 +245,6 @@ function AgendamentoCliente() {
     const sairDoPagamento = () => {
         setModalPagamento(null);
         setModalResumo(false);
-    };
-
-    const voltarSelecaoPagamento = () => {
-        setMetodoPagamento(null);
-        setPagamento(null);
-        setModalPagamento('metodos');
     };
 
     const cancelarAgendamentoCliente = async () => {
@@ -325,8 +260,6 @@ function AgendamentoCliente() {
             const resposta = await apiFetch(`/agendamentos/${idAgendamento}/cancelar`, { method: 'PUT', body: '{}' });
             setSucesso(resposta.mensagem?.informacao || 'Agendamento cancelado.');
             setIdAgendamento(null);
-            setPagamento(null);
-            setMetodoPagamento(null);
             setModalPagamento(null);
             setModalResumo(false);
             setHorarioSelecionado(null);
@@ -434,7 +367,7 @@ function AgendamentoCliente() {
                     </button>
                 </div>}
                 {sucesso && idAgendamento && !modalPagamento && <div className={styles.modalAcoes} style={{ justifyContent: 'center' }}>
-                    <button type="button" className={styles.btnConfirmarModal} onClick={() => setModalPagamento(metodoPagamento ? 'detalhe' : 'metodos')}>
+                    <button type="button" className={styles.btnConfirmarModal} onClick={() => setModalPagamento('metodos')}>
                         CONTINUAR PARA O PAGAMENTO
                     </button>
                     <button type="button" className={styles.btnCancelar} disabled={carregando} onClick={cancelarAgendamentoCliente}>
@@ -471,120 +404,14 @@ function AgendamentoCliente() {
             )}
 
             {modalPagamento && idAgendamento && (
-                <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="Pagamento do agendamento"
-                    onClick={() => { if (pagamento?.status !== 1) sairDoPagamento(); }}>
-                    <section className={styles.modal} onClick={(e) => e.stopPropagation()}>
-                        {modalPagamento === 'metodos' && (
-                            <>
-                                <h2>Como deseja pagar?</h2><ResumoTaxa resumo={resumoAgendamento} servico />
-                                <p>{valorTotal != null ? <>Total de <strong>R$ {Number(valorTotal).toFixed(2).replace('.', ',')}</strong>.</> : 'Escolha a forma de pagamento.'} Seu agendamento continua reservado até que você ou a barbearia o cancele.</p>
-                                <div className={styles.opcoesPagamento}>
-                                    <button type="button" className={styles.opcaoPagamento} onClick={() => selecionarMetodoPagamento('pix')} disabled={carregando}>
-                                        <FiDollarSign />
-                                        <span>PIX</span>
-                                        <small>Pagamento instantâneo via QR Code</small>
-                                    </button>
-                                    <button type="button" className={styles.opcaoPagamento} onClick={() => selecionarMetodoPagamento('boleto')} disabled={carregando}>
-                                        <FiFileText />
-                                        <span>Boleto</span>
-                                        <small>Pague em qualquer banco ou lotérica</small>
-                                    </button>
-                                    <button type="button" className={styles.opcaoPagamento} onClick={() => selecionarMetodoPagamento('cartao')} disabled={carregando}>
-                                        <FiCreditCard />
-                                        <span>Cartão</span>
-                                        <small>Débito ou crédito</small>
-                                    </button>
-                                    <button type="button" className={styles.opcaoPagamento} onClick={() => selecionarMetodoPagamento('na_hora')} disabled={carregando}>
-                                        <FiBriefcase />
-                                        <span>Pagar no local</span>
-                                        <small>Dinheiro ou cartão na barbearia</small>
-                                    </button>
-                                </div>
-                                <div className={styles.modalAcoes}>
-                                    <button type="button" className={styles.btnVoltar} onClick={sairDoPagamento}>VOLTAR</button>
-                                    <button type="button" className={styles.btnCancelar} disabled={carregando} onClick={cancelarAgendamentoCliente}>
-                                        CANCELAR AGENDAMENTO
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                        {modalPagamento === 'detalhe' && (
-                            <>
-                                {pagamento?.metodo === 'pix' && (
-                                    <>
-                                        <h2>Pix gerado · R$ {Number(pagamento.valor || 0).toFixed(2).replace('.', ',')}</h2>
-                                        {pagamento.status === 1
-                                            ? <p className={styles.confirmado}>✓ Pagamento confirmado! Voltando para a barbearia…</p>
-                                            : <>
-                                                <p>Use o código abaixo no app da sua conta. Verificamos automaticamente a cada 15 segundos.</p>
-                                                <div className={styles.qrCode}>
-                                                    <QRCodeSVG value={pagamento.codigo_pagamento} size={200} />
-                                                </div>
-                                                <p className={styles.codigoPix}><strong>{pagamento.codigo_pagamento}</strong></p>
-                                                <div className={styles.modalAcoes}>
-                                                    <button type="button" className={styles.btnVoltar} onClick={voltarSelecaoPagamento}>VOLTAR</button>
-                                                    <button type="button" className={styles.btnCancelar} disabled={carregando} onClick={cancelarAgendamentoCliente}>
-                                                        CANCELAR AGENDAMENTO
-                                                    </button>
-                                                    <button type="button" className={styles.btnConfirmarModal} onClick={copiarCodigo}>
-                                                        {copiado ? 'CÓDIGO COPIADO!' : 'COPIAR CÓDIGO PIX'}
-                                                    </button>
-                                                    <button type="button" className={styles.btnConfirmarModal} disabled={verificando} onClick={verificarPagamento}>
-                                                        {verificando ? 'VERIFICANDO…' : 'JÁ PAGUEI, VERIFICAR'}
-                                                    </button>
-                                                </div>
-                                            </>}
-                                    </>
-                                )}
-                                {pagamento?.metodo === 'boleto' && (
-                                    <>
-                                        <h2>Boleto gerado · R$ {Number(pagamento.valor || 0).toFixed(2).replace('.', ',')}</h2>
-                                        <p>Salve o PDF ou copie o código de barras para pagar. Depois volte para a barbearia.</p>
-                                        <div className={styles.modalAcoes}>
-                                            <button type="button" className={styles.btnVoltar} onClick={voltarSelecaoPagamento}>VOLTAR</button>
-                                            <button type="button" className={styles.btnCancelar} disabled={carregando} onClick={cancelarAgendamentoCliente}>
-                                                CANCELAR AGENDAMENTO
-                                            </button>
-                                            <button type="button" className={styles.btnConfirmarModal} onClick={() => window.open(pagamento.url_boleto, '_blank')}>
-                                                BAIXAR BOLETO
-                                            </button>
-                                            <button type="button" className={styles.btnConfirmarModal} onClick={voltarParaBarbearia}>
-                                                VOLTAR À BARBEARIA
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                                {pagamento?.metodo === 'cartao' && (
-                                    <>
-                                        <h2>Pagamento com Cartão · R$ {Number(pagamento.valor || 0).toFixed(2).replace('.', ',')}</h2>
-                                        <p>Conclua no checkout seguro e depois volte para a barbearia.</p>
-                                        <div className={styles.modalAcoes}>
-                                            <button type="button" className={styles.btnVoltar} onClick={voltarSelecaoPagamento}>VOLTAR</button>
-                                            <button type="button" className={styles.btnCancelar} disabled={carregando} onClick={cancelarAgendamentoCliente}>
-                                                CANCELAR AGENDAMENTO
-                                            </button>
-                                            {pagamento.url_checkout && <a href={pagamento.url_checkout} target="_blank" rel="noreferrer" className={styles.btnConfirmarModal}>IR PARA O CHECKOUT</a>}
-                                            <button type="button" className={styles.btnConfirmarModal} onClick={voltarParaBarbearia}>
-                                                VOLTAR À BARBEARIA
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                                {pagamento?.metodo === 'na_hora' && (
-                                    <>
-                                        <h2>Pagar no local</h2>
-                                        <p>Seu agendamento está reservado. Pague diretamente na barbearia.</p>
-                                        <p><strong>Pendente de confirmação da barbearia.</strong> A escolha deste método não confirma que o pagamento foi recebido.</p>
-                                        <div className={styles.modalAcoes}>
-                                            <button type="button" className={styles.btnConfirmarModal} onClick={voltarParaBarbearia}>
-                                                VOLTAR À BARBEARIA
-                                            </button>
-                                        </div>
-                                    </>
-                                )}
-                                {!pagamento && carregando && <p>Gerando pagamento…</p>}
-                            </>
-                        )}
+                <div className={styles.overlay} role="dialog" aria-modal="true" aria-label="Pagamento do agendamento">
+                    <section className={styles.modal}>
+                        <h2>Pagamento do atendimento</h2>
+                        <PagamentoAgendamento key={idAgendamento} agendamento={{ id_agendamento: idAgendamento, status: 'agendado', valor_total: valorTotal, resumo: resumoAgendamento }} />
+                        <div className={styles.modalAcoes}>
+                            <button type="button" className={styles.btnVoltar} onClick={sairDoPagamento}>FECHAR</button>
+                            <button type="button" className={styles.btnConfirmarModal} onClick={voltarParaBarbearia}>VOLTAR À BARBEARIA</button>
+                        </div>
                     </section>
                 </div>
             )}

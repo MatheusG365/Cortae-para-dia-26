@@ -3,7 +3,7 @@ import { canCreateOrderPix } from "./clientRules";
 import { useLocalSearchParams } from "expo-router";
 import { api, assetUrl } from "../../lib/api";
 import { useResource } from "../../lib/useResource";
-import { Button, Card, RemoteImage, Screen } from "../../ui";
+import { Button, Card, Notice, RemoteImage, Screen } from "../../ui";
 import {
   Feedback,
   Heading,
@@ -18,6 +18,15 @@ import {
   useAction,
 } from "./common";
 import { PixCode } from "./Payment";
+import CardArkhe, { CardReceipt } from "./CardArkhe";
+import {
+  CARTAO_INCERTO,
+  dadosCartao,
+  cartaoEmConferencia,
+  erroCartaoIncerto,
+  podePagarPedido,
+  reciboCartao,
+} from "./cardRules";
 export default function Orders() {
   const { id } = useLocalSearchParams();
   const state = useResource(
@@ -26,16 +35,79 @@ export default function Orders() {
   );
   const action = useAction();
   const [payment, setPayment] = useState(null);
+  const [uncertain, setUncertain] = useState(null);
   const p = state.data.pedido;
-  const pix = payment || p?.pagamento;
-  const canPix = canCreateOrderPix(p);
+  const pix = payment?.id === String(id) ? payment.value : p?.pagamento;
+  const blocked = uncertain === String(id) || cartaoEmConferencia(p);
+  const receipt = reciboCartao(pix);
+  const canPix = !blocked && !receipt && canCreateOrderPix(p);
+  async function refresh() {
+    const fresh = await api(`/marketplace/pedidos/${id}`);
+    state.setData(fresh);
+    if (
+      ["aprovado", "recusado"].includes(
+        fresh.pedido?.pagamento?.cartao_estado,
+      ) ||
+      fresh.pedido?.pagamento_status === "pago"
+    )
+      setUncertain(null);
+    return fresh.pedido;
+  }
   async function act(kind) {
-    const d = await api(
-      `/marketplace/pedidos/${id}/${kind}`,
-      kind === "pagamento" ? {} : { method: "POST", body: {} },
-    );
-    if (d.pagamento) setPayment(d.pagamento);
-    await state.reload();
+    if (
+      kind === "pagamento" &&
+      (p?.pagamento?.metodo === "cartao" || blocked)
+    ) {
+      await refresh();
+      return;
+    }
+    if (kind === "pix") {
+      const fresh = await api(`/marketplace/pedidos/${id}`);
+      if (blocked || !podePagarPedido(fresh.pedido))
+        throw new Error("Já existe pagamento ou cobrança. Atualize o pedido.");
+    }
+    try {
+      const d = await api(
+        `/marketplace/pedidos/${id}/${kind}`,
+        kind === "pagamento" ? {} : { method: "POST", body: {} },
+      );
+      if (d.pagamento) setPayment({ id: String(id), value: d.pagamento });
+    } catch (error) {
+      if (kind === "pix" && erroCartaoIncerto(error)) setUncertain(String(id));
+      throw error;
+    } finally {
+      await state.reload();
+    }
+  }
+  async function payCard(fields) {
+    const fresh = await api(`/marketplace/pedidos/${id}`);
+    if (blocked || !podePagarPedido(fresh.pedido))
+      throw new Error("Já existe pagamento ou cobrança. Atualize o pedido.");
+    if (Math.abs(Number(fresh.pedido.total) - Number(p.total)) > 0.005) {
+      state.setData(fresh);
+      throw new Error(
+        "O valor mudou. Confira o novo total antes de confirmar.",
+      );
+    }
+    try {
+      const response = await api(`/marketplace/pedidos/${id}/cartao`, {
+        method: "POST",
+        body: dadosCartao(fields, fresh.pedido.total),
+      });
+      setPayment({ id: String(id), value: response.pagamento });
+      if (!reciboCartao(response)) {
+        setUncertain(String(id));
+        throw new Error(CARTAO_INCERTO);
+      }
+    } catch (error) {
+      if (erroCartaoIncerto(error)) {
+        setUncertain(String(id));
+        throw new Error(CARTAO_INCERTO);
+      }
+      throw error;
+    } finally {
+      await state.reload();
+    }
   }
   return (
     <Screen
@@ -81,6 +153,16 @@ export default function Orders() {
             <Card>
               <Heading>Pagamento</Heading>
               <Label>Status: {p.pagamento_status || "Não iniciado"}</Label>
+              <CardReceipt receipt={receipt} />
+              {blocked && <Notice kind="info" message={CARTAO_INCERTO} />}
+              {!blocked && !receipt && podePagarPedido(p) && (
+                <CardArkhe
+                  key={String(id)}
+                  total={p.total}
+                  disabled={action.busy}
+                  onSubmit={(fields) => action.run(() => payCard(fields))}
+                />
+              )}
               {canPix && (
                 <Button
                   title="Gerar cobrança Pix"
@@ -108,7 +190,7 @@ export default function Orders() {
                 />
               )}
             </Card>
-            {pix?.codigo_pix && (
+            {pix?.metodo !== "cartao" && pix?.codigo_pix && (
               <PixCode code={pix.codigo_pix} amount={pix.valor} />
             )}
             <Card>
@@ -137,7 +219,8 @@ export default function Orders() {
               <Button
                 title="Atualizar acompanhamento"
                 variant="secondary"
-                onPress={state.reload}
+                loading={action.busy}
+                onPress={() => action.run(refresh)}
               />
             </Card>
             {p.pode_cancelar && (

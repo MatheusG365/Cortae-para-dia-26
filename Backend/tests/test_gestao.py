@@ -79,7 +79,7 @@ class GestaoBehavior(unittest.TestCase):
             con=MagicMock();cur=con.cursor.return_value;cur.fetchone.return_value=(Decimal('100.00'),)
             last_sql={'sql':''}
             cur.execute.side_effect=lambda sql,*args:last_sql.update(sql=sql)
-            cur.fetchone.side_effect=lambda:None if 'PLATAFORMA_TAXA' in last_sql['sql'] else (Decimal('100.00'),)
+            cur.fetchone.side_effect=lambda:None if any(table in last_sql['sql'] for table in ('PLATAFORMA_TAXA','PAGAMENTO_CARTAO')) else (Decimal('100.00'),)
             cur.fetchall.return_value=[(1,'na_hora','ag#91|gestao|dinheiro|1',received,begin),(2,'na_hora','ag#910|qa',999,begin),(3,'na_hora_pendente','ag#91|na_hora',100,begin)]
             with patch.object(pagamento,'obter_usuario_logado',return_value={'id_usuario':8,'tipo':2}),patch.object(pagamento,'conectar_banco',return_value=con),patch.object(pagamento,'buscar_agendamento',return_value=row),patch.object(pagamento,'pode_ver_agendamento',return_value=True),patch.object(pagamento,'pegar_id_barbearia_alvo',return_value=None),patch.object(pagamento,'_chamar') as provider:
                 response=self.client.get('/pagamentos/agendamento/91')
@@ -94,7 +94,7 @@ class GestaoBehavior(unittest.TestCase):
         con=MagicMock();cur=con.cursor.return_value;cur.fetchone.return_value=(Decimal('100.00'),)
         last_sql={'sql':''}
         cur.execute.side_effect=lambda sql,*args:last_sql.update(sql=sql)
-        cur.fetchone.side_effect=lambda:None if 'PLATAFORMA_TAXA' in last_sql['sql'] else (Decimal('100.00'),)
+        cur.fetchone.side_effect=lambda:None if any(table in last_sql['sql'] for table in ('PLATAFORMA_TAXA','PAGAMENTO_CARTAO')) else (Decimal('100.00'),)
         cur.fetchall.return_value=[(1,'na_hora','ag#91|gestao|cartao|1',Decimal('30.00')),(2,'na_hora_pendente','ag#91|na_hora',Decimal('100.00'))]
         with patch.object(pagamento,'obter_usuario_logado',return_value={'id_usuario':8,'tipo':2}),patch.object(pagamento,'conectar_banco',return_value=con),patch('agenda_equipe.travar_agendamento',return_value=row),patch.object(pagamento,'pode_ver_agendamento',return_value=True),patch.object(pagamento,'pegar_id_barbearia_alvo',return_value=None),patch.object(pagamento,'registrar_log'),patch.object(pagamento,'_chamar') as provider:
             response=self.client.post('/pagamentos/na-hora',json={'id_agendamento':91})
@@ -109,7 +109,7 @@ class GestaoBehavior(unittest.TestCase):
         con=MagicMock();cur=con.cursor.return_value;cur.fetchone.return_value=(Decimal('100.00'),)
         last_sql={'sql':''}
         cur.execute.side_effect=lambda sql,*args:last_sql.update(sql=sql)
-        cur.fetchone.side_effect=lambda:None if 'PLATAFORMA_TAXA' in last_sql['sql'] else (Decimal('100.00'),)
+        cur.fetchone.side_effect=lambda:None if any(table in last_sql['sql'] for table in ('PLATAFORMA_TAXA','PAGAMENTO_CARTAO')) else (Decimal('100.00'),)
         cur.fetchall.return_value=[(1,'na_hora','ag#91|gestao|dinheiro|1',Decimal('40.00')),(2,'na_hora_pendente','ag#91|na_hora',100)]
         with patch.object(pagamento,'obter_usuario_logado',return_value={'id_usuario':7,'tipo':1}),patch.object(pagamento,'conectar_banco',return_value=con),patch('agenda_equipe.travar_agendamento',return_value=row),patch.object(pagamento,'pode_ver_agendamento',return_value=True),patch.object(pagamento,'pegar_id_barbearia_alvo',return_value=None),patch.object(pagamento,'registrar_log') as audit:
             response=self.client.post('/pagamentos/na-hora',json={'id_agendamento':91})

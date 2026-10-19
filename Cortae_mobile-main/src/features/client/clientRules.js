@@ -16,6 +16,7 @@ export function canRequestBookingCharge(payment, status) {
     total = Number(payment.valor_total);
   return (
     !["cancelado", "faltou"].includes(status) &&
+    !["processando", "incerto", "aprovado"].includes(payment.cartao_estado) &&
     payment.quitado !== true &&
     payment.parcial !== true &&
     Array.isArray(payment.cobrancas) &&
@@ -31,7 +32,12 @@ export function canRequestBookingCharge(payment, status) {
 export function canCreateOrderPix(order) {
   return (
     order?.status === "aguardando_pagamento" &&
-    order?.pagamento_status === "nao_criado"
+    ["nao_criado", "recusado"].includes(order?.pagamento_status) &&
+    !["processando", "incerto", "aprovado"].includes(
+      order?.pagamento?.cartao_estado,
+    ) &&
+    !order?.pagamento?.id_cobranca &&
+    !order?.pagamento?.aprovado
   );
 }
 export function validQuantity(quantity, stock) {

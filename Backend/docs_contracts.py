@@ -46,6 +46,28 @@ CHECKOUT = objeto({'id_barbearia': INTEIRO, 'endereco': ENDERECO, 'retirada': BO
 DONO = 'Proprietário (tipo 2) da loja ou ADM (tipo 0); ADM informa id_barbearia na query. Nenhum acesso a outra loja. '
 CLIENTE = 'Cliente ativo (tipo 1); somente seus próprios dados. '
 PERIODO = 'Query inicio/fim em AAAA-MM-DD. '
+CARTAO = objeto({
+    'numero_cartao': {'type': 'string', 'pattern': '^[0-9]{16}$', 'minLength': 16, 'maxLength': 16,
+                      'writeOnly': True, 'description': 'Cartão virtual Arkhé; não informar PIN nem senha pessoal.'},
+    'validade': {'type': 'string', 'pattern': '^(0[1-9]|1[0-2])/[0-9]{4}$', 'writeOnly': True,
+                 'description': 'Validade MM/YYYY.'},
+    'cvv': {'type': 'string', 'pattern': '^[0-9]{3}$', 'minLength': 3, 'maxLength': 3,
+            'writeOnly': True, 'description': 'Texto para preservar zeros à esquerda; nunca armazenado.'},
+    'tipo': {'type': 'string', 'enum': ['DEBITO', 'CREDITO'], 'default': 'DEBITO'},
+    'parcelas': {'type': 'integer', 'minimum': 1, 'maximum': 15, 'default': 1,
+                 'description': 'Débito exige 1; crédito permite 1 a 15, mínimo de R$ 0,01 por parcela.'},
+}, ['numero_cartao', 'validade', 'cvv'])
+CARTAO_FLUXO = (
+    'Usa o valor bruto histórico do servidor e credenciais da loja, sem confiar em valor enviado pelo cliente. '
+    'Débito: uma parcela, lojista recebe 100%; crédito: até 15 parcelas, cliente paga o bruto e lojista recebe 95%, '
+    'com taxa de 5%. Retorna recibo aprovado seguro (IDs, bruto, líquido, taxa, modalidade, parcelas e final do cartão); '
+    'quita pelo bruto. Nunca retorna ou armazena número completo, CVV ou PIN. '
+    'Confirma reserva local durável antes de enviar. Não repete POST automaticamente. '
+    'Processando, resultado incerto, timeout, HTTP 409 ou falha de confirmação local bloqueiam outros métodos e nova venda '
+    'até conferência manual na Arkhé; não existe consulta de status de cartão no provedor. '
+    'Recusa explícita permite nova tentativa somente por ação do usuário. Aprovação já registrada devolve o recibo local sem nova venda. '
+    'Exige migração manual de PAGAMENTO_CARTAO, sem criar estrutura durante requisições.'
+)
 
 
 def complementar_contratos(documento, operacao):
@@ -251,10 +273,11 @@ def complementar_contratos(documento, operacao):
     owner('/gestao/marketplace/pedidos', 'get', 'Pedidos da loja', 'Filtros status exato e busca por ID/nome do cliente.', query=[('status', TEXTO), ('busca', TEXTO)])
     adicionar('/marketplace/pedidos/{id_pedido}', 'get', 'Detalhes da própria compra', CLIENTE+'Itens, preços e endereço preservados; histórico, Pix e entrega. Não revela custos privados.')
     owner('/gestao/marketplace/pedidos/{id_pedido}', 'get', 'Detalhes do pedido da loja', 'Dados de atendimento do pedido e entrega; custos permanecem fora do payload público de pedidos.')
-    adicionar('/marketplace/pedidos/{id_pedido}/cancelar', 'post', 'Cancelar pedido ainda sem cobrança', CLIENTE+'Só aguardando_pagamento com pagamento nao_criado. Restaura estoque/uso de cupom uma vez. Cobrança iniciada ou pagamento exige conciliação e não é cancelado/estornado por esta rota.')
+    adicionar('/marketplace/pedidos/{id_pedido}/cancelar', 'post', 'Cancelar pedido ainda sem cobrança', CLIENTE+'Só aguardando_pagamento com pagamento nao_criado ou recusado. Restaura estoque/uso de cupom uma vez. Cobrança iniciada ou pagamento exige conciliação e não é cancelado/estornado por esta rota.')
     owner('/gestao/marketplace/pedidos/{id_pedido}/status', 'patch', 'Preparação e retirada do pedido', 'Exige pagamento confirmado. pago → separando; retirada: separando → pronto_retirada → entregue. Entrega por transportadora é confirmada pelo rastreio.', objeto({'status': {'type': 'string', 'enum': ['separando', 'pronto_retirada', 'entregue']}}, ['status']))
     adicionar('/marketplace/pedidos/{id_pedido}/pix', 'post', 'Criar Pix do pedido pela Arkhé', CLIENTE+'Usa o total histórico e a conta da loja, nunca valor informado pelo navegador. Não duplica cobrança existente; resultado incerto exige conciliação. Retorna 201 na criação, ou cobrança existente.')
-    adicionar('/marketplace/pedidos/{id_pedido}/pagamento', 'get', 'Consultar e conciliar Pix do pedido', CLIENTE+'Confere identificador e valor retornados pela Arkhé antes de confirmar pagamento; não confirma só pela informação do cliente.')
+    adicionar('/marketplace/pedidos/{id_pedido}/cartao', 'post', 'Pagar pedido com cartão virtual Arkhé', CLIENTE+CARTAO_FLUXO, CARTAO)
+    adicionar('/marketplace/pedidos/{id_pedido}/pagamento', 'get', 'Consultar pagamento do pedido', CLIENTE+'Pix: confere identificador e valor retornados pela Arkhé antes de confirmar. Cartão: lê somente recibo e estado local, sem GET ao provedor. Retorna pedido e pagamento; estados processando/incerto/recusado retornam 409 e cartao_estado. Recibo aprovado mantém valor bruto e líquido separados.')
     owner('/gestao/marketplace/remetente', 'get', 'Consultar remetente de entrega', 'Retorna endereço cadastrado e permissões/limites da integração.')
     owner('/gestao/marketplace/remetente', 'put', 'Configurar remetente de entrega', 'Endereço completo, CEP/telefone/documento/UF válidos; inscrição estadual necessária para emissão comercial.', ENDERECO)
     entrega = '/gestao/marketplace/pedidos/{id_pedido}'

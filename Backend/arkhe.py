@@ -2154,57 +2154,14 @@ def financeiro_criar_boleto():
     methods=['POST']
 )
 def financeiro_criar_cartao():
-
-    def criar():
-        dados = (
-                request.get_json(
-                    silent=True
-                )
-                or {}
-        )
-
-        try:
-            valor = round(
-                float(
-                    str(
-                        dados.get('valor')
-                    ).replace(',', '.')
-                ),
-                2
-            )
-
-        except (
-                TypeError,
-                ValueError
-        ):
-            raise ArkheErro(
-                'Informe um valor válido.',
-                400
-            )
-
-        if (
-                valor <= 0
-                or valor > 1_000_000
-        ):
-            raise ArkheErro(
-                'O valor deve ser maior que zero.',
-                400
-            )
-
-        _, credenciais = (
-            _contexto_financeiro()
-        )
-
-        return _chamar_arkhe(
-            'POST',
-            '/api/v1/cobrancas/cartao',
-            corpo={
-                'valor': valor
-            },
-            credenciais=credenciais
-        )
-
-    return _executar(criar)
+    _, denied = _autorizado()
+    if denied:
+        return denied
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict) or not data.get('id_agendamento'):
+        return _erro('Use um agendamento ou pedido específico para pagar com cartão; cobranças avulsas não são permitidas.', 409)
+    from pagamento import criar_cobranca_cartao
+    return criar_cobranca_cartao()
 
 
 # ==========================================================
@@ -2309,30 +2266,11 @@ def financeiro_consultar_boleto(
     '/financeiro/cobrancas/cartao/<string:id_cobranca>',
     methods=['GET']
 )
-def financeiro_consultar_cartao(
-        id_cobranca
-):
-
-    def consultar():
-        _, credenciais = (
-            _contexto_financeiro()
-        )
-
-        id_seguro = urllib.parse.quote(
-            str(id_cobranca),
-            safe=''
-        )
-
-        return _chamar_arkhe(
-            'GET',
-            (
-                '/api/v1/cobrancas/cartao/'
-                f'{id_seguro}'
-            ),
-            credenciais=credenciais
-        )
-
-    return _executar(consultar)
+def financeiro_consultar_cartao(id_cobranca):
+    _, denied = _autorizado()
+    if denied:
+        return denied
+    return _erro('A Arkhé não possui consulta de cartão por cobrança. Consulte o estado local do pedido ou agendamento e confira o recebimento manualmente.', 409)
 
 
 # ==========================================================

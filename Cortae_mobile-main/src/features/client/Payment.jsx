@@ -4,6 +4,14 @@ import { Text, View } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import QRCode from "react-native-qrcode-svg";
 import { api } from "../../lib/api";
+import CardArkhe, { CardReceipt } from "./CardArkhe";
+import {
+  CARTAO_INCERTO,
+  dadosCartao,
+  cartaoEmConferencia,
+  erroCartaoIncerto,
+  reciboCartao,
+} from "./cardRules";
 import { useResource } from "../../lib/useResource";
 import { Button, Card, Notice } from "../../ui";
 import {
@@ -58,11 +66,20 @@ export function PixCode({ code, amount }) {
     </Card>
   );
 }
-export default function BookingPayment({ booking }) {
+export default function BookingPayment(props) {
+  return (
+    <BookingPaymentCurrent
+      key={String(props.booking.id_agendamento)}
+      {...props}
+    />
+  );
+}
+function BookingPaymentCurrent({ booking }) {
   const id = booking.id_agendamento;
   const state = useResource(`/pagamentos/agendamento/${id}`, {});
   const action = useAction();
   const [payment, setPayment] = useState(null);
+  const [uncertain, setUncertain] = useState(false);
   const d = state.data;
   const existing = d.cobrancas || [];
   const codigoPagamento = String(
@@ -71,19 +88,65 @@ export default function BookingPayment({ booking }) {
   const canCreate =
     !state.loading &&
     !state.error &&
+    !uncertain &&
+    !cartaoEmConferencia(d) &&
+    !reciboCartao(payment) &&
     canRequestBookingCharge(d, booking.status);
-  async function request(method) {
+  async function refresh() {
     const fresh = await api(`/pagamentos/agendamento/${id}`);
-    if (!canRequestBookingCharge(fresh, booking.status))
+    state.setData?.(fresh);
+    if (
+      ["aprovado", "recusado"].includes(fresh.cartao_estado) ||
+      fresh.cobrancas?.length ||
+      fresh.quitado
+    )
+      setUncertain(false);
+    await state.reload();
+    return fresh;
+  }
+  async function request(method, fields) {
+    const fresh = await api(`/pagamentos/agendamento/${id}`);
+    if (
+      uncertain ||
+      cartaoEmConferencia(fresh) ||
+      !canRequestBookingCharge(fresh, booking.status)
+    )
       throw new Error(
         "Já existe pagamento ou cobrança. Atualize e consulte a cobrança existente.",
       );
-    const response = await api(`/pagamentos/${method}`, {
-      method: "POST",
-      body: { id_agendamento: id },
-    });
-    setPayment(response);
-    await state.reload();
+    if (
+      method === "cartao" &&
+      Math.abs(Number(fresh.saldo) - Number(d.saldo)) > 0.005
+    ) {
+      state.setData?.(fresh);
+      throw new Error(
+        "O valor mudou. Confira o novo total antes de confirmar.",
+      );
+    }
+    let posted = false;
+    try {
+      posted = true;
+      const response = await api(`/pagamentos/${method}`, {
+        method: "POST",
+        body: {
+          id_agendamento: id,
+          ...(method === "cartao" ? dadosCartao(fields, fresh.saldo) : {}),
+        },
+      });
+      setPayment(response);
+      if (method === "cartao" && !reciboCartao(response)) {
+        setUncertain(true);
+        throw new Error(CARTAO_INCERTO);
+      }
+    } catch (error) {
+      if (erroCartaoIncerto(error)) {
+        setUncertain(true);
+        throw new Error(CARTAO_INCERTO);
+      }
+      throw error;
+    } finally {
+      if (posted) await state.reload();
+    }
   }
   async function consult(item) {
     const code = String(item.descricao).match(/^ARKHE:([^ ]+)/)?.[1];
@@ -127,8 +190,19 @@ export default function BookingPayment({ booking }) {
               )}
             </View>
           ))}
+          <CardReceipt receipt={reciboCartao(d) || reciboCartao(payment)} />
+          {(uncertain || cartaoEmConferencia(d)) && (
+            <Notice kind="info" message={CARTAO_INCERTO} />
+          )}
           {canCreate && (
             <>
+              <CardArkhe
+                total={d.saldo}
+                disabled={action.busy}
+                onSubmit={(fields) =>
+                  action.run(() => request("cartao", fields))
+                }
+              />
               <Button
                 title="Gerar cobrança Pix"
                 loading={action.busy}
@@ -163,7 +237,8 @@ export default function BookingPayment({ booking }) {
           <Button
             title="Atualizar status"
             variant="ghost"
-            onPress={state.reload}
+            loading={action.busy}
+            onPress={() => action.run(refresh)}
           />
         </Resource>
         <Feedback state={action} />

@@ -13,6 +13,7 @@ from flask import jsonify, make_response, render_template_string
 
 from application import app
 from funcoes import decodificar_token
+from docs_contracts import CARTAO, CARTAO_FLUXO
 
 
 # Respostas padronizadas tornam a especificação curta e deixam claro que toda
@@ -351,16 +352,19 @@ OPENAPI = {
             'Cliente dono, barbearia proprietária ou ADM. Body {id_agendamento}. Usa o preço salvo, cria a cobrança e registra em FINANCEIRO como boleto_pendente. Falha do provedor não cria boleto fictício. Retorna 201 com {url_boleto, codigo_pagamento, valor}.',
             {'type': 'object', 'required': ['id_agendamento'], 'properties': {'id_agendamento': {'type': 'integer'}}})},
         '/pagamentos/cartao': {'post': operacao(
-            'Gerar checkout de cartão do agendamento',
-            'Cliente dono, barbearia proprietária ou ADM. Body {id_agendamento}. Usa o preço salvo e registra em FINANCEIRO como cartao_pendente. Falha do provedor não cria checkout fictício. Retorna 201 com {url_checkout, valor}.',
-            {'type': 'object', 'required': ['id_agendamento'], 'properties': {'id_agendamento': {'type': 'integer'}}})},
+            'Pagar agendamento com cartão virtual Arkhé',
+            'Cliente dono, barbearia proprietária ou ADM; barbeiro não autorizado. '+CARTAO_FLUXO+
+            ' Não aceita agendamento com outra cobrança ou recebimento. Registra cartao_pago em FINANCEIRO pelo bruto. '
+            'Retorna 201 com aprovado=true, metodo=cartao, status=1, cartao_estado=aprovado; repetição de venda já aprovada retorna 200.',
+            {**deepcopy(CARTAO), 'required': [*CARTAO['required'], 'id_agendamento'],
+             'properties': {**deepcopy(CARTAO['properties']), 'id_agendamento': {'type': 'integer', 'minimum': 1}}})},
         '/pagamentos/na-hora': {'post': operacao(
             'Escolher pagamento no local ou confirmar recebimento',
             'Body {id_agendamento}. Cliente dono registra na_hora_pendente, status=0, confirmado=false. Barbeiro não autorizado. Proprietário ou ADM confirma somente o saldo ainda devido como na_hora, status=1; também aceita atendimento concluído. Recebimentos parciais anteriores são descontados. Repetições após quitação não duplicam. Não aceita cancelado/falta. O estado do atendimento não é alterado; nenhum provedor é chamado.',
             {'type': 'object', 'required': ['id_agendamento'], 'properties': {'id_agendamento': {'type': 'integer'}}})},
         '/pagamentos/agendamento/{id_agendamento}': {'get': operacao(
             'Consultar pagamentos do agendamento',
-            'Cliente dono, barbearia proprietária ou ADM. Retorna cobranças somente do cliente e do ID exato do agendamento; cada item contém tipo, valor, status, confirmado e pendente. Inclui valor_total, valor_recebido, saldo, parcial e quitado; na_hora_confirmado exige quitação completa. Perfil de barbeiro não autorizado.')},
+            'Cliente dono, barbearia proprietária ou ADM. Retorna cobranças somente do cliente e do ID exato do agendamento; cada item contém tipo, valor, status, confirmado e pendente. Inclui valor_total, valor_recebido, saldo, parcial e quitado; na_hora_confirmado exige quitação completa. Inclui cartao_estado (null, processando, incerto, aprovado ou recusado) e cartao_resultado seguro ou null. Para cartão lê somente o banco local, sem GET ao provedor. Perfil de barbeiro não autorizado.')},
         '/financeiro/grafico': {'get': operacao(
             'Gráfico financeiro (pygal)',
             'Barbearia ou ADM. Query data_inicio, data_fim (AAAA-MM-DD, máx. 92 dias) e tipo=todos|ganhos|custos. ADM pode filtrar id_barbearia. Retorna SVG de linha.')},
@@ -381,17 +385,18 @@ OPENAPI = {
             'type': 'object', 'required': ['valor'], 'properties': {'valor': {'type': 'number', 'minimum': 0.01, 'example': 45.0}}
         })},
         '/financeiro/cobrancas/pix/{id_cobranca}': {'get': operacao('Consultar cobrança Pix avulsa', 'Barbearia ou ADM. Consulta uma cobrança Pix diretamente na Arkhé.')},
-        '/financeiro/cobrancas/boleto': {'post': operacao('Criar boleto avulso', 'Barbearia ou ADM. Body {valor}. Quando Arkhé não suporta boleto, pode retornar um boleto simulado.', {
+        '/financeiro/cobrancas/boleto': {'post': operacao('Criar boleto avulso pela integração legada', 'Barbearia ou ADM. Body {valor}. Falha do provedor retorna erro; nenhum boleto simulado é criado.', {
             'type': 'object', 'required': ['valor'], 'properties': {'valor': {'type': 'number', 'minimum': 0.01, 'example': 45.0}}
         })},
-        '/financeiro/cobrancas/cartao': {'post': operacao('Criar checkout de cartão avulso', 'Barbearia ou ADM. Body {valor}. Quando Arkhé não suporta cartão, pode retornar checkout simulado.', {
-            'type': 'object', 'required': ['valor'], 'properties': {'valor': {'type': 'number', 'minimum': 0.01, 'example': 45.0}}
-        })},
+        '/financeiro/cobrancas/cartao': {'post': operacao('Compatibilidade: cartão vinculado a agendamento',
+            'Barbearia ou ADM. Exige id_agendamento e os mesmos dados de /pagamentos/cartao; delega ao fluxo com trava e valor histórico. Sem alvo retorna 409: cobranças avulsas de cartão não são permitidas. '+CARTAO_FLUXO,
+            {**deepcopy(CARTAO), 'required': [*CARTAO['required'], 'id_agendamento'],
+             'properties': {**deepcopy(CARTAO['properties']), 'id_agendamento': {'type': 'integer', 'minimum': 1}}})},
         '/financeiro/cobrancas/na-hora': {'post': operacao('Registrar recebimento avulso na hora', 'Barbearia ou ADM. Body {valor}; confirma um recebimento sem criar cobrança externa.', {
             'type': 'object', 'required': ['valor'], 'properties': {'valor': {'type': 'number', 'minimum': 0.01, 'example': 45.0}}
         })},
         '/financeiro/cobrancas/boleto/{id_cobranca}': {'get': operacao('Consultar boleto avulso', 'Barbearia ou ADM. Consulta o boleto na Arkhé.')},
-        '/financeiro/cobrancas/cartao/{id_cobranca}': {'get': operacao('Consultar checkout de cartão avulso', 'Barbearia ou ADM. Consulta o checkout na Arkhé.')},
+        '/financeiro/cobrancas/cartao/{id_cobranca}': {'get': operacao('Consulta antiga de cartão indisponível', 'Barbearia ou ADM. Retorna 409, sem chamar rota inexistente do provedor. Consulte o estado local do pedido/agendamento e confira manualmente as movimentações na Arkhé.')},
         '/financeiro/webhook/arkhe': {'post': operacao('Receber webhook Arkhé', 'Endpoint de integração chamado pela Arkhé para notificações de pagamento. Não usa autenticação por cookie.', autenticada=False)},
         '/barbearias/{id_barbearia}/funcionarios': {'get': operacao(
             'Listar profissionais da barbearia',

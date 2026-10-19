@@ -118,6 +118,9 @@ def marketplace_image(filename):
     return serve_image('marketplace',filename)
 
 
+from arkhe_cartao import (CartaoErro, obter_tentativa, bloquear_outro_pagamento,
+                          validar_cartao, executar_venda, recibo, resposta_erro as erro_cartao)
+
 def protected(mode='client'):
     def decorate(fn):
         @wraps(fn)
@@ -144,6 +147,7 @@ def protected(mode='client'):
                     registrar_log('MARKETPLACE','MP_OPERACAO',id_registro=kwargs.get('id_produto') or kwargs.get('id_pedido') or user['id_usuario'],
                         id_usuario=user['id_usuario'],campo='ROTA',valor_depois=request.method+' '+request.path)
                 return result
+            except CartaoErro as exc:con.rollback();return erro_cartao(exc)
             except Conflito as exc:con.rollback();return erro(str(exc),409)
             except (ValueError,TypeError) as exc:con.rollback();return erro(str(exc),getattr(exc,'status',400))
             except ImageStorageError as exc:con.rollback();return erro(str(exc),exc.status)
@@ -432,7 +436,7 @@ def order_json(row):
     order=dict(zip(('id_pedido','id_usuario','id_barbearia','status','subtotal','frete','total','retirada','endereco','itens','cotacao','pagamento_status','pagamento_id','pagamento','entrega_status','entrega_id','entrega','criado_em','cliente','barbearia'),row))
     for k in ('subtotal','frete','total'):order[k]=float(order[k])
     for k in ('endereco','itens','cotacao','pagamento','entrega'):order[k]=loads(order[k],[] if k=='itens' else {})
-    order['retirada']=bool(order['retirada']);order['criado_em']=order['criado_em'].isoformat();order['pode_cancelar']=row[3]=='aguardando_pagamento' and row[11]=='nao_criado'
+    order['retirada']=bool(order['retirada']);order['criado_em']=order['criado_em'].isoformat();order['pode_cancelar']=row[3]=='aguardando_pagamento' and row[11] in ('nao_criado','recusado')
     if len(row)>=28 and row[20] is not None:
         resumo=dict(zip(('valor_base','frete','taxa_percentual','taxa_valor','taxa_pagador','valor_total_cliente','valor_liquido_barbearia','termos_versao'),row[20:28]))
         for field in ('valor_base','frete','taxa_percentual','taxa_valor','valor_total_cliente','valor_liquido_barbearia'):resumo[field]=float(resumo[field])
@@ -540,7 +544,7 @@ def cancel_order(user,salon,cur,con,id_pedido):
     lock_user(cur,user['id_usuario']);row=get_order(cur,id_pedido,user['id_usuario'],lock=True)
     if not row:return erro('Pedido não encontrado.',404)
     if row[3]=='cancelado':return jsonify(pedido=order_json(row))
-    if row[3]!='aguardando_pagamento' or row[11]!='nao_criado':raise Conflito('Pedido com cobrança ou pagamento exige conciliação e estorno antes de cancelar.')
+    if row[3]!='aguardando_pagamento' or row[11] not in ('nao_criado','recusado'):raise Conflito('Pedido com cobrança ou pagamento exige conciliação e estorno antes de cancelar.')
     lock_user(cur,row[2])
     for item in loads(row[9],[]):
         if item.get('id_variacao'):cur.execute('UPDATE MP_VARIACAO SET ESTOQUE=ESTOQUE+? WHERE ID_VARIACAO=?',(item['quantidade'],item['id_variacao']))
@@ -577,9 +581,10 @@ def create_pix(user,salon,cur,con,id_pedido):
     from arkhe import _chamar_arkhe,ArkheErro
     row=get_order(cur,id_pedido,user['id_usuario'],lock=True)
     if not row:return erro('Pedido não encontrado.',404)
+    bloquear_outro_pagamento(cur,'pedido',id_pedido)
     if row[3]=='cancelado':raise Conflito('Pedido cancelado não pode gerar cobrança.')
     if row[11] in ('pendente','pago'):return jsonify(pedido=order_json(row),pagamento=loads(row[13],{}))
-    if row[11]!='nao_criado':raise Conflito('Cobrança em processamento ou com resultado incerto. Confira a Arkhé antes de nova tentativa.')
+    if row[11] not in ('nao_criado','recusado'):raise Conflito('Cobrança em processamento ou com resultado incerto. Confira a Arkhé antes de nova tentativa.')
     try:credentials=_credenciais_da_barbearia(row[2])
     except RuntimeError:return erro('Conta Arkhé da barbearia não configurada.',503)
     if not app.config.get('ARKHE_BASE_URL'):return erro('Arkhé não configurada.',503)
@@ -601,6 +606,12 @@ def consult_pix(user,salon,cur,con,id_pedido):
     from arkhe import _chamar_arkhe,ArkheErro
     row=get_order(cur,id_pedido,user['id_usuario'],lock=True)
     if not row:return erro('Pedido não encontrado.',404)
+    saved=loads(row[13],{})
+    if saved.get('metodo')=='cartao':
+        if row[11]=='pago':return jsonify(pedido=order_json(row),pagamento=saved)
+        state=saved.get('cartao_estado') or row[11]
+        return jsonify(pedido=order_json(row),pagamento=saved,cartao_estado=state,
+            mensagem={'informacao':'Cartão sem aprovação confirmada. Confira a Arkhé antes de repetir; a consulta é somente local.','tipo':'erro'}),409
     if row[11]=='pago' or row[3]=='cancelado':return jsonify(pedido=order_json(row),pagamento=loads(row[13],{}))
     if row[11]!='pendente' or not row[12]:return erro('Cobrança ainda não disponível ou exige conferência manual.',409)
     try:
@@ -609,6 +620,48 @@ def consult_pix(user,salon,cur,con,id_pedido):
     except (ArkheErro,ValueError):return erro('Não foi possível confirmar o pagamento com a Arkhé.',502)
     if payment['status']==1:cur.execute("UPDATE MP_PEDIDO SET PAGAMENTO_STATUS='pago',STATUS='pago',PAGAMENTO_DADOS=?,ATUALIZADO_EM=CURRENT_TIMESTAMP WHERE ID_PEDIDO=?",(dumps(payment),id_pedido));con.commit()
     return jsonify(pedido=order_json(get_order(cur,id_pedido,user['id_usuario'])),pagamento=payment)
+
+@app.post('/marketplace/pedidos/<int:id_pedido>/cartao')
+@protected()
+def pay_card(user,salon,cur,con,id_pedido):
+    from pagamento import _credenciais_da_barbearia
+    row=get_order(cur,id_pedido,user['id_usuario'],lock=True)
+    if not row:return erro('Pedido não encontrado.',404)
+    attempt=obter_tentativa(cur,'pedido',id_pedido)
+    if attempt and attempt['estado']=='aprovado':
+        receipt=recibo(attempt['resultado'])
+        return jsonify(pedido=order_json(row),pagamento=receipt,**receipt)
+    bloquear_outro_pagamento(cur,'pedido',id_pedido)
+    if row[3]!='aguardando_pagamento' or row[11] not in ('nao_criado','recusado'):
+        raise CartaoErro('Pedido cancelado, com cobrança ou pagamento existente. Confira o financeiro antes de pagar por cartão.',409)
+    payload=validar_cartao(body(),row[6])
+    try:credentials=_credenciais_da_barbearia(row[2])
+    except RuntimeError:raise CartaoErro('Conta Arkhé da barbearia não configurada.',503) from None
+    from arkhe_cartao import preparar_conexao
+    preparar_conexao(credentials)
+    cur.execute("UPDATE MP_PEDIDO SET PAGAMENTO_STATUS='processando',PAGAMENTO_DADOS=?,ATUALIZADO_EM=CURRENT_TIMESTAMP WHERE ID_PEDIDO=?",
+        (dumps({'metodo':'cartao','cartao_estado':'processando'}),id_pedido))
+
+    def confirmar(safe):
+        current=get_order(cur,id_pedido,user['id_usuario'],lock=True)
+        if not current or current[3]!='aguardando_pagamento' or current[11]!='processando' or dinheiro(current[6],True)!=dinheiro(payload['valor'],True):
+            raise CartaoErro('O pedido mudou durante o pagamento. Confira o recebimento manualmente.',409,'incerto')
+        receipt=recibo(safe)
+        cur.execute("UPDATE MP_PEDIDO SET PAGAMENTO_STATUS='pago',STATUS='pago',PAGAMENTO_ID=?,PAGAMENTO_DADOS=?,ATUALIZADO_EM=CURRENT_TIMESTAMP WHERE ID_PEDIDO=?",
+            (str(safe['id_compra']),dumps(receipt),id_pedido))
+    try:
+        safe=executar_venda(cur,con,'pedido',id_pedido,user['id_usuario'],row[2],payload,credentials,confirmar)
+    except CartaoErro as exc:
+        if exc.estado in ('incerto','recusado'):
+            try:
+                cur.execute("UPDATE MP_PEDIDO SET PAGAMENTO_STATUS=?,PAGAMENTO_DADOS=?,ATUALIZADO_EM=CURRENT_TIMESTAMP WHERE ID_PEDIDO=? AND PAGAMENTO_STATUS='processando'",
+                    (exc.estado,dumps({'metodo':'cartao','cartao_estado':exc.estado}),id_pedido))
+                con.commit()
+            except Exception:con.rollback()
+        return erro_cartao(exc)
+    receipt=recibo(safe)
+    return jsonify(pedido=order_json(get_order(cur,id_pedido,user['id_usuario'])),pagamento=receipt,**receipt),201
+
 
 def sender_profile(cur,salon):
     cur.execute('SELECT DADOS FROM MP_REMETENTE WHERE ID_BARBEARIA=?',(salon,));row=cur.fetchone();return loads(row[0],{}) if row else {}

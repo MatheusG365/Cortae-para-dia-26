@@ -1,0 +1,6 @@
+.formulario { display: grid; gap: 1rem; margin-block: 1rem; }
+.campos { border: 0; padding: 0; display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.campos label { display: grid; gap: .5rem; }
+.campos input, .campos select { min-height: 44px; width: 100%; box-sizing: border-box; padding: .75rem; border: 1px solid #666; border-radius: 8px; background: #202020; color: #fff; }
+.formulario button { min-height: 44px; padding: .75rem 1rem; cursor: pointer; }
+.formulario button:disabled { opacity: .55; cursor: default; }

@@ -50,8 +50,8 @@ PAGINAS = {
     '/marketplace/favoritos': ('Produtos favoritos', 'Lista os produtos salvos pelo cliente autenticado.'),
     '/marketplace/lista-desejos': ('Lista de desejos independente', 'Lista produtos desejados pelo cliente; salvar ou remover não altera os favoritos. Mostra somente produtos de lojas disponíveis.'),
     '/marketplace/carrinho': ('Carrinho, cupom e checkout por loja', 'Mantém quantidades e variações por cliente, agrupa por loja, permite retirada ou cotação de frete. CEP preenche rua, bairro, cidade e UF via ViaCEP; número/complemento são manuais. Endereços são salvos por cliente, com padrão, seleção, edição e novo endereço; pedidos anteriores preservam seu endereço. Salvar endereço é explícito; editar os campos para uma compra não atualiza automaticamente o cadastro salvo. A opção padrão é carregada na próxima compra, sem guardar endereço no localStorage. Mudanças invalidam frete e resumo. Cupom fixo/percentual é exclusivo da loja e desconta mercadorias, sem frete. Servidor confere validade, limite e resumo; criação reserva estoque e uso, cancelamento permitido restaura uma vez.'),
-    '/marketplace/pedidos': ('Minhas compras', 'Exibe o histórico de pedidos do cliente, pagamento Pix e acompanhamento da entrega.'),
-    '/marketplace/pedidos/:id': ('Detalhes da compra', 'Exibe os itens e preços preservados do pedido, o Pix e o status de retirada ou entrega.'),
+    '/marketplace/pedidos': ('Minhas compras', 'Exibe histórico, pagamento Pix ou cartão virtual Arkhé e acompanhamento da entrega. Cartão: débito em uma parcela ou crédito em até 15; valor bruto vem do pedido. Resultado incerto bloqueia nova cobrança até conferência manual.'),
+    '/marketplace/pedidos/:id': ('Detalhes da compra', 'Exibe itens e preços preservados, Pix ou recibo seguro de cartão e status da entrega. Cartão usa consulta somente local; bruto pago pelo cliente e líquido recebido pela loja permanecem separados.'),
     '/gestao-marketplace': ('Gestão comercial do marketplace', 'Query aba: produtos, fornecedores, cupons, vendas, pedidos ou remetente. Gerencia produtos/variações, preço de compra, margem, promoções, lançamentos, estoque e histórico. Fornecedores e custos são privados. Painel de vendas separa faturamento pago, pedidos, ticket, frete, desconto e lucro com custos históricos; exporta CSV. Remetente usa consulta automática por CEP e salvamento na própria loja. Etiquetas permanecem desabilitadas; cotação e rastreio não compram envios.'),
     '/termos-de-uso': ('Termos de uso e aceite', 'Exibe documento, versão e estado de publicação. Nome e contato do responsável mais pagador válido publicam os termos; documento/endereço do responsável são opcionais e entram na versão quando preenchidos. Rascunho não bloqueia reservas nem exige aceite. Publicado exige aceite da versão atual. Taxa de 1,5% sobre serviços/produtos, sem frete, conforme o pagador configurado; resumo mostra o total antes de confirmar. Mudanças de versão exigem nova conferência e aceite.'),
     '/help': ('Ajuda técnica exclusiva do administrador', 'Acesso por URL e sessão ADM. Catálogo das páginas do site, telas nativas do aplicativo e rotas da API, com fluxo, entradas, saídas e fontes. O administrador consulta o funcionamento do mobile pelo site; não existe painel ADM no aplicativo. Busca e filtros por origem, área e método; código por ID opaco com credenciais ocultadas. Swagger e /openapi.json também exigem ADM.'),
@@ -238,6 +238,13 @@ def _backend(memo):
                 'Lê no máximo 500 KB e oculta trechos com credenciais literais, mantendo os números das linhas.',
                 'Retorna o código como texto em JSON e proíbe o cache da resposta.'])
         if protegido: funcionamento.append('Lê a sessão com decodificar_token; essa função recarrega o perfil ativo no banco antes de continuar.')
+        if regra.rule == '/pagamentos/cartao' or regra.rule.endswith('/cartao') and regra.rule.startswith('/marketplace/pedidos/'):
+            funcionamento.extend([
+                'Confere permissão, trava o alvo e usa somente o total histórico do servidor.',
+                'Confirma PAGAMENTO_CARTAO como processando antes do POST /api/v1/vendas/cartao; não repete envio automaticamente.',
+                'Persiste somente recibo aprovado seguro; número completo, CVV e PIN não entram em banco, logs nem auditoria.',
+                'Timeout, 409 ou resultado incerto bloqueiam outros pagamentos até conferência manual; consulta de cartão é somente local.'
+            ])
         if entradas: funcionamento.append('Recebe os campos listados em Entradas e aplica as validações presentes no código.')
         if 'conectar_banco' in chamadas: funcionamento.append('Abre uma conexão com o banco; consulte o código para os filtros e operações desta rota.')
         if chamadas: funcionamento.append('Chamadas diretas: ' + ', '.join(chamadas) + '.')

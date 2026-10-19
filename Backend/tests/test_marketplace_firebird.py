@@ -12,6 +12,7 @@ import main
 import marketplace as mp
 from migrations import marketplace_schema
 from migrations import termos_schema
+from migrations import arkhe_cartao_schema
 import termos
 from test_marketplace import PRODUCT,ADDRESS
 
@@ -29,6 +30,7 @@ class MarketplaceFirebird(unittest.TestCase):
         finally:cur.close();con.close()
         with patch.object(marketplace_schema,'conectar_banco',side_effect=self.connect):marketplace_schema.migrar_marketplace();marketplace_schema.migrar_marketplace()
         with patch.object(termos_schema,'conectar_banco',side_effect=self.connect):termos_schema.migrar_termos_taxa();termos_schema.migrar_termos_taxa()
+        with patch.object(arkhe_cartao_schema,'conectar_banco',side_effect=self.connect):arkhe_cartao_schema.migrar_cartao();arkhe_cartao_schema.migrar_cartao()
         self.addCleanup(patch.stopall);patch.object(mp,'conectar_banco',side_effect=self.connect).start();patch.object(mp,'registrar_log').start()
         # Exercise the published policy regardless of the developer's .env.
         fixture_policy=MarketplaceFirebird.fee_policy(self,'barbearia');fixture_policy.start();self.addCleanup(fixture_policy.stop)

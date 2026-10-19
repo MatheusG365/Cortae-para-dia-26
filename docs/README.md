@@ -4,6 +4,8 @@ Esta pasta reúne documentação de integração e relatórios históricos. A ap
 
 ## Auditoria mais recente
 
+[Cartão virtual Arkhé — 19/10/2026](validacoes/ARKHE_CARTAO_2026-10-19.md): agendamentos e marketplace no site/aplicativo, migração compatível com ODS 13.0, bloqueio de cobrança repetida e snapshots sem credenciais. Inclui limites da validação e situação da revogação anterior.
+
 [Drive central e WAHA — 19/10/2026](validacoes/DRIVE_WAHA_2026-10-19.md): autorização Drive renovada, 19 imagens reais restauradas, 44 testes focados e instalação WSL/Docker aguardando reinício Windows para iniciar WAHA.
 
 [Android com Python de 32 bits — 19/10/2026](validacoes/MOBILE_ANDROID_PYTHON32_2026-10-19.md): execução real no emulador, compra e agendamento isolados, 36 rotas autenticadas e correção da agenda.

@@ -1247,6 +1247,13 @@ def cancelar_agendamento(id_agendamento):
             if not linha: return resposta_erro('Agendamento não encontrado.', 404)
             if not acesso_agendamento(cursor, usuario, linha):
                 return resposta_erro('Sem permissão para cancelar este agendamento.', 403)
+            from arkhe_cartao import obter_tentativa, CartaoErro, resposta_erro as erro_cartao
+            try:
+                tentativa = obter_tentativa(cursor, 'agendamento', id_agendamento)
+                if tentativa and tentativa['estado'] in ('processando', 'incerto'):
+                    return erro_cartao(CartaoErro('Confira o recebimento do cartão na Arkhé antes de cancelar.', 409, tentativa['estado']))
+            except CartaoErro as exc:
+                return erro_cartao(exc)
             if linha[9] in ('concluido', 'faltou'):
                 return resposta_erro('Atendimento finalizado não pode ser cancelado.', 400)
             from agenda_gestao import validar_prazo,enfileirar_evento
@@ -1370,6 +1377,14 @@ def registrar_status_atendimento(id_agendamento):
                 return resposta_erro('Agendamento não encontrado.', 404)
             if not acesso_agendamento(cursor, usuario, linha):
                 return resposta_erro('Sem permissão para registrar este atendimento.', 403)
+            if status == 'faltou':
+                from arkhe_cartao import obter_tentativa, CartaoErro, resposta_erro as erro_cartao
+                try:
+                    tentativa = obter_tentativa(cursor, 'agendamento', id_agendamento)
+                    if tentativa and tentativa['estado'] in ('processando', 'incerto'):
+                        return erro_cartao(CartaoErro('Confira o recebimento do cartão na Arkhé antes de registrar falta.', 409, tentativa['estado']))
+                except CartaoErro as exc:
+                    return erro_cartao(exc)
             if linha[9] not in ('agendado', 'confirmado'):
                 return resposta_erro('Este agendamento já foi finalizado ou cancelado.', 400)
             if linha[5] > datetime.now():

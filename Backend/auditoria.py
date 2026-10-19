@@ -30,6 +30,12 @@ _CAMPOS_SENSIVEIS = {
     "API_KEY",
     "CLIENT_SECRET",
     "CHAVE_PIX",
+    "NUMERO_CARTAO",
+    "CARD_NUMBER",
+    "PAN",
+    "CVV",
+    "CVC",
+    "PIN",
 }
 
 
@@ -92,6 +98,15 @@ def _obter_id_usuario_token():
     return dados.get('id_usuario') if dados else None
 
 
+def _redigir_cartao_aninhado(valor):
+    if isinstance(valor, dict):
+        return {key: ('[PROTEGIDO]' if str(key).upper() in _CAMPOS_SENSIVEIS
+                      else _redigir_cartao_aninhado(item)) for key, item in valor.items()}
+    if isinstance(valor, (list, tuple, set)):
+        return [_redigir_cartao_aninhado(item) for item in valor]
+    return valor
+
+
 def _valor_para_texto(valor, campo=None):
     """Converte valores para VARCHAR(1000), protegendo dados sensíveis."""
     campo = str(campo or "").upper()
@@ -127,6 +142,7 @@ def _valor_para_texto(valor, campo=None):
         try:
             if isinstance(valor, set):
                 valor = sorted(valor)
+            valor = _redigir_cartao_aninhado(valor)
             texto = json.dumps(valor, ensure_ascii=False, default=str)
         except Exception:
             texto = str(valor)

@@ -32,10 +32,11 @@ def aplicar():
     from .marketplace_schema import migrar_marketplace
     from .termos_schema import migrar_termos_taxa
     from .image_storage_schema import migrar_imagens
+    from .arkhe_cartao_schema import migrar_cartao
     for atualizar in (migrar_visagismo, migrar_financeiro, inicializar_banco,
                       migrar_agenda, migrar_gestao_agenda, migrar_gestao,
                       migrar_ranking_avaliacoes, migrar_metas, migrar_marketplace,
-                      migrar_termos_taxa, migrar_imagens):
+                      migrar_termos_taxa, migrar_imagens, migrar_cartao):
         atualizar()
     return conferir()
 

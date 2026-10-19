@@ -21,7 +21,7 @@ class PaymentBehavior(unittest.TestCase):
         con=MagicMock();cur=con.cursor.return_value
         last={'sql':''}
         cur.execute.side_effect=lambda sql,*args:last.update(sql=sql)
-        cur.fetchone.side_effect=lambda:None if 'PLATAFORMA_TAXA' in last['sql'] else (value,)
+        cur.fetchone.side_effect=lambda:None if any(table in last['sql'] for table in ('PLATAFORMA_TAXA','PAGAMENTO_CARTAO')) else (value,)
         return con,cur
 
     def test_payment_value_reads_booking_snapshot(self):
@@ -93,7 +93,7 @@ class PaymentBehavior(unittest.TestCase):
         self.assertTrue(any("TIPO = 'pix_pago'" in c.args[0] for c in cur.execute.call_args_list))
 
     def test_payment_provider_failure_never_creates_fake_checkout_or_finance(self):
-        for path in ('/pagamentos/pix','/pagamentos/boleto','/pagamentos/cartao'):
+        for path in ('/pagamentos/pix','/pagamentos/boleto'):
             con,cur=self.connection()
             with self.subTest(path=path),patch.object(pagamento,'obter_usuario_logado',return_value=self.user),patch.object(pagamento,'conectar_banco',return_value=con),patch.object(pagamento,'buscar_agendamento',return_value=self.row),patch.object(pagamento,'pode_ver_agendamento',return_value=True),patch.object(pagamento,'pegar_id_barbearia_alvo',return_value=None),patch.object(pagamento,'_chamar',side_effect=RuntimeError('provider unavailable')),patch.object(pagamento,'registrar_log'):
                 response=self.client.post(path,json={'id_agendamento':91})

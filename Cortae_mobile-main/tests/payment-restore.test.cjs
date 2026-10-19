@@ -41,6 +41,8 @@ function harness(responses) {
     "expo-clipboard": {},
     "react-native-qrcode-svg": "QRCode",
     "./clientRules": { canRequestBookingCharge: () => false },
+    "./CardArkhe": { CardReceipt: "CardReceipt" },
+    "./cardRules": require("../src/features/client/cardRules.js"),
     "../../lib/api": {
       api: async (url, options) => {
         calls.push({ url, options });
@@ -78,10 +80,10 @@ function harness(responses) {
     },
     { filename },
   );
-  const render = () =>
-    module.exports.default({
-      booking: { id_agendamento: 91, status: "agendado" },
-    });
+  const render = () => {
+    const screen = module.exports.default({ booking: { id_agendamento: 91, status: "agendado" } });
+    return screen.type(screen.props);
+  };
   function elements(tree, matches) {
     if (!tree || typeof tree !== "object") return [];
     if (Array.isArray(tree))
