@@ -69,6 +69,7 @@ class MarketplaceImages(unittest.TestCase):
 
     def test_real_batch_compresses_product_photo_before_mock_drive_upload(self):
         import image_storage
+        self.cur.fetchone.return_value=None  # No active private reference to the newly created Drive object.
         provider=MagicMock();provider.name='google_drive';provider.put.return_value='private-drive-file'
         with patch.object(mp,'ImageBatch',image_storage.ImageBatch),patch.object(image_storage,'_provider',return_value=provider),patch.object(image_storage,'_table_exists',return_value=True):
             self.call_save(files=[(PNG,'product.png')])
@@ -83,6 +84,7 @@ class MarketplaceImages(unittest.TestCase):
 
     def test_real_batch_failed_business_commit_deletes_only_new_drive_object(self):
         import image_storage
+        self.cur.fetchone.return_value=None
         provider=MagicMock();provider.name='google_drive';provider.put.return_value='new-private-file'
         self.con.commit.side_effect=RuntimeError('database failure')
         with patch.object(mp,'ImageBatch',image_storage.ImageBatch),patch.object(image_storage,'_provider',return_value=provider),patch.object(image_storage,'_table_exists',return_value=True):

@@ -48,7 +48,7 @@ class Cursor:
 class Provider:
     name = 'google_drive'
     def __init__(self):
-        self.files = {}; self.deleted = []; self.trashed = []
+        self.files = {}; self.deleted = []; self.trashed = []; self.published = []
     def put(self, area, filename, data):
         identifier = 'private-' + filename; self.files[identifier] = data; return identifier
     def get(self, identifier, limit):
@@ -57,6 +57,8 @@ class Provider:
         self.deleted.append(identifier); self.files.pop(identifier, None)
     def trash(self, identifier):
         self.trashed.append(identifier); self.files.pop(identifier, None)
+    def publish_public(self, identifier):
+        self.published.append(identifier)
 
 
 class CompressionTests(unittest.TestCase):
@@ -217,7 +219,7 @@ class MetadataTests(unittest.TestCase):
     def test_provider_missing_credentials_is_503_without_local_fallback(self):
         self.provider_patch.stop()
         try:
-            with patch.dict(app.config, IMAGE_STORAGE_PROVIDER='google_drive', GOOGLE_DRIVE_CREDENTIALS_FILE=''):
+            with patch.dict(app.config, IMAGE_STORAGE_PROVIDER='google_drive', GOOGLE_DRIVE_CREDENTIALS_FILE='', GOOGLE_DRIVE_CREDENTIALS_JSON=''):
                 with self.assertRaises(storage.ImageStorageError) as error:
                     storage.ImageBatch(self.cur).save(picture(), 'perfil', 7, 'profile')
                 self.assertEqual(error.exception.status, 503)
@@ -255,6 +257,17 @@ class DriveTests(unittest.TestCase):
         first = drive.GoogleDriveStorage(self.config); second = drive.GoogleDriveStorage(self.config)
         self.assertIs(first.credentials, second.credentials)
         self.assertIs(first.credentials_lock, second.credentials_lock)
+
+    def test_explicit_publication_grants_reader_only_on_exact_file_not_folder(self):
+        provider = drive.GoogleDriveStorage(self.config)
+        response = b'{"id":"anyoneWithLink","type":"anyone","role":"reader","allowFileDiscovery":false}'
+        with patch.object(provider, '_request', return_value=response) as request:
+            self.assertEqual(provider.publish_public('image_123456789'), 'anyoneWithLink')
+        self.assertEqual(request.call_args.args, ('POST', drive.BASE+'/image_123456789/permissions'))
+        self.assertEqual(request.call_args.kwargs['json'], {'type':'anyone','role':'reader','allowFileDiscovery':False})
+        for raw in (b'{}', b'not json', b'{"id":"public","type":"anyone","role":"writer"}'):
+            with patch.object(provider, '_request', return_value=raw), self.assertRaises(drive.DriveError):
+                provider.publish_public('image_123456789')
 
     def test_missing_upload_folder_is_service_unavailable_but_missing_media_stays_404(self):
         provider = drive.GoogleDriveStorage(self.config)

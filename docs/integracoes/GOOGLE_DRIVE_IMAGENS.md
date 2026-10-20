@@ -1,15 +1,42 @@
-# Imagens privadas no Google Drive
+# Imagens no Google Drive: leitura pública e conteúdo privado
 
-O backend valida o conteúdo real das imagens, aplica a orientação EXIF, reduz a resolução e grava WebP sem os metadados originais. O arquivo fica privado no Drive; o Firebird guarda a referência, o proprietário, a área, o tamanho, a resolução, o hash e o estado. Site e aplicativo continuam pedindo a imagem pela API do Cortaê, preservando as regras de acesso de cada rota.
+O backend valida o conteúdo real das imagens, aplica a orientação EXIF, reduz a resolução e grava WebP sem os metadados originais. As selfies e os resultados de visagismo ficam privados no Drive. As áreas de apresentação pública podem publicar cada arquivo individualmente, sem publicar pastas. O Firebird guarda a referência, o proprietário, a área, o tamanho, a resolução, o hash e o estado. Site e aplicativo continuam pedindo a imagem pela API do Cortaê, preservando as regras de acesso de cada rota.
 
 Com o provedor Google Drive, a aplicação resolve as imagens pelo Firebird e pelo Drive, sem consultar arquivos locais como alternativa. O provedor `local` permanece uma opção explícita de desenvolvimento. Uma referência removida deixa um registro de exclusão. A substituição entra na mesma transação dos dados do cadastro; se a gravação falhar, o sistema preserva a referência anterior e tenta limpar somente os novos uploads.
+
+## Ler as imagens públicas em outro computador
+
+A ausência de `GOOGLE_DRIVE_CREDENTIALS_JSON` e `GOOGLE_DRIVE_CREDENTIALS_FILE` não permite ler um arquivo com `IMAGE_ASSET.PROVIDER=google_drive`: esse provedor é autenticado. Copiar somente código e banco não copia a autorização do servidor. O erro correspondente é HTTP 503; o backend não troca automaticamente de provedor nem busca fotos privadas por links públicos.
+
+O provedor explícito `public_google_drive` resolve essa dependência para `site`, `mobile`, `perfil`, `barbearia`, `marketplace` e `visagismo/cortes`. Ele aceita somente um ID de arquivo já registrado no Firebird. A leitura anônima usa os endpoints HTTPS de download do Drive, não a API `alt=media` sem chave. Redirecionamentos são manuais, limitados a três e aos hosts exatos `drive.usercontent.google.com` e `drive.google.com`, mantendo o mesmo ID. Login, outro host, caminho, porta ou ID são recusados. Proxies e credenciais do ambiente não são utilizados; cookies não seguem entre etapas. Respostas HTML, tamanhos excessivos e conteúdo que não corresponde ao tamanho/SHA-256/WebP registrado são rejeitados.
+
+Esse provedor não envia arquivos nem cria permissões. Nunca o configure como `IMAGE_STORAGE_PROVIDER` para uploads. A origem continua sendo o Google Drive; nenhuma cópia local é usada como fallback. Rotas públicas do Cortaê continuam entregando os bytes e não expõem links ou IDs do Drive nos cabeçalhos.
+
+### Publicar referências existentes: operação administrativa
+
+Esta atualização de código não altera as permissões nem os metadados de arquivos existentes. O administrador deve fazer uma operação explícita, com um backup do banco restaurado e verificado:
+
+1. Produza um manifesto das referências ativas das seis áreas públicas, contendo área, nome, ID, provedor anterior, tamanho e SHA-256. Preserve também as permissões anteriores e o ID de cada permissão criada pela operação. Não registre tokens ou credenciais no manifesto.
+2. Exclua do plano qualquer ID que também apareça em uma referência ativa de `visagismo/fotos` ou `visagismo/resultados`. Essa interseção bloqueia tanto a publicação de uploads quanto a leitura anônima, mesmo se um registro estiver classificado incorretamente.
+3. Com OAuth do administrador, conceda apenas `type=anyone`, `role=reader`, `allowFileDiscovery=false` em cada arquivo aprovado. Não compartilhe a pasta principal, pastas de área, selfies ou resultados.
+4. Baixe cada arquivo sem OAuth e confira tamanho, SHA-256 e WebP. Somente depois marque as referências verificadas como `public_google_drive`. Preserve aliases, nomes, proprietários, slots e hashes. Falhas permanecem no provedor anterior para revisão; não marque uma permissão não confirmada como sucesso.
+5. Para reverter, restaure os provedores anteriores a partir do manifesto e remova somente as permissões criadas pela operação, usando seus IDs. Não remova permissões anteriores do proprietário e não restaure cegamente um banco ativo com dados novos.
+
+Fotos e resultados privados continuam exigindo autenticação e vínculo de proprietário nas rotas do Cortaê e autorização Google no servidor. Um clone sem OAuth não recebe esse conteúdo privado. Use uma API central autorizada ou configure OAuth no servidor que precisa atendê-lo.
+
+### Novos uploads em áreas públicas
+
+`IMAGE_STORAGE_PROVIDER=google_drive` continua sendo o provedor de escrita. `GOOGLE_DRIVE_PUBLIC_AREAS` lista as áreas que devem receber publicação individual após o upload autenticado; o padrão são as seis áreas acima. Um valor vazio mantém todos os novos uploads privados. Incluir fotos ou resultados privados é um erro de configuração e bloqueia o upload; não amplia a política de publicação.
+
+A sequência é: validar/comprimir, enviar com OAuth, confirmar ausência de referência privada ativa para o ID, criar permissão individual de leitura, registrar `public_google_drive` e concluir a transação de negócio. Falha de publicação remove somente o novo upload e conserva a referência anterior. Rollback remove o novo arquivo através do provedor autenticado; a substituição move o arquivo anterior para a lixeira somente depois do commit, também com OAuth. A leitura pública nunca realiza essas mutações.
+
+O Drive e o Firebird não formam uma transação distribuída. Uma interrupção pode deixar um upload órfão, inclusive já público nas áreas configuradas. Preserve os registros operacionais e faça a limpeza administrativa por ID; não publique pastas para corrigir uma falha de entrega.
 
 ## Autorizar a conta usada pelo servidor
 
 ### Acesso pelo site e aplicativo em qualquer aparelho
 
-Todos os aparelhos devem usar a mesma API hospedada. A autorização do Drive fica
-somente nesse servidor; clientes e barbearias não criam credenciais Google.
+Uma implantação pode usar uma API central hospedada; a autorização do Drive fica somente nesse servidor. Um clone em outro computador também consegue ler os arquivos explicitamente registrados como `public_google_drive`, sem receber a autorização privada. Uploads e conteúdo privado continuam exigindo OAuth no servidor; clientes e barbearias não criam credenciais Google.
 Configure `VITE_API_URL` no site e `EXPO_PUBLIC_API_URL` no build do aplicativo
 com a URL HTTPS dessa API. Um backend acessível apenas no computador de
 desenvolvimento não passa a estar hospedado ao publicar o código no GitHub.
@@ -75,7 +102,7 @@ Projetos OAuth externos em **Testing** que solicitam acesso ao Drive têm refres
 
 ## Configurar as pastas existentes
 
-Crie ou selecione uma pasta principal privada da conta. O mapa aponta para oito subpastas, uma por área; as pastas de visagismo podem ficar dentro de uma pasta intermediária `visagismo`. As áreas `site` e `mobile` guardam fotos, banners e logos fixos. Não compartilhe publicamente as imagens no Drive; a API controla a entrega.
+Crie ou selecione uma pasta principal privada da conta. O mapa aponta para oito subpastas, uma por área; as pastas de visagismo podem ficar dentro de uma pasta intermediária `visagismo`. As áreas `site` e `mobile` guardam fotos, banners e logos fixos. Mantenha as pastas privadas. A publicação permitida neste documento é individual e restrita às seis áreas públicas; fotos e resultados pessoais nunca são publicados. A API continua controlando suas próprias rotas e referências.
 
 Guarde fora do projeto um JSON com os IDs reais das pastas. O exemplo abaixo mostra somente o formato; os textos de exemplo devem ser substituídos pelos IDs do seu Drive:
 
@@ -101,6 +128,7 @@ IMAGE_STORAGE_PROVIDER=google_drive
 GOOGLE_DRIVE_CREDENTIALS_FILE=C:/caminho/privado/authorized_user.json
 GOOGLE_DRIVE_FOLDER_IDS_FILE=C:/caminho/privado/pastas.json
 GOOGLE_DRIVE_SHARED_DRIVE_ID=
+GOOGLE_DRIVE_PUBLIC_AREAS=site,mobile,perfil,barbearia,marketplace,visagismo/cortes
 ```
 
 `GOOGLE_DRIVE_FOLDER_IDS_FILE` aponta para o mapa JSON local e prevalece sobre `GOOGLE_DRIVE_FOLDER_IDS`, que também aceita o JSON diretamente. A chave `root` é usada pelo verificador; as oito chaves de área são usadas nos uploads. A chave intermediária `visagismo` é opcional. Um ambiente que usa conta de serviço precisa informar `GOOGLE_DRIVE_SHARED_DRIVE_ID` e conceder acesso adequado à conta de serviço nesse Drive compartilhado.
@@ -161,6 +189,6 @@ Uploads novos precisam da autorização do Google e das tabelas de metadados no 
 
 Sem configuração válida, a API devolve um erro de armazenamento com mensagem própria; não grava silenciosamente no disco como alternativa ao Drive. `IMAGE_STORAGE_PROVIDER=local` é uma escolha explícita de desenvolvimento, não a configuração de produção.
 
-O Drive e o Firebird não participam de uma transação distribuída. A aplicação preserva a referência anterior até o commit e tenta remover uploads não confirmados; interrupções de rede ou do processo podem deixar arquivos privados órfãos para uma limpeza posterior. Não trate uma falha de comunicação como confirmação de upload ou de exclusão.
+O Drive e o Firebird não participam de uma transação distribuída. A aplicação preserva a referência anterior até o commit e tenta remover uploads não confirmados; interrupções de rede ou do processo podem deixar arquivos órfãos, privados ou já publicados individualmente conforme a área, para uma limpeza posterior. Não trate uma falha de comunicação como confirmação de upload ou de exclusão.
 
 As imagens são servidas pela API do Cortaê. URLs públicas originais continuam públicas somente quando já faziam parte da apresentação do estabelecimento; selfies e resultados privados mantêm suas regras de autenticação. IDs do Drive, refresh tokens e Client Secret não precisam ser enviados ao navegador ou ao aplicativo.

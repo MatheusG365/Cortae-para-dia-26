@@ -5,9 +5,9 @@ ETAPAS = [
     'O servidor decodifica os bytes reais: JPEG, PNG, WebP ou GIF estático, até 10 MB e 24 megapixels por arquivo. Animações e arquivos inválidos são rejeitados.',
     'Aplica a orientação EXIF, limita a maior dimensão a 512 px no perfil e 1600 px nas demais imagens, preservando transparência quando existente.',
     'Converte para WebP, escolhe a menor codificação entre as candidatas com e sem perdas e remove EXIF, GPS, comentários e demais metadados.',
-    'Envia o arquivo privado ao Google Drive. O Firebird guarda referência, área, vínculo, dimensões, tamanho e hash; não recebe o conteúdo binário da foto.',
+    'Envia o arquivo ao Google Drive com OAuth exclusivo do servidor. Nas áreas públicas configuradas, confirma a publicação individual para leitura antes de registrar a referência; fotos e resultados do visagismo permanecem privados. O Firebird guarda referência, área, vínculo, dimensões, tamanho e hash; não recebe o conteúdo binário da foto.',
     'A gravação da referência acompanha a transação do cadastro. Falha desfaz a referência e tenta limpar o upload novo; substituições preservam o anterior até confirmar a transação.',
-    'Os clientes recebem URLs da API. O servidor consulta a referência, verifica permissão quando necessária, lê o Drive e confere tamanho/hash antes de entregar bytes image/webp.',
+    'Os clientes recebem URLs da API. O servidor consulta a referência e verifica permissão quando necessária. Lê anonimamente apenas arquivos públicos registrados como public_google_drive; os privados exigem OAuth no servidor. Confere tamanho, hash e WebP antes de entregar bytes image/webp.',
 ]
 TIPOS = [
     'Perfil: foto pública, redimensionada até 512 px; exclusão e substituição respeitam o vínculo atual, inclusive nas URLs antigas.',
@@ -20,10 +20,12 @@ TIPOS = [
 ]
 OBSERVACOES = [
     'No modo Google Drive não há fallback para imagens locais. Aliases registrados mantêm URLs antigas compatíveis mesmo após remover as pastas de fotos.',
+    'As áreas públicas são site, mobile, perfil, barbearia, marketplace e visagismo/cortes. Cada arquivo precisa de publicação individual confirmada e referência explícita public_google_drive para ser lido sem credenciais Google em outro computador; não se publica a pasta inteira. Uploads continuam exigindo OAuth no servidor.',
+    'Fotos e resultados do visagismo nunca recebem leitura anônima: continuam exigindo autenticação, vínculo autorizado e OAuth no servidor. A ausência de OAuth não amplia o acesso nem provoca fallback público.',
     'Imagem ausente ou removida retorna 404; Drive indisponível ou sem configuração retorna 503; limites de arquivo/resolução/tamanho retornam 413. Arquivo inválido retorna 400 e foto privada sem permissão retorna 403.',
     'A migração é uma operação técnica explícita, com backup verificado e revalidação das referências. A CLI pode importar imagens locais, o manifesto fixo site/mobile e referências HTTPS existentes do catálogo com proteção SSRF; não importa novas URLs automaticamente.',
     'Uma imagem muito otimizada pode não ficar menor depois da conversão; o servidor respeita os limites e não promete redução fixa.',
-    'A limpeza remota é uma tentativa: interrupções ou indisponibilidade podem deixar um arquivo privado pendente de limpeza, sem referência pública válida.',
+    'A limpeza remota usa OAuth e é uma tentativa: interrupções ou indisponibilidade podem deixar um arquivo privado ou público pendente de limpeza. Falha na publicação tenta remover somente o upload novo e preserva a imagem anterior.',
     'Credenciais e configuração OAuth ficam exclusivamente no servidor. Se o OAuth externo estiver em modo de teste e usar os escopos do Drive, o refresh token normalmente expira em sete dias; a equipe deve preparar a configuração para produção.',
     'Esta documentação é somente consulta: não abre o Drive, não envia imagens, não executa migração, não altera permissões e não testa integrações.',
 ]
@@ -48,7 +50,7 @@ def catalogo_imagens(backend):
             for route in backend if normalizar(route['rota']) in MEDIA_PATHS | UPLOAD_PATHS
             or route['rota'] == '/visagismo/<int:id_visagismo>/simular']
     return {'titulo': 'Imagens do site e do aplicativo no Google Drive',
-            'descricao': 'Uploads, logos, banners, fotos de produtos e visagismo compartilham o armazenamento privado; a API controla a entrega das imagens ao site e ao mobile.',
+            'descricao': 'Site e aplicativo usam imagens no Google Drive: arquivos públicos publicados individualmente podem ser lidos sem credenciais Google; fotos e resultados privados do visagismo mantêm OAuth e controle de acesso pela API.',
             'etapas': list(ETAPAS), 'tipos': list(TIPOS),
             'observacoes': list(OBSERVACOES), 'apis': apis}
 

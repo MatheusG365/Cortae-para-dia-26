@@ -18,7 +18,7 @@ from flask import current_app, send_file, abort
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from application import app, conectar_banco, erro_json
-from google_drive_storage import GoogleDriveStorage, DriveError
+from google_drive_storage import GoogleDriveStorage, PublicGoogleDriveStorage, DriveError, PUBLIC_AREAS, PUBLIC_PROVIDER
 
 AREAS = {'perfil', 'barbearia', 'visagismo/cortes', 'visagismo/fotos',
          'visagismo/resultados', 'marketplace', 'site', 'mobile'}
@@ -162,15 +162,35 @@ class _LocalStorage:
 
 
 def _provider(name=None):
+    explicit = name is not None
     name = name or current_app.config.get('IMAGE_STORAGE_PROVIDER', 'google_drive')
     try:
         if name == 'google_drive':
             return GoogleDriveStorage(current_app.config)
+        if name == PUBLIC_PROVIDER and explicit:
+            return PublicGoogleDriveStorage()
         if name == 'local':
             return _LocalStorage(current_app.config)
         raise ImageStorageError('Provedor de imagens não configurado.')
     except DriveError as error:
         raise ImageStorageError(str(error)) from None
+
+
+def _public_upload_areas():
+    configured = current_app.config.get('GOOGLE_DRIVE_PUBLIC_AREAS', PUBLIC_AREAS)
+    if not isinstance(configured, (str, set, frozenset, list, tuple)):
+        raise ImageStorageError('Configuração de áreas públicas inválida.')
+    values = set(configured.split(',')) if isinstance(configured, str) else set(configured)
+    values = {str(area).strip() for area in values if str(area).strip()}
+    if not values <= PUBLIC_AREAS:
+        raise ImageStorageError('A configuração pública não pode incluir imagens privadas.')
+    return values
+
+
+def _private_reference(cur, identifier):
+    cur.execute('SELECT FIRST 1 1 FROM IMAGE_ASSET WHERE FILE_ID=? AND ATIVO=1 '
+                'AND AREA IN (?,?)', (identifier, 'visagismo/fotos', 'visagismo/resultados'))
+    return cur.fetchone() is not None
 
 
 @contextmanager
@@ -261,6 +281,16 @@ class ImageBatch:
         try:
             if not _table_exists(self.cursor, 'IMAGE_ASSET') or not _table_exists(self.cursor, 'IMAGE_SLOT'):
                 raise ImageStorageError('O banco precisa da migração de armazenamento de imagens.')
+            if provider.name == 'google_drive' and area in _public_upload_areas():
+                if _private_reference(self.cursor, identifier):
+                    # A reused private object is not owned by this upload. Never publish or delete it.
+                    self.new.remove((provider, asset))
+                    raise ImageStorageError('A referência da imagem já pertence a uma imagem privada.')
+                try:
+                    provider.publish_public(identifier)
+                except DriveError as error:
+                    raise ImageStorageError(str(error)) from None
+                asset.provider = PUBLIC_PROVIDER
             if slot is not None:
                 self.delete(area, owner_id, slot)
             self.cursor.execute('INSERT INTO IMAGE_ASSET (' + COLUMNS + ') VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
@@ -273,11 +303,12 @@ class ImageBatch:
         except Exception:
             # Caller still rolls back its business transaction. The uploaded file can
             # safely be deleted because no committed business row references it yet.
-            try:
-                provider.delete(identifier)
-                self.new.remove((provider, asset))
-            except Exception:
-                current_app.logger.warning('Imagem pendente de limpeza após falha de gravação.')
+            if (provider, asset) in self.new:
+                try:
+                    provider.delete(identifier)
+                    self.new.remove((provider, asset))
+                except Exception:
+                    current_app.logger.warning('Imagem pendente de limpeza após falha de gravação.')
             raise
 
     def delete(self, area, owner_id, slot):
@@ -304,7 +335,8 @@ class ImageBatch:
         # Old metadata remains for audit/revocation. Private media deletion is best effort.
         for asset in self.old:
             try:
-                _provider(asset.provider).trash(asset.file_id)
+                # Public reads need no secret; cleanup remains an authenticated write.
+                _provider('google_drive' if asset.provider == PUBLIC_PROVIDER else asset.provider).trash(asset.file_id)
             except Exception:
                 current_app.logger.warning('Imagem substituída pendente de limpeza no armazenamento.')
         self._close()
@@ -333,6 +365,12 @@ def read_image(area, filename, legacy_folder=None, cursor=None):
     if asset:
         if not asset.active:
             raise FileNotFoundError('Imagem removida.')
+        if asset.provider == PUBLIC_PROVIDER:
+            if area not in PUBLIC_AREAS:
+                raise ImageStorageError('Imagens privadas exigem armazenamento autenticado.')
+            with _cursor(cursor) as cur:
+                if _private_reference(cur, asset.file_id):
+                    raise ImageStorageError('A imagem pública conflita com uma referência privada.')
         try:
             content = _provider(asset.provider).get(asset.file_id, min(MAX_OUTPUT, asset.size))
         except DriveError as error:

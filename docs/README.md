@@ -4,6 +4,8 @@ Esta pasta reúne documentação de integração e relatórios históricos. A ap
 
 ## Auditoria mais recente
 
+[Imagens em outra instalação — 20/10/2026](validacoes/IMAGENS_PORTAVEIS_2026-10-20.md): 64 imagens públicas com leitura sem OAuth, 27 referências privadas protegidas e verificação visual numa cópia separada do projeto.
+
 [Firebird 4.0.4.3010 — 19/10/2026](validacoes/FIREBIRD_4_0_4_2026-10-19.md): dois bancos restaurados no motor exato de 32 bits, regras recompiladas, dados preservados e snapshots ODS 13.0.
 
 [Cartão virtual Arkhé — 19/10/2026](validacoes/ARKHE_CARTAO_2026-10-19.md): agendamentos e marketplace no site/aplicativo, migração compatível com ODS 13.0, bloqueio de cobrança repetida e snapshots sem credenciais. Inclui limites da validação e situação da revogação anterior.

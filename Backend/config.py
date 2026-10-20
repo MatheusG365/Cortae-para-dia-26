@@ -104,6 +104,7 @@ PERFIL_FOLDER = os.path.join(
 IMAGE_STORAGE_PROVIDER = os.getenv('IMAGE_STORAGE_PROVIDER', 'google_drive').strip().lower()
 # Full authorized_user JSON (including refresh_token), held only by the server.
 GOOGLE_DRIVE_CREDENTIALS_JSON = os.getenv('GOOGLE_DRIVE_CREDENTIALS_JSON', '').strip()
+GOOGLE_DRIVE_PUBLIC_AREAS = os.getenv('GOOGLE_DRIVE_PUBLIC_AREAS', 'site,mobile,perfil,barbearia,marketplace,visagismo/cortes').strip()
 GOOGLE_DRIVE_CREDENTIALS_FILE = os.getenv('GOOGLE_DRIVE_CREDENTIALS_FILE', '').strip()
 GOOGLE_DRIVE_FOLDER_IDS = (os.getenv('GOOGLE_DRIVE_FOLDER_IDS', '').strip()
                           or Path(BASE_DIR, 'google_drive_folders.json').read_text(encoding='utf-8'))
