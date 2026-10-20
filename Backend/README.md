@@ -121,6 +121,12 @@ requisições simultâneas.
 
 ## Execução local
 
+Use Firebird **4.0.4.3010 Windows x86** e bancos ODS **13.0**. O configurador da raiz instala
+o ZIP oficial validado, sem serviço/admin, em `%LOCALAPPDATA%\Cortae\runtimes\Firebird-4.0.4.3010-Win32`.
+O iniciador gerencia somente o runtime local na porta **3054**; servidores remotos ou portas
+explicitamente configuradas continuam respeitados e precisam ter a versão exigida.
+`DB_NAME` e `LOG_DB_NAME` mantêm os caminhos padrão anteriores.
+
 Use Python 3.12 ou superior **de 32 bits (Windows x86)**. Na raiz do projeto,
 `Configurar-Cortae.cmd` valida o interpretador, prepara `Backend/.venv` e instala o lock completo.
 Para escolher explicitamente um Python instalado, use
@@ -131,6 +137,7 @@ Na pasta `Backend`:
 
 ```powershell
 .\.venv\Scripts\python.exe runtime_check.py
+.\.venv\Scripts\python.exe firebird_runtime.py
 .\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
 .\.venv\Scripts\python.exe -m pip check
 .\.venv\Scripts\python.exe main.py
@@ -138,6 +145,12 @@ Na pasta `Backend`:
 
 A aplicação valida a arquitetura antes de carregar dependências ou acessar dados, incluindo
 importações WSGI. Python de 64 bits ou anterior a 3.12 encerra com mensagem de correção.
+
+`firebird_runtime.py` confere a versão do servidor pela Services API e ODS dos dois bancos em
+transação somente de leitura. `main.py` executa a conferência antes das rotas e do trabalhador
+de e-mail; uma hospedagem WSGI deve executar o mesmo comando na etapa anterior à inicialização.
+Não há migração ou substituição automática de bancos. Preserve backup antes de qualquer troca:
+ODS 13.1 e regras compiladas pelo Firebird 5 podem exigir reconstrução verificada em cópias.
 
 ## Banco já preparado
 

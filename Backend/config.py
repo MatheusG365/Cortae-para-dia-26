@@ -29,7 +29,7 @@ MAX_CONTENT_LENGTH = int(os.getenv('MAX_CONTENT_LENGTH', str(85 * 1024 * 1024)))
 # ==========================================================
 
 DB_HOST = os.getenv('DB_HOST', 'localhost')
-DB_PORT = int(os.getenv('DB_PORT', '3050'))
+DB_PORT = int(os.getenv('DB_PORT', '3054'))
 DB_TIMEOUT = int(os.getenv('DB_TIMEOUT', '10'))
 
 DB_NAME = os.getenv('DB_NAME', os.path.join(BASE_DIR, 'CORTAE.FDB'))
@@ -53,7 +53,7 @@ LOG_DB_NAME = os.getenv(
     os.path.join(BASE_DIR, 'LOG_CORTAE.FDB')
 )
 LOG_DB_USER = os.getenv('LOG_DB_USER', DB_USER)
-LOG_DB_PASSWORD = os.getenv('LOG_DB_PASSWORD', DB_PASSWORD)
+LOG_DB_PASSWORD = os.getenv('LOG_DB_PASSWORD') or DB_PASSWORD
 LOG_DB_TABLE = os.getenv('LOG_DB_TABLE', 'LOG_ALTERACAO')
 
 # False: se o banco de LOG estiver fora do ar, a ação principal continua e o

@@ -171,7 +171,7 @@ class RankingFirebirdIsolado(unittest.TestCase):
     def setUp(self):
         self.directory = Path(tempfile.mkdtemp(prefix='cortae-ranking-')).resolve()
         self.database = self.directory / 'RANKING-AVALIACOES-QA.FDB'
-        self.options = dict(host='127.0.0.1', port=int(os.environ.get('RANKING_TEST_FIREBIRD_PORT', '3050')),
+        self.options = dict(host='127.0.0.1', port=int(os.environ.get('RANKING_TEST_FIREBIRD_PORT', main.app.config['DB_PORT'])),
             user=os.environ.get('RANKING_TEST_FIREBIRD_USER', 'SYSDBA'),
             password=os.environ.get('RANKING_TEST_FIREBIRD_PASSWORD', os.environ.get('DB_PASSWORD', main.app.config['DB_PASSWORD'])), database=str(self.database), charset='UTF8')
         con = firebirdsql.create_database(**self.options); cur = con.cursor()

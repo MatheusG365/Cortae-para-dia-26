@@ -7,6 +7,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = $PSScriptRoot
+. (Join-Path $projectRoot 'Firebird-Cortae.ps1')
 
 function Get-BackendSetting([string]$Name, [string]$Default) {
     $configured = [Environment]::GetEnvironmentVariable($Name, 'Process')
@@ -108,6 +109,9 @@ $previousPort = [Environment]::GetEnvironmentVariable('PORT', 'Process')
 $previousHost = [Environment]::GetEnvironmentVariable('API_HOST', 'Process')
 $previousProxy = [Environment]::GetEnvironmentVariable('CORTAE_API_PROXY_TARGET', 'Process')
 try {
+    Start-CortaeFirebird $projectRoot
+    & $pythonPath (Join-Path $projectRoot 'Backend\firebird_runtime.py')
+    if ($LASTEXITCODE -ne 0) { throw 'Firebird ou bancos incompatíveis. Corrija a configuração antes de iniciar a API.' }
     $env:PORT = [string]$ApiPort
     $env:API_HOST = $ApiHost
     $env:CORTAE_API_PROXY_TARGET = $apiUrl
@@ -118,16 +122,20 @@ try {
     $processes += @{ Pid = $frontend.Id; Script = $vitePath; Started = $frontend.StartTime.ToUniversalTime().ToString('o') }
     $processes | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $runtimePath 'processes.json') -Encoding UTF8
     $ready = $false
+    $lastReadinessError = ''
     for ($attempt = 0; $attempt -lt 20; $attempt++) {
         Start-Sleep -Seconds 1
         try {
-            $health = Invoke-RestMethod -Uri "$apiUrl/health" -TimeoutSec 2
-            $front = Invoke-WebRequest -Uri "$frontendUrl/" -TimeoutSec 2 -UseBasicParsing
+            $health = Invoke-RestMethod -Uri "$apiUrl/health" -TimeoutSec 10
+            $front = Invoke-WebRequest -Uri "$frontendUrl/" -TimeoutSec 5 -UseBasicParsing
             if ($health.pronto -and $front.StatusCode -eq 200) { $ready = $true; break }
-        } catch { }
+        } catch { $lastReadinessError = $_.Exception.Message }
         if ($backend.HasExited -or $frontend.HasExited) { break }
     }
-    if (-not $ready) { throw 'Falha ao iniciar. Consulte .runtime\backend-error.log e frontend-error.log.' }
+    if (-not $ready) {
+        $detail = if ($lastReadinessError) { " Ultima verificacao: $lastReadinessError" } else { '' }
+        throw "Falha ao iniciar.$detail Consulte .runtime\backend.log, backend-error.log, frontend.log e frontend-error.log; os logs foram preservados."
+    }
     Write-Host "Cortaê neste computador: $frontendUrl"
     Write-Host "Saúde: $apiUrl/health"
     Write-Host "Documentação: $apiUrl/docs"

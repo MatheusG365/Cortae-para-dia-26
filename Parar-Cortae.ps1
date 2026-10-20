@@ -1,7 +1,8 @@
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath($PSScriptRoot)
+. (Join-Path $projectRoot 'Firebird-Cortae.ps1')
 $statePath = Join-Path $projectRoot '.runtime\processes.json'
-if (-not (Test-Path -LiteralPath $statePath)) { Write-Host 'Nenhum processo registrado.'; exit 0 }
+if (-not (Test-Path -LiteralPath $statePath)) { Stop-CortaeFirebird $projectRoot; Write-Host 'Nenhum processo de API/frontend registrado.'; exit 0 }
 $states = @(Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json)
 $remaining = @()
 foreach ($state in $states) {
@@ -50,4 +51,7 @@ foreach ($state in $states) {
 }
 if ($remaining.Count) {
     $remaining | ConvertTo-Json | Set-Content -LiteralPath $statePath -Encoding UTF8
-} else { Remove-Item -LiteralPath $statePath -Force }
+} else {
+    Remove-Item -LiteralPath $statePath -Force
+    Stop-CortaeFirebird $projectRoot
+}

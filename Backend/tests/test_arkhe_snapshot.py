@@ -70,7 +70,7 @@ class SnapshotFirebird(unittest.TestCase):
         self.directory = Path(tempfile.mkdtemp(prefix='cortae-arkhe-snapshot-')).resolve()
         self.database = self.directory / 'ARKHE-SNAPSHOT-QA.FDB'
         self.connection_options = dict(host='127.0.0.1',
-            port=int(os.environ.get('ARKHE_TEST_FIREBIRD_PORT', '3050')),
+            port=int(os.environ.get('ARKHE_TEST_FIREBIRD_PORT', main.app.config['DB_PORT'])),
             user=os.environ.get('ARKHE_TEST_FIREBIRD_USER', 'SYSDBA'),
             password=os.environ.get('ARKHE_TEST_FIREBIRD_PASSWORD', os.environ.get('DB_PASSWORD', main.app.config['DB_PASSWORD'])),
             database=str(self.database), charset='UTF8')

@@ -34,7 +34,8 @@ PAN='4000000000000082'
 CVV='082'
 CARD={'numero_cartao':PAN,'validade':'09/2031','cvv':CVV,'tipo':'CREDITO','parcelas':1}
 QA_ROOT=Path(os.environ.get('ARKHE_CARD_QA_ROOT',r'C:\Users\mathe\Documents\Backups-Cortae\arkhe-card-20261019')).resolve()
-GBAK=Path(os.environ.get('ARKHE_TEST_GBAK',r'C:\Program Files (x86)\Firebird\Firebird_5_0\gbak.exe'))
+GBAK=Path(os.environ.get('ARKHE_TEST_GBAK', str(Path(os.environ.get('CORTAE_FIREBIRD_HOME') or
+    str(Path(os.environ.get('LOCALAPPDATA',Path.home()))/'Cortae'/'runtimes'/'Firebird-4.0.4.3010-Win32'))/'gbak.exe')))
 
 
 class FakeResponse:

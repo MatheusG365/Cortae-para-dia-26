@@ -22,4 +22,6 @@ if (-not (Test-Path -LiteralPath (Join-Path $backendPath '.env'))) {
     Copy-Item -LiteralPath (Join-Path $backendPath '.env.example') -Destination (Join-Path $backendPath '.env')
     Write-Host 'Preencha Backend\.env antes de iniciar.'
 }
+. (Join-Path $projectRoot 'Firebird-Cortae.ps1')
+Initialize-CortaeFirebird $projectRoot $backendPython
 Write-Host 'Dependências instaladas. Execute Iniciar-Cortae.cmd.'

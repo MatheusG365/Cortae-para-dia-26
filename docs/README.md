@@ -4,6 +4,8 @@ Esta pasta reúne documentação de integração e relatórios históricos. A ap
 
 ## Auditoria mais recente
 
+[Firebird 4.0.4.3010 — 19/10/2026](validacoes/FIREBIRD_4_0_4_2026-10-19.md): dois bancos restaurados no motor exato de 32 bits, regras recompiladas, dados preservados e snapshots ODS 13.0.
+
 [Cartão virtual Arkhé — 19/10/2026](validacoes/ARKHE_CARTAO_2026-10-19.md): agendamentos e marketplace no site/aplicativo, migração compatível com ODS 13.0, bloqueio de cobrança repetida e snapshots sem credenciais. Inclui limites da validação e situação da revogação anterior.
 
 [Drive central e WAHA — 19/10/2026](validacoes/DRIVE_WAHA_2026-10-19.md): autorização Drive renovada, 19 imagens reais restauradas, 44 testes focados e instalação WSL/Docker aguardando reinício Windows para iniciar WAHA.

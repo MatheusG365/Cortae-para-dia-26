@@ -17,7 +17,7 @@ class ImageStorageFirebird(unittest.TestCase):
     def setUp(self):
         self.folder = Path(tempfile.mkdtemp(prefix='cortae-images-')).resolve()
         self.db = self.folder / 'IMAGES-QA.FDB'
-        self.options = dict(host='127.0.0.1', port=int(os.getenv('IMAGE_TEST_FIREBIRD_PORT', '3050')),
+        self.options = dict(host='127.0.0.1', port=int(os.getenv('IMAGE_TEST_FIREBIRD_PORT', app.config['DB_PORT'])),
                             user=os.getenv('IMAGE_TEST_FIREBIRD_USER', 'SYSDBA'),
                             password=os.environ.get('IMAGE_TEST_FIREBIRD_PASSWORD', os.environ.get('DB_PASSWORD', app.config['DB_PASSWORD'])),
                             database=str(self.db), charset='UTF8')

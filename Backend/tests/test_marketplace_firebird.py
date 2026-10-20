@@ -20,7 +20,7 @@ from test_marketplace import PRODUCT,ADDRESS
 class MarketplaceFirebird(unittest.TestCase):
     def setUp(self):
         self.directory=Path(tempfile.mkdtemp(prefix='cortae-marketplace-')).resolve();self.db=self.directory/'MARKETPLACE-QA.FDB'
-        self.options=dict(host='127.0.0.1',port=3050,user=os.environ.get('MARKETPLACE_TEST_FIREBIRD_USER','SYSDBA'),password=os.environ.get('MARKETPLACE_TEST_FIREBIRD_PASSWORD', os.environ.get('DB_PASSWORD', main.app.config['DB_PASSWORD'])),database=str(self.db),charset='UTF8')
+        self.options=dict(host='127.0.0.1',port=int(os.environ.get('MARKETPLACE_TEST_FIREBIRD_PORT',main.app.config['DB_PORT'])),user=os.environ.get('MARKETPLACE_TEST_FIREBIRD_USER','SYSDBA'),password=os.environ.get('MARKETPLACE_TEST_FIREBIRD_PASSWORD', os.environ.get('DB_PASSWORD', main.app.config['DB_PASSWORD'])),database=str(self.db),charset='UTF8')
         con=firebirdsql.create_database(**self.options);cur=con.cursor();self.addCleanup(self.drop)
         try:
             cur.execute('CREATE TABLE USUARIO(ID_USUARIO INTEGER PRIMARY KEY,TIPO SMALLINT,NOME VARCHAR(100),ATIVO SMALLINT,EMAIL_CONFIRMADO SMALLINT)');con.commit()

@@ -17,7 +17,7 @@ Os relatórios não são necessários para executar a aplicação. Foram mantido
 
 ## Iniciar no Windows
 
-Requisitos: **Python 3.12 ou superior de 32 bits (Windows x86)**, Node.js 22+ e servidor Firebird 5 disponível. Os arquivos `Backend/CORTAE.FDB` e `Backend/LOG_CORTAE.FDB` precisam estar acessíveis ao Firebird.
+Requisitos: **Python 3.12 ou superior de 32 bits (Windows x86)**, Node.js 22+ e **Firebird exato 4.0.4.3010 Windows x86**, com bancos ODS 13.0. Os arquivos `Backend/CORTAE.FDB` e `Backend/LOG_CORTAE.FDB` precisam estar acessíveis ao Firebird.
 
 Os dois bancos estão versionados nesses caminhos. As cópias publicadas em
 19/10/2026 foram produzidas por backup completo e restauração verificada, com os
@@ -31,9 +31,31 @@ Os arquivos locais podem aparecer modificados no Git durante o uso normal do
 sistema; publicar outra cópia requer um novo backup consistente, sem copiar
 arquivos enquanto o Firebird estiver escrevendo neles.
 
-1. Execute `Configurar-Cortae.cmd` para instalar as dependências nas versões verificadas.
-2. Preencha `Backend/.env` a partir de `.env.example` se ainda não existir. Informe banco, senha, chave da aplicação e credenciais das integrações utilizadas.
+1. Preencha `Backend/.env` a partir de `.env.example` se ainda não existir. Defina `SECRET_KEY`, `DB_PASSWORD` privado e credenciais das integrações utilizadas. Os caminhos padrão dos bancos permanecem em `Backend/`.
+2. Execute `Configurar-Cortae.cmd` para instalar as dependências e o runtime Firebird nas versões verificadas. Se o comando criou um `.env` vazio, preencha-o e execute novamente para inicializar a conta privada.
 3. Execute `Iniciar-Cortae.cmd`.
+
+O instalador utiliza o [ZIP oficial Firebird 4.0.4.3010 Win32](https://firebirdsql.org/en/firebird-4-0-4/),
+verifica SHA256 `A66C34098FC0BE315C653745B9D4B455B7F1CEC9F556D8F88FBB12919716F533`,
+arquitetura PE x86 e versão exata. A instalação fica em
+`%LOCALAPPDATA%\Cortae\runtimes\Firebird-4.0.4.3010-Win32`, fora do Git; pode ser indicada por
+`CORTAE_FIREBIRD_HOME`. Não instala serviço Windows nem exige administrador.
+Somente uma instalação nova recebe SYSDBA inicializado com `DB_PASSWORD`, enviado ao isql por stdin,
+sem senha nos argumentos ou arquivos SQL. Instalações existentes mantêm conta e configurações.
+
+O runtime local escuta em `127.0.0.1:3054`, convivendo com outros servidores na porta 3050.
+O iniciador só gerencia essa porta local e o executável validado. Hosts/portas explícitos ou remotos
+permanecem configurados; `CORTAE_FIREBIRD_AUTO_START=false` desativa o gerenciamento automático.
+Antes de abrir a API, o sistema confere versão exata do servidor e ODS 13.0 dos dois bancos,
+usando consultas de leitura. Uma instância já ativa é reutilizada e não é registrada para encerramento.
+`Parar-Cortae.cmd` encerra Firebird somente quando o próprio projeto o iniciou e PID, executável e
+horário ainda correspondem ao registro; primeiro encerra API e frontend.
+
+Os bancos publicados para clonagem devem ser preparados e verificados pelo Firebird 4.
+Arquivos ODS 13.0 compatíveis podem ser abertos diretamente pelo runtime 4; arquivos restaurados
+no Firebird 5 podem ter ODS 13.1 ou regras compiladas incompatíveis. A troca exige backup e
+restauração verificada em cópias, preservando os originais. Os scripts nunca substituem bancos
+nem fazem downgrade automático.
 
 O instalador conserva um `Backend/.venv` válido de 32 bits. Ao criar ou substituir o ambiente,
 prefere `py -3.12-32`, verifica os outros interpretadores disponíveis e rejeita Python de 64 bits.
@@ -68,6 +90,7 @@ Backend, a partir de `Backend/`:
 
 ```powershell
 .\.venv\Scripts\python.exe main.py
+.\.venv\Scripts\python.exe firebird_runtime.py
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
@@ -81,6 +104,9 @@ npm run build
 ```
 
 Por padrão, a API usa a porta 5000 e o frontend a 5173. O iniciador respeita `PORT` e `API_HOST` do ambiente ou de `Backend/.env`. O frontend envia `/api` pelo proxy Vite ao backend; o iniciador ajusta esse proxy à porta da API. Configure `VITE_API_URL` para outra implantação.
+
+Em implantação WSGI, execute `Backend/firebird_runtime.py` como conferência anterior à inicialização.
+O comando manual `main.py` também exige esse preflight antes de carregar rotas ou iniciar a fila de e-mail.
 
 ## Acesso na mesma rede
 

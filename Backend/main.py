@@ -1,4 +1,9 @@
 """WSGI application and local server entry point."""
+if __name__ == '__main__':
+    from firebird_runtime import main as check_firebird
+    if check_firebird([]):
+        raise SystemExit(1)
+
 from application import app
 
 # Route modules import application, avoiding a second app through main.
